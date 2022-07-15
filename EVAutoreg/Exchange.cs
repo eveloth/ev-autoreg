@@ -5,7 +5,7 @@ namespace EVAutoreg;
 class Exchange
 {
     public ExchangeService CreateService(string url, string username, string password)
-    {
+    {       
         return new ExchangeService
         {
             Url = new Uri(url),

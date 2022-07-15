@@ -18,24 +18,31 @@ class Program
         Console.WriteLine("Welcome to EV Hack!");
 
         Console.WriteLine("Enter server adress: ");
-        string serverAddress = Console.ReadLine();
+        string? serverAddress = Console.ReadLine();
         Console.WriteLine("Enter username: ");
-        string username = Console.ReadLine();
+        string? username = Console.ReadLine();
         Console.WriteLine("Enter password: ");
-        string password = Console.ReadLine();
+        string? password = Console.ReadLine();
 
 
         var exchangeConfigurator = new Exchange();
 
+        if (String.IsNullOrEmpty(serverAddress) || String.IsNullOrEmpty(username) || String.IsNullOrEmpty(password))
+        {
+            Console.WriteLine("Server address, username and password cannot be empty. Exiting.");
+        }
+
         var exchangeService = exchangeConfigurator.CreateService($"https://{serverAddress}/ews/exchange.asmx", username, password);
         var subscription = await exchangeConfigurator.NewMailSubscribtion(exchangeService);
+
+
 
         foreach (EmailMessage email in await exchangeService.FindItems(WellKnownFolderName.Inbox, new ItemView(100)))
         {
             Console.WriteLine(email.Subject.ToString());
         }
 
-        StreamingSubscriptionConnection connection = new(exchangeService, 30);
+        StreamingSubscriptionConnection connection = new(exchangeService, 10);
         
         connection.OnNotificationEvent += OnNotificationEvent;
         connection.OnSubscriptionError += OnSubscriptionError;
@@ -44,14 +51,17 @@ class Program
 
         connection.Open();
 
-        if (connection.IsOpen)
+        PrintConnectionStatus(connection);
+
+        
+
+        var startTimeSpan = TimeSpan.Zero;
+        var periodTimeSpan = TimeSpan.FromMinutes(1);
+
+        var timer = new System.Threading.Timer((e) =>
         {
-            Console.WriteLine($"{DateTime.Now}\nOpened connection..");
-        }
-        else
-        {
-            Console.WriteLine("Error");
-        }
+            HealthCheck();   
+        }, null, startTimeSpan, periodTimeSpan);
 
         _quitEvent.WaitOne();
 
@@ -82,18 +92,47 @@ class Program
         {
             Console.WriteLine("\n------Disconnected.");
 
-            System.Console.WriteLine("Trying to reestablish a connection..."); ;
+            System.Console.WriteLine("Trying to reestablish a connection...");
 
-            connection.Open();
+            try
+            {
+                connection.Open();
+            }
+            catch (System.Exception e)
+            {
+                System.Console.WriteLine(e.Message);
+                throw;
+            }
+            
 
+            PrintConnectionStatus(connection);
+        }
+
+        void PrintConnectionStatus(StreamingSubscriptionConnection connection)
+        {
             if (connection.IsOpen)
             {
                 Console.WriteLine($"{DateTime.Now}\nOpened connection..");
+
+                foreach (StreamingSubscription sub in connection.CurrentSubscriptions)
+                {
+                    System.Console.WriteLine(
+                        "Subscription debugging info:\n" +
+                        $"ID: {sub.Id}\n" +
+                        $"Service: {sub.Service.Url}\n" +
+                        $"Watermark: {sub.Watermark}"
+                    );
+                }
             }
             else
             {
-                Console.WriteLine("Error");
+                Console.WriteLine("Error opening a connection");
             }
+        }
+
+        void HealthCheck()
+        {
+            System.Console.WriteLine($"{DateTime.Now}: Application is running...");
         }
 
     }
