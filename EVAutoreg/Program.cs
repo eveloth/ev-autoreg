@@ -74,12 +74,16 @@ class Program
                 var itemEvent = (ItemEvent)notification;
                 Console.WriteLine($"{DateTime.Now}\nID: {itemEvent.ItemId}");
                 EmailMessage email = await EmailMessage.Bind(exchangeService, itemEvent.ItemId);
-                Console.WriteLine(email.Subject);
+                
+                if(Regex.IsMatch(email.Subject, @"^\[.+\]: Новое"))
+                {
+                    Console.Write("Case No. to process: ");
 
-                Console.Write("Case No. to process: ");
-
-                Match match = Regex.Match(email.Subject, @"^\[.+(\d{6})\]");
-                Console.WriteLine(match.Groups[1].Value);
+                    Match match = Regex.Match(email.Subject, @"^\[.+(\d{6})\]");
+                    Console.ForegroundColor = ConsoleColor.DarkMagenta;
+                    Console.WriteLine(match.Groups[1].Value);
+                    Console.ResetColor();
+                }              
             }
         }
 
@@ -90,9 +94,12 @@ class Program
 
         void OnDisconnect(object sender, SubscriptionErrorEventArgs args)
         {
+            Console.ForegroundColor = ConsoleColor.DarkYellow;
             Console.WriteLine("\n------Disconnected.");
 
-            System.Console.WriteLine("Trying to reestablish a connection...");
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("Trying to reestablish a connection...");
+            Console.ResetColor();
 
             try
             {
@@ -102,8 +109,7 @@ class Program
             {
                 System.Console.WriteLine(e.Message);
                 throw;
-            }
-            
+            }       
 
             PrintConnectionStatus(connection);
         }
@@ -112,7 +118,9 @@ class Program
         {
             if (connection.IsOpen)
             {
+                Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine($"{DateTime.Now}\nOpened connection..");
+                Console.ResetColor();
 
                 foreach (StreamingSubscription sub in connection.CurrentSubscriptions)
                 {
@@ -126,7 +134,9 @@ class Program
             }
             else
             {
+                Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine("Error opening a connection");
+                Console.ResetColor();
             }
         }
 
