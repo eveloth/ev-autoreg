@@ -77,6 +77,7 @@ class Program
                 
                 if(Regex.IsMatch(email.Subject, @"^\[.+\]: Новое"))
                 {
+                    System.Console.WriteLine(email.Subject);
                     Console.Write("Case No. to process: ");
 
                     Match match = Regex.Match(email.Subject, @"^\[.+(\d{6})\]");
