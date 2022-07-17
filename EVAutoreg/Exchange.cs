@@ -8,15 +8,29 @@ class Exchange
     {       
         return new ExchangeService
         {
-            Url = new Uri(url),
+            Url = new Uri($"https://{url}/ews/exchange.asmx"),
             Credentials = new WebCredentials(username, password)
         };
     }
 
-    public Task<StreamingSubscription> NewMailSubscribtion(ExchangeService service)
+    public async Task<StreamingSubscription> NewMailSubscribtion(ExchangeService service)
     {
-        return service.SubscribeToStreamingNotifications(
-    new FolderId[] { WellKnownFolderName.Inbox }, EventType.NewMail);
-    }
+        StreamingSubscription subscription;
 
+        try
+        {
+            subscription = await service.SubscribeToStreamingNotifications(
+                new FolderId[] { WellKnownFolderName.Inbox }, EventType.NewMail);
+        }
+        catch (Exception e)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("\nCouldn't authenticate agaist the Exchange Server.\n" +
+            "Possible reasons are: invalid username and/or password, or domain was specicifed incorrectly.\n", e.Message);
+            Console.ResetColor();
+            throw;
+        }
+
+        return subscription;
+    }
 }
