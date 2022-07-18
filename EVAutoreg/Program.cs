@@ -49,7 +49,13 @@ class Program
         connection.Open();
         PrintConnectionStatus(connection);
 
-        SetHealthCheckTimer();
+        var startTimeSpan = TimeSpan.Zero;
+        var periodTimeSpan = TimeSpan.FromMinutes(1);
+
+        var timer = new Timer((e) =>
+        {
+            HealthCheck();
+        }, null, startTimeSpan, periodTimeSpan);
 
         _quitEvent.WaitOne();
 
@@ -134,17 +140,6 @@ class Program
                 Console.WriteLine("Error opening a connection");
                 Console.ResetColor();
             }
-        }
-
-        void SetHealthCheckTimer()
-        {
-            var startTimeSpan = TimeSpan.Zero;
-            var periodTimeSpan = TimeSpan.FromMinutes(1);
-
-            var timer = new Timer((e) =>
-            {
-                HealthCheck();
-            }, null, startTimeSpan, periodTimeSpan);
         }
 
         void HealthCheck()
