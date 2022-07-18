@@ -26,7 +26,8 @@ class Program
         string extraViewServerUsername = config.GetValue<string>("ExtraViewCredentials:Username");
         string extraViewServerPassword = config.GetValue<string>("ExtraViewCredentials:Password");
 
-        string[] apiQueryUpdateParameters = config.GetSection("QueryParameters:QueryUpdateParameters").Get<string[]>();
+        string[] apiQueryRegisterParameters = config.GetSection("QueryParameters:QueryRegisterParameters").Get<string[]>();
+        string[] apiQueryInWorkParameters = config.GetSection("QueryParameters:QueryInWorkParameters").Get<string[]>();
 
         Console.CancelKeyPress += (sender, eArgs) => {
             _quitEvent.Set();
@@ -67,25 +68,53 @@ class Program
 
             EmailMessage email = await EmailMessage.Bind(exchangeService, notification.ItemId);
 
-            Console.WriteLine("Recieved an email that we won't process.");
-            
-            if(Regex.IsMatch(email.Subject, @"^\[.+\]: Новое"))
+            string subject = email.Subject;
+
+            if (Regex.IsMatch(subject, @"^\[.+\]: Новое"))
             {
+                string issueNo = Regex.Match(email.Subject, @"^\[.+(\d{6})\]").Groups[1].Value;
+
                 Console.ForegroundColor = ConsoleColor.Blue;
                 Console.WriteLine($"\n{DateTime.Now}\n------New Mail:------");
                 Console.ResetColor();
-                Console.WriteLine(email.Subject);
+
+                Console.WriteLine(subject);
+
                 Console.Write("Case No. to process: ");
-
-                Match match = Regex.Match(email.Subject, @"^\[.+(\d{6})\]");
                 Console.ForegroundColor = ConsoleColor.DarkMagenta;
-
-                string issueNo = match.Groups[1].Value;
                 Console.WriteLine($"{email.From.Address}, {issueNo}");
                 Console.ResetColor();
 
-                await evapi.GetIssue(issueNo);
-            }              
+                //await evapi.GetIssue(issueNo);
+
+                if (subject.Contains("is unreachable") ||
+                    subject.Contains("unavailable by", StringComparison.InvariantCultureIgnoreCase) ||
+                    subject.Contains("is not OK") ||
+                    subject.Contains("has just been restarted") ||
+                    subject.Contains("Free disk space") ||
+                    subject.Contains("are not responding") ||
+                    subject.Contains("ping response time") ||
+                    subject.Contains("is above critical threshold") ||
+                    subject.Contains("does not send any pings") ||
+                    subject.Contains("high utilization") ||
+                    subject.Contains("more than") ||
+                    Regex.IsMatch(subject, @"^\[.+\]: Новое.{1,4}\d{6}(?:.{,2})?$"))
+                {
+                    Console.WriteLine("Recieved monitoring issue, processing...");
+                    try
+                    {
+                        await AssignIssueToFirstLineOperators(issueNo, apiQueryRegisterParameters, apiQueryInWorkParameters);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("Failed assigning an issue,\n" + e.Message);
+                    }                    
+                }
+            }
+            else
+            {
+                Console.WriteLine("Recieved an email that we won't process.");
+            }
         }
 
         void OnSubscriptionError(object sender, SubscriptionErrorEventArgs args)
@@ -115,6 +144,21 @@ class Program
             }       
 
             PrintConnectionStatus(connection);
+        }
+
+        async Task AssignIssueToFirstLineOperators(string issueNumber, string[] registeringParameters, string[] assigningParameters)
+        {
+            HttpResponseMessage registeredResponse = await evapi.UpdateIssue(issueNumber, registeringParameters);
+            HttpResponseMessage inWorkResponse;
+
+            if (registeredResponse.IsSuccessStatusCode)
+            {
+                inWorkResponse = await evapi.UpdateIssue(issueNumber, assigningParameters);
+                if (inWorkResponse.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"Succesfully assigned issue no. {issueNumber} to first line operators");
+                }
+            }
         }
 
         void PrintConnectionStatus(StreamingSubscriptionConnection connection)

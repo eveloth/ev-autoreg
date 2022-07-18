@@ -21,11 +21,37 @@ class EVApiWrapper
         _client.DefaultRequestHeaders.Add("User-agent", "OperatorsAPI");
 
         HttpResponseMessage issue = await _client.GetAsync($"https://{_domain}/evj/ExtraView/ev_api.action?user_id={_username}&password={_password}&statevar=get&id={issueNo}");
-        var issueToDisplay = await issue.Content.ReadAsStringAsync();
 
-        Console.WriteLine(issueToDisplay);
+        if (issue.IsSuccessStatusCode)
+        {
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine("Issue retrieved successfully.");
+            Console.ResetColor();
+        }
+        var issueToDisplay = await issue.Content.ReadAsStringAsync();
 
         XDocument doc = XDocument.Parse(issueToDisplay);
         Console.WriteLine(doc);
+    }
+
+    public async Task<HttpResponseMessage> UpdateIssue(string issueNo, params string[] queryUpdateParameters)
+    {
+        _client.DefaultRequestHeaders.Add("User-agent", "OperatorsAPI");
+
+        string query = $"https://{_domain}/evj/ExtraView/ev_api.action?user_id={_username}&password={_password}&statevar=update&id={issueNo}";
+
+        foreach (var param in queryUpdateParameters)
+        {
+            query += $"&{param}";
+        }
+
+        HttpResponseMessage res = await _client.GetAsync(query);
+
+        if (res.IsSuccessStatusCode)
+        {
+            Console.WriteLine($"Issue {issueNo} successfully updated");
+        }
+
+        return res;
     }
 }
