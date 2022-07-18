@@ -1,4 +1,7 @@
 ﻿using Microsoft.Exchange.WebServices.Data;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using System.Text.RegularExpressions;
 using Task = System.Threading.Tasks.Task;
 
@@ -6,66 +9,51 @@ namespace EVAutoreg;
 
 class Program
 {
-    static ManualResetEvent _quitEvent = new ManualResetEvent(false);
+    static readonly ManualResetEvent _quitEvent = new(false);
 
     public static async Task Main(string[] args)
     {
+        using IHost host = Host.CreateDefaultBuilder(args).Build();
+        IConfiguration config = host.Services.GetRequiredService<IConfiguration>();
+
+        #region Declarations
+
+        string exchangeServerUrl = config.GetValue<string>("ExchangeCredentials:URL");
+        string exchangeServerUsername = config.GetValue<string>("ExchangeCredentials:EmailAddress");
+        string exchangeServerPassword = config.GetValue<string>("ExchangeCredentials:Password");
+
+        string extraViewServerUrl = config.GetValue<string>("ExtraViewCredentials:URL");
+        string extraViewServerUsername = config.GetValue<string>("ExtraViewCredentials:Username");
+        string extraViewServerPassword = config.GetValue<string>("ExtraViewCredentials:Password");
+
+        string[] apiQueryUpdateParameters = config.GetSection("QueryParameters:QueryUpdateParameters").Get<string[]>();
+
         Console.CancelKeyPress += (sender, eArgs) => {
             _quitEvent.Set();
             eArgs.Cancel = true;
         };
 
-        Console.WriteLine("Welcome to EV Hack!");
+        #endregion
 
-        Console.WriteLine("Enter server adress: ");
-        string? serverAddress = Console.ReadLine();
-        Console.WriteLine("Enter username: ");
-        string? username = Console.ReadLine();
-        Console.WriteLine("Enter password: ");
-        string? password = Console.ReadLine();
+        Console.WriteLine("Welcome to EV Autoregistrator!");
 
-        if (String.IsNullOrEmpty(serverAddress) || String.IsNullOrEmpty(username) || String.IsNullOrEmpty(password))
-        {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("Server address, username and password cannot be empty. Exiting.");
-            Console.ResetColor();
-            throw new ArgumentNullException();
-        }
-
-        Exchange exchangeConfigurator = new Exchange();
-
-        ExchangeService  exchangeService = exchangeConfigurator.CreateService(serverAddress, username, password);
-        StreamingSubscription  subscription = await exchangeConfigurator.NewMailSubscribtion(exchangeService);
-
-        EVApiWrapper evapi = new("v.stepanovd@cti.ru", "Evel)tri@rusct1", "ev.cti.ru");
-        
-        foreach (EmailMessage email in await exchangeService.FindItems(WellKnownFolderName.Inbox, new ItemView(100)))
-        {
-            Console.WriteLine(email.Subject.ToString());
-        }
-
+        ExchangeService  exchangeService = Exchange.CreateService(exchangeServerUrl, exchangeServerUsername, exchangeServerPassword);
+        StreamingSubscription  subscription = await Exchange.NewMailSubscribtion(exchangeService);
         StreamingSubscriptionConnection connection = new(exchangeService, 10);
-        
+        EVApiWrapper evapi = new(extraViewServerUrl, extraViewServerUsername, extraViewServerPassword);
+
         connection.OnNotificationEvent += OnNotificationEvent;
         connection.OnSubscriptionError += OnSubscriptionError;
         connection.OnDisconnect += OnDisconnect;
         connection.AddSubscription(subscription);
-
         connection.Open();
-
         PrintConnectionStatus(connection);
 
-        
-
-        var startTimeSpan = TimeSpan.Zero;
-        var periodTimeSpan = TimeSpan.FromMinutes(1);
-
-        var timer = new System.Threading.Timer((e) =>
-        {
-            HealthCheck();   
-        }, null, startTimeSpan, periodTimeSpan);
+        SetHealthCheckTimer();
 
         _quitEvent.WaitOne();
+
+        #region Methods
 
         async void OnNotificationEvent(Object sender, NotificationEventArgs args)
         {
@@ -91,18 +79,6 @@ class Program
                 Console.ResetColor();
 
                 await evapi.GetIssue(issueNo);
-
-                switch (email.From.Address)
-                {
-                    case "support":
-                        Console.WriteLine($"TODO: Register as support issue ({issueNo})");
-                        break;
-                    case "service":
-                        Console.WriteLine($"TODO: Register as service issue ({issueNo})");
-                        break;
-                    default:
-                        break;
-                }
             }              
         }
 
@@ -127,7 +103,7 @@ class Program
             catch (Exception e)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("Could not reestablish a connecntion:\n", e.Message);
+                Console.WriteLine("Could not reestablish a connecntion:\n" + e.Message);
                 Console.ResetColor();
                 throw;
             }       
@@ -160,10 +136,22 @@ class Program
             }
         }
 
-        void HealthCheck()
+        void SetHealthCheckTimer()
         {
-            System.Console.WriteLine($"{DateTime.Now}: Application is running...");
+            var startTimeSpan = TimeSpan.Zero;
+            var periodTimeSpan = TimeSpan.FromMinutes(1);
+
+            var timer = new Timer((e) =>
+            {
+                HealthCheck();
+            }, null, startTimeSpan, periodTimeSpan);
         }
 
+        void HealthCheck()
+        {
+            Console.WriteLine($"{DateTime.Now}: Application is running...");
+        }
+
+        #endregion
     }
 }
