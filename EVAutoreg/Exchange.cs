@@ -2,9 +2,9 @@
 
 namespace EVAutoreg;
 
-class Exchange
+public static class Exchange
 {
-    public ExchangeService CreateService(string url, string username, string password)
+    public static ExchangeService CreateService(string url, string username, string password)
     {       
         return new ExchangeService
         {
@@ -13,7 +13,7 @@ class Exchange
         };
     }
 
-    public async Task<StreamingSubscription> NewMailSubscribtion(ExchangeService service)
+    public static async Task<StreamingSubscription> NewMailSubscribtion(ExchangeService service)
     {
         StreamingSubscription subscription;
 
@@ -26,7 +26,7 @@ class Exchange
         {
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine("\nCouldn't authenticate agaist the Exchange Server.\n" +
-            "Possible reasons are: invalid username and/or password, or domain was specicifed incorrectly.\n", e.Message);
+            "Possible reasons are: invalid username and/or password, or domain was specicifed incorrectly.\n" + e.Message);
             Console.ResetColor();
             throw;
         }
