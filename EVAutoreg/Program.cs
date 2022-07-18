@@ -36,6 +36,8 @@ class Program
 
         ExchangeService  exchangeService = exchangeConfigurator.CreateService(serverAddress, username, password);
         StreamingSubscription  subscription = await exchangeConfigurator.NewMailSubscribtion(exchangeService);
+
+        EVApiWrapper evapi = new("v.stepanovd@cti.ru", "Evel)tri@rusct1", "ev.cti.ru");
         
         foreach (EmailMessage email in await exchangeService.FindItems(WellKnownFolderName.Inbox, new ItemView(100)))
         {
@@ -85,8 +87,10 @@ class Program
                 Console.ForegroundColor = ConsoleColor.DarkMagenta;
 
                 string issueNo = match.Groups[1].Value;
-                Console.WriteLine(email.From.Address, issueNo);
+                Console.WriteLine($"{email.From.Address}, {issueNo}");
                 Console.ResetColor();
+
+                await evapi.GetIssue(issueNo);
 
                 switch (email.From.Address)
                 {
