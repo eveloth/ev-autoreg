@@ -4,16 +4,16 @@ namespace EVAutoreg;
 
 class EVApiWrapper
 {
-    private string _username;
-    private string _password;
-    private string _domain;
-    private HttpClient _client = new HttpClient();
+    private readonly string _username;
+    private readonly string _password;
+    private readonly string _domain;
+    private readonly HttpClient _client = new();
 
-    public EVApiWrapper(string username, string password, string serverAddress)
+    public EVApiWrapper(string serverAddress, string username, string password)
     {
+        _domain = serverAddress;
         _username = username;
         _password = password;
-        _domain = serverAddress;
     }
 
     public async Task GetIssue(string issueNo)
