@@ -13,18 +13,12 @@ class Program
 
     public static async Task Main(string[] args)
     {
+        #region Declarations
         using IHost host = Host.CreateDefaultBuilder(args).Build();
         IConfiguration config = host.Services.GetRequiredService<IConfiguration>();
 
-        #region Declarations
-
-        string exchangeServerUrl = config.GetValue<string>("ExchangeCredentials:URL");
-        string exchangeServerUsername = config.GetValue<string>("ExchangeCredentials:EmailAddress");
-        string exchangeServerPassword = config.GetValue<string>("ExchangeCredentials:Password");
-
-        string extraViewServerUrl = config.GetValue<string>("ExtraViewCredentials:URL");
-        string extraViewServerUsername = config.GetValue<string>("ExtraViewCredentials:Username");
-        string extraViewServerPassword = config.GetValue<string>("ExtraViewCredentials:Password");
+        Exchange exchange = new Exchange(config);
+        EVApiWrapper evapi = new(config);
 
         string[] apiQueryRegisterParameters = config.GetSection("QueryParameters:QueryRegisterParameters").Get<string[]>();
         string[] apiQueryInWorkParameters = config.GetSection("QueryParameters:QueryInWorkParameters").Get<string[]>();
@@ -38,10 +32,12 @@ class Program
 
         Console.WriteLine("Welcome to EV Autoregistrator!");
 
-        ExchangeService  exchangeService = Exchange.CreateService(exchangeServerUrl, exchangeServerUsername, exchangeServerPassword);
-        StreamingSubscription  subscription = await Exchange.NewMailSubscribtion(exchangeService);
+        
+
+        ExchangeService  exchangeService = exchange.CreateService();
+        StreamingSubscription  subscription = await exchange.NewMailSubscribtion(exchangeService);
         StreamingSubscriptionConnection connection = new(exchangeService, 10);
-        EVApiWrapper evapi = new(extraViewServerUrl, extraViewServerUsername, extraViewServerPassword);
+        
 
         connection.OnNotificationEvent += OnNotificationEvent;
         connection.OnSubscriptionError += OnSubscriptionError;
@@ -103,7 +99,7 @@ class Program
                     Console.WriteLine("Recieved monitoring issue, processing...");
                     try
                     {
-                        await AssignIssueToFirstLineOperators(issueNo, apiQueryRegisterParameters, apiQueryInWorkParameters);
+                        //await AssignIssueToFirstLineOperators(issueNo, apiQueryRegisterParameters, apiQueryInWorkParameters);
                     }
                     catch (Exception e)
                     {

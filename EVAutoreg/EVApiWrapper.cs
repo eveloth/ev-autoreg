@@ -1,19 +1,22 @@
 using System.Xml.Linq;
+using Microsoft.Extensions.Configuration;
 
 namespace EVAutoreg;
 
 class EVApiWrapper
 {
+    private readonly IConfiguration _config;
     private readonly string _username;
     private readonly string _password;
     private readonly string _domain;
     private readonly HttpClient _client = new();
 
-    public EVApiWrapper(string serverAddress, string username, string password)
+    public EVApiWrapper(IConfiguration config)
     {
-        _domain = serverAddress;
-        _username = username;
-        _password = password;
+        _config = config;
+        _domain = _config.GetValue<string>("ExtraViewCredentials:URL");
+        _username = _config.GetValue<string>("ExtraViewCredentials:EmailAddress");
+        _password = _config.GetValue<string>("ExtraViewCredentials:Password");
     }
 
     public async Task GetIssue(string issueNo)

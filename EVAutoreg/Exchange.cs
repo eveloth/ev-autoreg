@@ -1,19 +1,34 @@
 ﻿using Microsoft.Exchange.WebServices.Data;
+using Microsoft.Extensions.Configuration;
 
 namespace EVAutoreg;
 
-public static class Exchange
+public class Exchange
 {
-    public static ExchangeService CreateService(string url, string username, string password)
+    private readonly IConfiguration _config;
+    private readonly string _url;
+    private readonly string _emailAddress;
+    private readonly string _password;
+
+
+    public Exchange(IConfiguration config)
+    {
+        _config = config;
+        _url = _config.GetValue<string>("ExchangeCredentials:URL");
+        _emailAddress = _config.GetValue<string>("ExchangeCredentials:EmailAddress");
+        _password = _config.GetValue<string>("ExchangeCredentials:Password");
+    }
+
+    public ExchangeService CreateService()
     {       
         return new ExchangeService
         {
-            Url = new Uri($"https://{url}/ews/exchange.asmx"),
-            Credentials = new WebCredentials(username, password)
+            Url = new Uri($"https://{_url}/ews/exchange.asmx"),
+            Credentials = new WebCredentials(_emailAddress, _password)
         };
     }
 
-    public static async Task<StreamingSubscription> NewMailSubscribtion(ExchangeService service)
+    public async Task<StreamingSubscription> NewMailSubscribtion(ExchangeService service)
     {
         StreamingSubscription subscription;
 
