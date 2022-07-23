@@ -1,29 +1,32 @@
 using System.Xml.Linq;
 using Microsoft.Extensions.Configuration;
+using System.Net;
 
 namespace EVAutoreg;
 
 class EVApiWrapper
 {
     private readonly IConfiguration _config;
+    private readonly string _domain;
     private readonly string _username;
     private readonly string _password;
-    private readonly string _domain;
     private readonly HttpClient _client = new();
 
     public EVApiWrapper(IConfiguration config)
     {
         _config = config;
         _domain = _config.GetValue<string>("ExtraViewCredentials:URL");
-        _username = _config.GetValue<string>("ExtraViewCredentials:EmailAddress");
-        _password = _config.GetValue<string>("ExtraViewCredentials:Password");
+        _username = _config.GetValue<string>("ExtraViewCredentials:Username");
+        _password = WebUtility.UrlEncode(_config.GetValue<string>("ExtraViewCredentials:Password"));
     }
 
     public async Task GetIssue(string issueNo)
     {
         _client.DefaultRequestHeaders.Add("User-agent", "OperatorsAPI");
 
-        HttpResponseMessage issue = await _client.GetAsync($"https://{_domain}/evj/ExtraView/ev_api.action?user_id={_username}&password={_password}&statevar=get&id={issueNo}");
+        string query = $"https://{_domain}/evj/ExtraView/ev_api.action?user_id={_username}&password={_password}&statevar=get&id={issueNo}";
+
+        HttpResponseMessage issue = await _client.GetAsync(query);
 
         if (issue.IsSuccessStatusCode)
         {
@@ -31,6 +34,7 @@ class EVApiWrapper
             Console.WriteLine("Issue retrieved successfully.");
             Console.ResetColor();
         }
+
         var issueToDisplay = await issue.Content.ReadAsStringAsync();
 
         XDocument doc = XDocument.Parse(issueToDisplay);
