@@ -27,18 +27,24 @@ class EVApiWrapper
         string query = $"https://{_domain}/evj/ExtraView/ev_api.action?user_id={_username}&password={_password}&statevar=get&id={issueNo}";
 
         HttpResponseMessage issue = await _client.GetAsync(query);
+        var issueToDisplay = await issue.Content.ReadAsStringAsync();
 
-        if (issue.IsSuccessStatusCode)
+        if (issue.IsSuccessStatusCode && issueToDisplay.StartsWith("<?xml"))
         {
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine("Issue retrieved successfully.");
             Console.ResetColor();
+
+            XDocument doc = XDocument.Parse(issueToDisplay);
+            Console.WriteLine(doc);
         }
-
-        var issueToDisplay = await issue.Content.ReadAsStringAsync();
-
-        XDocument doc = XDocument.Parse(issueToDisplay);
-        Console.WriteLine(doc);
+        else
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("Failed retrieveing an issue. Reason: ");
+            Console.ResetColor();
+            Console.WriteLine(issueToDisplay);
+        }
     }
 
     public async Task<HttpResponseMessage> UpdateIssue(string issueNo, params string[] queryUpdateParameters)
@@ -53,10 +59,18 @@ class EVApiWrapper
         }
 
         HttpResponseMessage res = await _client.GetAsync(query);
+        var content = await res.Content.ReadAsStringAsync();
 
-        if (res.IsSuccessStatusCode)
+        if (res.IsSuccessStatusCode && content.StartsWith("<?xml"))
         {
             Console.WriteLine($"Issue {issueNo} successfully updated");
+        }
+        else
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("Failed updating an issue. Reason: ");
+            Console.ResetColor();
+            Console.WriteLine(content);
         }
 
         return res;

@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using System.Net;
 using System.Text.RegularExpressions;
 using Task = System.Threading.Tasks.Task;
 
@@ -32,7 +33,7 @@ class Program
 
         Console.WriteLine("Welcome to EV Autoregistrator!");
 
-        
+        await evapi.GetIssue("722256");
 
         ExchangeService  exchangeService = exchange.CreateService();
         StreamingSubscription  subscription = await exchange.NewMailSubscribtion(exchangeService);
@@ -144,13 +145,13 @@ class Program
 
         async Task AssignIssueToFirstLineOperators(string issueNumber, string[] registeringParameters, string[] assigningParameters)
         {
-            HttpResponseMessage registeredResponse = await evapi.UpdateIssue(issueNumber, registeringParameters);
-            HttpResponseMessage inWorkResponse;
+            HttpStatusCode isOKRegistered = await evapi.UpdateIssue(issueNumber, registeringParameters);
+            HttpStatusCode isOKInWork;
 
-            if (registeredResponse.IsSuccessStatusCode)
+            if (isOKRegistered == HttpStatusCode.OK)
             {
-                inWorkResponse = await evapi.UpdateIssue(issueNumber, assigningParameters);
-                if (inWorkResponse.IsSuccessStatusCode)
+                isOKInWork = await evapi.UpdateIssue(issueNumber, assigningParameters);
+                if (isOKInWork == HttpStatusCode.OK)
                 {
                     Console.WriteLine($"Succesfully assigned issue no. {issueNumber} to first line operators");
                 }
