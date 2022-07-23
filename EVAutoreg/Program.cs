@@ -5,6 +5,7 @@ using Microsoft.Extensions.Hosting;
 using System.Net;
 using System.Text.RegularExpressions;
 using Task = System.Threading.Tasks.Task;
+using static ColouredConsole;
 
 namespace EVAutoreg;
 
@@ -33,13 +34,10 @@ class Program
 
         Console.WriteLine("Welcome to EV Autoregistrator!");
 
-        await evapi.GetIssue("722256");
-
         ExchangeService  exchangeService = exchange.CreateService();
         StreamingSubscription  subscription = await exchange.NewMailSubscribtion(exchangeService);
         StreamingSubscriptionConnection connection = new(exchangeService, 10);
         
-
         connection.OnNotificationEvent += OnNotificationEvent;
         connection.OnSubscriptionError += OnSubscriptionError;
         connection.OnDisconnect += OnDisconnect;
@@ -71,18 +69,12 @@ class Program
             {
                 string issueNo = Regex.Match(email.Subject, @"^\[.+(\d{6})\]").Groups[1].Value;
 
-                Console.ForegroundColor = ConsoleColor.Blue;
-                Console.WriteLine($"\n{DateTime.Now}\n------New Mail:------");
-                Console.ResetColor();
+                PrintInBlue($"\n{DateTime.Now}\n------New Mail:------");
 
                 Console.WriteLine(subject);
 
                 Console.Write("Case No. to process: ");
-                Console.ForegroundColor = ConsoleColor.DarkMagenta;
-                Console.WriteLine($"{email.From.Address}, {issueNo}");
-                Console.ResetColor();
-
-                //await evapi.GetIssue(issueNo);
+                PrintInPurple($"{email.From.Address}, {issueNo}");
 
                 if (subject.Contains("is unreachable") ||
                     subject.Contains("unavailable by", StringComparison.InvariantCultureIgnoreCase) ||
@@ -104,7 +96,7 @@ class Program
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine("Failed assigning an issue,\n" + e.Message);
+                        PrintInRed("Failed assigning an issue,\n" + e.Message);
                     }                    
                 }
             }
@@ -116,17 +108,13 @@ class Program
 
         void OnSubscriptionError(object sender, SubscriptionErrorEventArgs args)
         {
-            Console.WriteLine("Subscription error occured. Exiting...");
+            PrintInRed("Subscription error occured. Exiting...");
         }
 
         void OnDisconnect(object sender, SubscriptionErrorEventArgs args)
         {
-            Console.ForegroundColor = ConsoleColor.DarkYellow;
-            Console.WriteLine("\n------<Disconnected.>------");
-
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("Trying to reestablish a connection...");
-            Console.ResetColor();
+            PrintInOrange("\n------<Disconnected.>------");
+            PrintInYellow("Trying to reestablish a connection...");
 
             try
             {
@@ -134,9 +122,7 @@ class Program
             }
             catch (Exception e)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("Could not reestablish a connecntion:\n" + e.Message);
-                Console.ResetColor();
+                PrintInRed("Could not reestablish a connecntion:\n" + e.Message);
                 throw;
             }       
 
@@ -162,13 +148,11 @@ class Program
         {
             if (connection.IsOpen)
             {
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine($"{DateTime.Now}\nConnection opened, listening on events...");
-                Console.ResetColor();
+                PrintInGreen($"{DateTime.Now}\nConnection opened, listening on events...");
 
                 foreach (StreamingSubscription sub in connection.CurrentSubscriptions)
                 {
-                    System.Console.WriteLine(
+                    Console.WriteLine(
                         "Subscription debugging info:\n" +
                         $"ID: {sub.Id}\n" +
                         $"Service: {sub.Service.Url}\n"
@@ -177,9 +161,7 @@ class Program
             }
             else
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("Error opening a connection");
-                Console.ResetColor();
+                PrintInRed("Error opening a connection");
             }
         }
 

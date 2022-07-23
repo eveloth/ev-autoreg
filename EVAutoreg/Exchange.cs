@@ -1,5 +1,6 @@
 ﻿using Microsoft.Exchange.WebServices.Data;
 using Microsoft.Extensions.Configuration;
+using static ColouredConsole;
 
 namespace EVAutoreg;
 
@@ -39,10 +40,8 @@ public class Exchange
         }
         catch (Exception e)
         {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("\nCouldn't authenticate agaist the Exchange Server.\n" +
+            PrintInRed("\nCouldn't authenticate agaist the Exchange Server.\n" +
             "Possible reasons are: invalid username and/or password, or domain was specicifed incorrectly.\n" + e.Message);
-            Console.ResetColor();
             throw;
         }
 

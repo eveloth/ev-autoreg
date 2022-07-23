@@ -1,6 +1,7 @@
 using System.Xml.Linq;
 using Microsoft.Extensions.Configuration;
 using System.Net;
+using static ColouredConsole;
 
 namespace EVAutoreg;
 
@@ -31,23 +32,19 @@ class EVApiWrapper
 
         if (issue.IsSuccessStatusCode && issueToDisplay.StartsWith("<?xml"))
         {
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("Issue retrieved successfully.");
-            Console.ResetColor();
-
+            PrintInGreen("Issue retrieved successfully.");
+            
             XDocument doc = XDocument.Parse(issueToDisplay);
             Console.WriteLine(doc);
         }
         else
         {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("Failed retrieveing an issue. Reason: ");
-            Console.ResetColor();
+            PrintInRed("Failed retrieveing an issue. Reason: ");
             Console.WriteLine(issueToDisplay);
         }
     }
 
-    public async Task<HttpResponseMessage> UpdateIssue(string issueNo, params string[] queryUpdateParameters)
+    public async Task<HttpStatusCode> UpdateIssue(string issueNo, params string[] queryUpdateParameters)
     {
         _client.DefaultRequestHeaders.Add("User-agent", "OperatorsAPI");
 
@@ -71,8 +68,10 @@ class EVApiWrapper
             Console.WriteLine("Failed updating an issue. Reason: ");
             Console.ResetColor();
             Console.WriteLine(content);
+
+            return HttpStatusCode.BadRequest;
         }
 
-        return res;
+        return HttpStatusCode.OK;
     }
 }
