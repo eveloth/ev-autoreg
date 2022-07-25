@@ -9,15 +9,15 @@ using static ColouredConsole;
 
 namespace EVAutoreg;
 
-class Program
+internal static class Program
 {
     static readonly ManualResetEvent _quitEvent = new(false);
 
     public static async Task Main(string[] args)
     {
         #region Declarations
-        using IHost host = Host.CreateDefaultBuilder(args).Build();
-        IConfiguration config = host.Services.GetRequiredService<IConfiguration>();
+        using var host = Host.CreateDefaultBuilder(args).Build();
+        var config = host.Services.GetRequiredService<IConfiguration>();
 
         Exchange exchange = new Exchange(config);
         EVApiWrapper evapi = new(config);
@@ -57,9 +57,10 @@ class Program
 
         #region Methods
 
-        async void OnNotificationEvent(Object sender, NotificationEventArgs args)
+        async void OnNotificationEvent(object sender, NotificationEventArgs args)
         {
-            ItemEvent notification = (ItemEvent?)args.Events.FirstOrDefault() ?? throw new ArgumentNullException("Notification was null, which was most possibly Exchange's fault...");
+            ItemEvent notification = (ItemEvent?)args.Events.FirstOrDefault() ?? 
+                                     throw new ArgumentNullException("Notification was null, which was most possibly Exchange's fault...");
 
             EmailMessage email = await EmailMessage.Bind(exchangeService, notification.ItemId);
 
@@ -87,9 +88,9 @@ class Program
                     subject.Contains("does not send any pings") ||
                     subject.Contains("high utilization") ||
                     subject.Contains("more than") ||
-                    Regex.IsMatch(subject, @"^\[.+\]: Новое.{1,4}\d{6}(?:.{,2})?$"))
+                    Regex.IsMatch(subject, @"^\[.+\]: Новое.{1,4}\d{6}(?:.{0,2})?$"))
                 {
-                    Console.WriteLine("Recieved monitoring issue, processing...");
+                    Console.WriteLine("Received monitoring issue, processing...");
                     try
                     {
                         //await AssignIssueToFirstLineOperators(issueNo, apiQueryRegisterParameters, apiQueryInWorkParameters);
@@ -122,7 +123,7 @@ class Program
             }
             catch (Exception e)
             {
-                PrintInRed("Could not reestablish a connecntion:\n" + e.Message);
+                PrintInRed("Could not reestablish a connection:\n" + e.Message);
                 throw;
             }       
 
@@ -131,13 +132,12 @@ class Program
 
         async Task AssignIssueToFirstLineOperators(string issueNumber, string[] registeringParameters, string[] assigningParameters)
         {
-            HttpStatusCode isOKRegistered = await evapi.UpdateIssue(issueNumber, registeringParameters);
-            HttpStatusCode isOKInWork;
+            HttpStatusCode isOkRegistered = await evapi.UpdateIssue(issueNumber, registeringParameters);
 
-            if (isOKRegistered == HttpStatusCode.OK)
+            if (isOkRegistered == HttpStatusCode.OK)
             {
-                isOKInWork = await evapi.UpdateIssue(issueNumber, assigningParameters);
-                if (isOKInWork == HttpStatusCode.OK)
+                var isOkInWork = await evapi.UpdateIssue(issueNumber, assigningParameters);
+                if (isOkInWork == HttpStatusCode.OK)
                 {
                     Console.WriteLine($"Succesfully assigned issue no. {issueNumber} to first line operators");
                 }
