@@ -36,7 +36,7 @@ internal static class Program
 
         ExchangeService  exchangeService = exchange.CreateService();
         StreamingSubscription  subscription = await exchange.NewMailSubscribtion(exchangeService);
-        StreamingSubscriptionConnection connection = new(exchangeService, 10);
+        StreamingSubscriptionConnection connection = new(exchangeService, 15);
         
         connection.OnNotificationEvent += OnNotificationEvent;
         connection.OnSubscriptionError += OnSubscriptionError;
@@ -65,6 +65,7 @@ internal static class Program
             EmailMessage email = await EmailMessage.Bind(exchangeService, notification.ItemId);
 
             string subject = email.Subject;
+            string content = email.Body.Text;
 
             if (Regex.IsMatch(subject, @"^\[.+\]: Новое"))
             {
@@ -77,7 +78,7 @@ internal static class Program
                 Console.Write("Case No. to process: ");
                 PrintInPurple($"{email.From.Address}, {issueNo}");
 
-                if (subject.Contains("is unreachable") ||
+                if (subject.Contains("is unreachable") || 
                     subject.Contains("unavailable by", StringComparison.InvariantCultureIgnoreCase) ||
                     subject.Contains("is not OK") ||
                     subject.Contains("has just been restarted") ||
@@ -88,12 +89,13 @@ internal static class Program
                     subject.Contains("does not send any pings") ||
                     subject.Contains("high utilization") ||
                     subject.Contains("more than") ||
+                    content.Contains("на PROBLEM")||
                     Regex.IsMatch(subject, @"^\[.+\]: Новое.{1,4}\d{6}(?:.{0,2})?$"))
                 {
                     Console.WriteLine("Received monitoring issue, processing...");
                     try
                     {
-                        //await AssignIssueToFirstLineOperators(issueNo, apiQueryRegisterParameters, apiQueryInWorkParameters);
+                        await AssignIssueToFirstLineOperators(issueNo, apiQueryRegisterParameters, apiQueryInWorkParameters);
                     }
                     catch (Exception e)
                     {
