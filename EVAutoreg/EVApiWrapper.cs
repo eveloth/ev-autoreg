@@ -58,8 +58,9 @@ class EVApiWrapper
         HttpResponseMessage res = await _client.GetAsync(query);
         var content = await res.Content.ReadAsStringAsync();
 
-        if (res.IsSuccessStatusCode && content.StartsWith("<?xml"))
+        if (res.IsSuccessStatusCode && content.Contains("updated", StringComparison.InvariantCultureIgnoreCase))
         {
+            Console.WriteLine(content);
             Console.WriteLine($"Issue {issueNo} successfully updated");
         }
         else
