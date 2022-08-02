@@ -1,13 +1,12 @@
 using System.Xml.Linq;
 using Microsoft.Extensions.Configuration;
 using System.Net;
-using static ColouredConsole;
+using static EVAutoreg.PrettyPrinter;
 
 namespace EVAutoreg;
 
-class EVApiWrapper
+public class EVApiWrapper : IEVApiWrapper
 {
-    private readonly IConfiguration _config;
     private readonly string _domain;
     private readonly string _username;
     private readonly string _password;
@@ -15,10 +14,9 @@ class EVApiWrapper
 
     public EVApiWrapper(IConfiguration config)
     {
-        _config = config;
-        _domain = _config.GetValue<string>("ExtraViewCredentials:URL");
-        _username = _config.GetValue<string>("ExtraViewCredentials:Username");
-        _password = WebUtility.UrlEncode(_config.GetValue<string>("ExtraViewCredentials:Password"));
+        _domain = config.GetValue<string>("ExtraViewCredentials:URL");
+        _username = config.GetValue<string>("ExtraViewCredentials:Username");
+        _password = WebUtility.UrlEncode(config.GetValue<string>("ExtraViewCredentials:Password"));
     }
 
     public async Task GetIssue(string issueNo)
@@ -32,14 +30,14 @@ class EVApiWrapper
 
         if (issue.IsSuccessStatusCode && issueToDisplay.StartsWith("<?xml"))
         {
-            PrintInGreen("Issue retrieved successfully.");
+            PrintNotification("Issue retrieved successfully.", ConsoleColor.Green);
             
             XDocument doc = XDocument.Parse(issueToDisplay);
             Console.WriteLine(doc);
         }
         else
         {
-            PrintInRed("Failed retrieveing an issue. Reason: ");
+            PrintNotification("Failed retrieveing an issue. Reason: ", ConsoleColor.Red);
             Console.WriteLine(issueToDisplay);
         }
     }
@@ -65,11 +63,9 @@ class EVApiWrapper
         }
         else
         {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("Failed updating an issue. Reason: ");
-            Console.ResetColor();
+            PrintNotification("Failed updating an issue. Reason: ", ConsoleColor.Red);
             Console.WriteLine(content);
-
+            
             return HttpStatusCode.BadRequest;
         }
 
