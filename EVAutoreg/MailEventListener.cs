@@ -11,39 +11,41 @@ public class MailEventListener : IMailEventListener
 {
     private readonly IConfiguration _config;
     private readonly IEVApiWrapper _evapi;
+    private readonly Rules _rules;
 
-    public MailEventListener(IConfiguration config, IEVApiWrapper evapi)
+    private enum IssueType
+    {
+        Monitoring,
+        ExternalIT,
+        None
+    }
+
+    public MailEventListener(IConfiguration config, IEVApiWrapper evapi, Rules rules)
     {
         _config = config;
         _evapi = evapi;
+        _rules = rules;
     }
 
     public async Task ProcessEvent(EmailMessage email)
     {
         var subject = email.Subject;
         var body = email.Body.Text;
-        
-        if (IsRegisteringNeeded(subject, body))
+        var issueNo = Regex.Match(subject, @"^\[.+(\d{6})\]").Groups[1].Value;
+        var rules = new Rules(_config);
+
+        var action = IdentifyIssueType(subject, body, rules) switch
         {
-            Console.WriteLine("Received monitoring issue, processing...");
-            try
-            {
-                var issueNo = Regex.Match(subject, @"^\[.+(\d{6})\]").Groups[1].Value;
+            IssueType.Monitoring => RegisterAsMonitoring(issueNo),
+            IssueType.ExternalIT => RegisterAsExternalIT(issueNo),
+            _                    => Task.CompletedTask
+        };
 
-                Console.Write("Issue No. to process: ");
-                PrintNotification(issueNo, ConsoleColor.Magenta);
-
-                //await AssignIssueToFirstLineOperators(issueNo);
-                await Task.CompletedTask;
-            }
-            catch (Exception e)
-            {
-                PrintNotification($"Failed assigning an issue,\n{e.Message}", ConsoleColor.Red);
-            }
-        }
+        await action;
     }
 
-    private bool IsRegisteringNeeded(string subject, string body)
+
+    private IssueType IdentifyIssueType(string subject, string body, Rules rules)
     {
         var subjectRules = _config.GetSection("MailAnalysisRules:SubjectRules").Get<string[]>()
             ?? Array.Empty<string>().ToArray();
@@ -53,26 +55,71 @@ public class MailEventListener : IMailEventListener
             ?? Array.Empty<string>().ToArray();
         var bodyNegativeRules = _config.GetSection("MailAnalysisRules:BodyNegativeRules").Get<string[]>()
             ?? Array.Empty<string>().ToArray();
+        var externalITSubjectRules = _config.GetSection("MailAnalysisRules:ExternalITSubjectRules").Get<string[]>()
+            ?? Array.Empty<string>().ToArray();
+        var externalITBodyRules = _config.GetSection("MailAnalysisRules:ExternalITBodyRules").Get<string[]>()
+            ?? Array.Empty<string>().ToArray();
 
-        return (subjectRules.Any(s => subject.Contains(s)) && !subjectNegativeRules.Any(s => body.Contains(s))) ||
-            (bodyRules.Any(s => body.Contains(s)) && !bodyNegativeRules.Any(s => body.Contains(s))) ||
-            Regex.IsMatch(subject, @"^\[.+\]: Новое.{1,4}\d{6}(?:.{0,2})?$");
+        if (IsMonitoring())
+        {
+            return IssueType.Monitoring;
+        }
+        else if(IsExternalIT())
+        {
+            return IssueType.ExternalIT;
+        }
+        else
+        {
+            return IssueType.None;
+        }
+
+        bool IsMonitoring()
+        {
+            return rules.SubjectRules.Any(subject.Contains) && !rules.SubjectNegativeRules.Any(subject.Contains) ||
+                   rules.BodyRules.Any(body.Contains) && !rules.BodyNegativeRules.Any(body.Contains) ||
+                   Regex.IsMatch(subject, @"^\[.+\]: Новое.{1,4}\d{6}(?:.{0,2})?$");
+        }
+
+        bool IsExternalIT()
+        {
+            return rules.ExternalITSubjectRules.Any(subject.Contains) ||
+                   rules.ExternalITBodyRules.Any(body.Contains) ||
+                   Regex.IsMatch(subject, @"^\[.+\]: Новое  - (\w){1,2}?(\d){2,3}");
+        }
     }
 
-    private async Task AssignIssueToFirstLineOperators(string issueNumber)
-    {   
+    private async Task RegisterAsMonitoring(string issueNo)
+    {
+        Console.WriteLine("Received monitoring issue, processing...");
+        Console.Write("Issue No. to process: ");
+        PrintNotification(issueNo, ConsoleColor.Magenta);
+
         var registeringParameters = _config.GetSection("QueryParameters:QueryRegisterParameters").Get<string[]>();
         var assigningParameters = _config.GetSection("QueryParameters:QueryInWorkParameters").Get<string[]>();
-        
-        var isOkRegistered = await _evapi.UpdateIssue(issueNumber, registeringParameters);
+
+        var isOkRegistered = await _evapi.UpdateIssue(issueNo, registeringParameters);
 
         if (isOkRegistered == HttpStatusCode.OK)
         {
-            var isOkInWork = await _evapi.UpdateIssue(issueNumber, assigningParameters);
+            var isOkInWork = await _evapi.UpdateIssue(issueNo, assigningParameters);
             if (isOkInWork == HttpStatusCode.OK)
             {
-                Console.WriteLine($"Succesfully assigned issue no. {issueNumber} to first line operators");
+                PrintNotification($"Succesfully assigned issue no. {issueNo} to first line operators", ConsoleColor.DarkGreen);
             }
+        }
+    }
+
+    private async Task RegisterAsExternalIT(string issueNo)
+    {
+        Console.WriteLine("Received External IT issue, processing...");
+        Console.Write("Issue No. to process: ");
+        PrintNotification(issueNo, ConsoleColor.Magenta);
+
+        var registeringParameters = _config.GetSection("QueryParameters:QueryExternalITParameters").Get<string[]>();
+
+        if (await _evapi.UpdateIssue(issueNo, registeringParameters) == HttpStatusCode.OK)
+        {
+            PrintNotification($"Succesfully registered issue no. {issueNo} as an External IT issue.", ConsoleColor.DarkGreen);
         }
     }
 }

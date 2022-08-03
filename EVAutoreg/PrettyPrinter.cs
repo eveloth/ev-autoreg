@@ -4,7 +4,7 @@ namespace EVAutoreg;
 
 public static class PrettyPrinter
 {
-    public static void PrintNotification(string str, ConsoleColor color)
+    public static void PrintNotification(string str, ConsoleColor color = ConsoleColor.Gray)
     {
         Console.ForegroundColor = color;
         Console.WriteLine(str);

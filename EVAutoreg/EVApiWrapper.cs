@@ -58,8 +58,7 @@ public class EVApiWrapper : IEVApiWrapper
 
         if (res.IsSuccessStatusCode && content.Contains("updated", StringComparison.InvariantCultureIgnoreCase))
         {
-            Console.WriteLine(content);
-            Console.WriteLine($"Issue {issueNo} successfully updated");
+            PrintNotification(content, ConsoleColor.Green);
         }
         else
         {
