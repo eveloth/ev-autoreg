@@ -21,30 +21,18 @@ public class MailEventListener : IMailEventListener
     public async Task ProcessEvent(EmailMessage email)
     {
         var subject = email.Subject;
-        var content = email.Body.Text;
-        var issueNo = Regex.Match(subject, @"^\[.+(\d{6})\]").Groups[1].Value;
-
-        Console.Write("Issue No. to process: ");
-        PrintNotification(issueNo, ConsoleColor.Magenta);
-
-
-        if (subject.Contains("is unreachable") ||
-            subject.Contains("unavailable by", StringComparison.InvariantCultureIgnoreCase) ||
-            subject.Contains("is not OK") ||
-            subject.Contains("has just been restarted") ||
-            subject.Contains("Free disk space") ||
-            subject.Contains("are not responding") ||
-            subject.Contains("ping response time") ||
-            subject.Contains("is above critical threshold") ||
-            subject.Contains("does not send any pings") ||
-            subject.Contains("high utilization") ||
-            subject.Contains("more than") ||
-            content.Contains("на PROBLEM") ||
-            Regex.IsMatch(subject, @"^\[.+\]: Новое.{1,4}\d{6}(?:.{0,2})?$"))
+        var body = email.Body.Text;
+        
+        if (IsRegisteringNeeded(subject, body))
         {
             Console.WriteLine("Received monitoring issue, processing...");
             try
             {
+                var issueNo = Regex.Match(subject, @"^\[.+(\d{6})\]").Groups[1].Value;
+
+                Console.Write("Issue No. to process: ");
+                PrintNotification(issueNo, ConsoleColor.Magenta);
+
                 //await AssignIssueToFirstLineOperators(issueNo);
                 await Task.CompletedTask;
             }
@@ -53,6 +41,22 @@ public class MailEventListener : IMailEventListener
                 PrintNotification($"Failed assigning an issue,\n{e.Message}", ConsoleColor.Red);
             }
         }
+    }
+
+    private bool IsRegisteringNeeded(string subject, string body)
+    {
+        var subjectRules = _config.GetSection("MailAnalysisRules:SubjectRules").Get<string[]>()
+            ?? Array.Empty<string>().ToArray();
+        var bodyRules = _config.GetSection("MailAnalysisRules:BodyRules").Get<string[]>()
+            ?? Array.Empty<string>().ToArray();
+        var subjectNegativeRules = _config.GetSection("MailAnalysisRules:SubjectNegativeRules").Get<string[]>()
+            ?? Array.Empty<string>().ToArray();
+        var bodyNegativeRules = _config.GetSection("MailAnalysisRules:BodyNegativeRules").Get<string[]>()
+            ?? Array.Empty<string>().ToArray();
+
+        return (subjectRules.Any(s => subject.Contains(s)) && !subjectNegativeRules.Any(s => body.Contains(s))) ||
+            (bodyRules.Any(s => body.Contains(s)) && !bodyNegativeRules.Any(s => body.Contains(s))) ||
+            Regex.IsMatch(subject, @"^\[.+\]: Новое.{1,4}\d{6}(?:.{0,2})?$");
     }
 
     private async Task AssignIssueToFirstLineOperators(string issueNumber)
