@@ -54,13 +54,12 @@ public class Exchange
         await _listener.ProcessEvent(email);
     }
 
-    private void OnSubscriptionError(object sender, SubscriptionErrorEventArgs args)
+    private static void OnSubscriptionError(object sender, SubscriptionErrorEventArgs args)
     {
-        
         PrintNotification("Subscription error occured. Exiting...", ConsoleColor.Red);
     }
-    
-    void OnDisconnect(object sender, SubscriptionErrorEventArgs args)
+
+    private void OnDisconnect(object sender, SubscriptionErrorEventArgs args)
     {
         PrintNotification("\n------<Disconnected.>------", ConsoleColor.DarkYellow);
         PrintNotification("Trying to reestablish a connection...", ConsoleColor.Yellow);
