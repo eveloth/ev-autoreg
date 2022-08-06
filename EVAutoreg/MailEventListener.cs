@@ -4,6 +4,7 @@ using Microsoft.Exchange.WebServices.Data;
 using Microsoft.Extensions.Configuration;
 using static EVAutoreg.PrettyPrinter;
 using Task = System.Threading.Tasks.Task;
+// ReSharper disable InconsistentNaming
 
 namespace EVAutoreg;
 
@@ -11,7 +12,6 @@ public class MailEventListener : IMailEventListener
 {
     private readonly IConfiguration _config;
     private readonly IEVApiWrapper _evapi;
-    private readonly Rules _rules;
 
     private enum IssueType
     {
@@ -20,11 +20,10 @@ public class MailEventListener : IMailEventListener
         None
     }
 
-    public MailEventListener(IConfiguration config, IEVApiWrapper evapi, Rules rules)
+    public MailEventListener(IConfiguration config, IEVApiWrapper evapi)
     {
         _config = config;
         _evapi = evapi;
-        _rules = rules;
     }
 
     public async Task ProcessEvent(EmailMessage email)
@@ -44,47 +43,28 @@ public class MailEventListener : IMailEventListener
         await action;
     }
 
-
-    private IssueType IdentifyIssueType(string subject, string body, Rules rules)
+    private static IssueType IdentifyIssueType(string subject, string body, Rules rules)
     {
-        var subjectRules = _config.GetSection("MailAnalysisRules:SubjectRules").Get<string[]>()
-            ?? Array.Empty<string>().ToArray();
-        var bodyRules = _config.GetSection("MailAnalysisRules:BodyRules").Get<string[]>()
-            ?? Array.Empty<string>().ToArray();
-        var subjectNegativeRules = _config.GetSection("MailAnalysisRules:SubjectNegativeRules").Get<string[]>()
-            ?? Array.Empty<string>().ToArray();
-        var bodyNegativeRules = _config.GetSection("MailAnalysisRules:BodyNegativeRules").Get<string[]>()
-            ?? Array.Empty<string>().ToArray();
-        var externalITSubjectRules = _config.GetSection("MailAnalysisRules:ExternalITSubjectRules").Get<string[]>()
-            ?? Array.Empty<string>().ToArray();
-        var externalITBodyRules = _config.GetSection("MailAnalysisRules:ExternalITBodyRules").Get<string[]>()
-            ?? Array.Empty<string>().ToArray();
+        return (subject, body) switch
+        {
+            _ when IsMonitoring(subject, body) => IssueType.Monitoring,
+            _ when IsExternalIT(subject, body) => IssueType.ExternalIT,
+            _ => IssueType.None
 
-        if (IsMonitoring())
+        };
+
+        bool IsMonitoring(string subj, string bdy)
         {
-            return IssueType.Monitoring;
-        }
-        else if(IsExternalIT())
-        {
-            return IssueType.ExternalIT;
-        }
-        else
-        {
-            return IssueType.None;
+            return rules.SubjectRules.Any(subj.Contains) && !rules.SubjectNegativeRules.Any(subj.Contains) ||
+                   rules.BodyRules.Any(bdy.Contains) && !rules.BodyNegativeRules.Any(bdy.Contains) ||
+                   Regex.IsMatch(subj, @"^\[.+\]: Новое.{1,4}\d{6}(?:.{0,2})?$");
         }
 
-        bool IsMonitoring()
+        bool IsExternalIT(string subj, string bdy)
         {
-            return rules.SubjectRules.Any(subject.Contains) && !rules.SubjectNegativeRules.Any(subject.Contains) ||
-                   rules.BodyRules.Any(body.Contains) && !rules.BodyNegativeRules.Any(body.Contains) ||
-                   Regex.IsMatch(subject, @"^\[.+\]: Новое.{1,4}\d{6}(?:.{0,2})?$");
-        }
-
-        bool IsExternalIT()
-        {
-            return rules.ExternalITSubjectRules.Any(subject.Contains) ||
-                   rules.ExternalITBodyRules.Any(body.Contains) ||
-                   Regex.IsMatch(subject, @"^\[.+\]: Новое  - (\w){1,2}?(\d){2,3}");
+            return rules.ExternalITSubjectRules.Any(subj.Contains) ||
+                   rules.ExternalITBodyRules.Any(bdy.Contains) ||
+                   Regex.IsMatch(subj, @"^\[.+\]: Новое  - (\w){1,2}?(\d){2,3}");
         }
     }
 
