@@ -40,6 +40,7 @@ public class Exchange
 
     private async void OnNotificationEvent(object sender, NotificationEventArgs args)
     {
+        Console.WriteLine(args.Events.Count());
         var notification = (ItemEvent) args.Events.FirstOrDefault()!;
         var email = await EmailMessage.Bind(_exchangeService, notification.ItemId);
 

@@ -12,8 +12,8 @@ internal static class Program
     {
         var host = Host.CreateDefaultBuilder(args)
             .ConfigureServices(services => { services.AddSingleton<Exchange>();
-                services.AddSingleton<IMailEventListener, MailEventListener>();
-                services.AddSingleton<IEVApiWrapper, EVApiWrapper>();
+                services.AddTransient<IMailEventListener, MailEventListener>();
+                services.AddTransient<IEVApiWrapper, EVApiWrapper>();
             })
             .Build();
 
