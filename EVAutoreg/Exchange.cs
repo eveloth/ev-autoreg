@@ -40,19 +40,21 @@ public class Exchange
 
     private async void OnNotificationEvent(object sender, NotificationEventArgs args)
     {
-        Console.WriteLine(args.Events.Count());
-        var notification = (ItemEvent) args.Events.FirstOrDefault()!;
-        var email = await EmailMessage.Bind(_exchangeService, notification.ItemId);
-
-        if (!Regex.IsMatch(email.Subject, @"^\[.+\]: Новое"))
+        foreach (var e in args.Events)
         {
-            Console.WriteLine("Recieved an email that we won't process.");
-            return;
+            var notification = (ItemEvent) e;
+            var email = await EmailMessage.Bind(_exchangeService, notification.ItemId);
+            
+            if (!Regex.IsMatch(email.Subject, @"^\[.+\]: Новое"))
+            {
+                Console.WriteLine("Recieved an email that we won't process.");
+                continue;
+            }
+            
+            PrintNotification($"\n{DateTime.Now}\n------New Mail:------", ConsoleColor.Blue);
+            Console.WriteLine(email.Subject);
+            await _listener.ProcessEvent(email);
         }
-        
-        PrintNotification($"\n{DateTime.Now}\n------New Mail:------", ConsoleColor.Blue);
-        Console.WriteLine(email.Subject);
-        await _listener.ProcessEvent(email);
     }
 
     private static void OnSubscriptionError(object sender, SubscriptionErrorEventArgs args)
