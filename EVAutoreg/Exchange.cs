@@ -26,7 +26,7 @@ public class Exchange
 
     public async Task StartService()
     {
-        var subscription = await NewMailSubscribtion();
+        var subscription = await NewMailSubscription();
         Connection = new StreamingSubscriptionConnection(_exchangeService, 15);
 
         Connection.OnNotificationEvent += OnNotificationEvent;
@@ -47,7 +47,7 @@ public class Exchange
             
             if (!Regex.IsMatch(email.Subject, @"^\[.+\]: Новое"))
             {
-                Console.WriteLine("Recieved an email that we won't process.");
+                Console.WriteLine("Received an email that we won't process.");
                 continue;
             }
             
@@ -57,9 +57,27 @@ public class Exchange
         }
     }
 
-    private static void OnSubscriptionError(object sender, SubscriptionErrorEventArgs args)
+    private async void OnSubscriptionError(object sender, SubscriptionErrorEventArgs args)
     {
-        PrintNotification("Subscription error occured. Exiting...", ConsoleColor.Red);
+        PrintNotification("Subscription error occurred. Trying to resubscribe...", ConsoleColor.DarkYellow);
+
+        try
+        {
+            Connection?.Close();
+
+            var subscription = await NewMailSubscription();
+            Connection?.AddSubscription(subscription);
+
+            Connection?.Open();
+
+            if (Connection != null) PrintConnectionStatus(Connection);
+        }
+        catch (Exception)
+        {
+            PrintNotification("Could not restore subscription, exiting.", ConsoleColor.Red);
+            throw;
+        }
+
     }
 
     private void OnDisconnect(object sender, SubscriptionErrorEventArgs args)
@@ -89,7 +107,7 @@ public class Exchange
         };
     }
 
-    private async Task<StreamingSubscription> NewMailSubscribtion()
+    private async Task<StreamingSubscription> NewMailSubscription()
     {
         StreamingSubscription subscription;
 
@@ -100,8 +118,8 @@ public class Exchange
         }
         catch (Exception e)
         {
-            PrintNotification("\nCouldn't authenticate agaist the Exchange Server.\n" +
-            "Possible reasons are: invalid username and/or password, or domain was specicifed incorrectly.\n" +
+            PrintNotification("\nCouldn't authenticate against the Exchange Server.\n" +
+            "Possible reasons are: invalid username and/or password, or domain was specified incorrectly.\n" +
             e.Message, ConsoleColor.Red);
             throw;
         }
