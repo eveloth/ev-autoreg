@@ -1,40 +1,48 @@
 using System.Xml.Linq;
+using Microsoft.Extensions.Configuration;
+using System.Net;
+using static EVAutoreg.PrettyPrinter;
 
 namespace EVAutoreg;
 
-class EVApiWrapper
+public class EVApiWrapper : IEVApiWrapper
 {
+    private readonly string _domain;
     private readonly string _username;
     private readonly string _password;
-    private readonly string _domain;
     private readonly HttpClient _client = new();
 
-    public EVApiWrapper(string serverAddress, string username, string password)
+    public EVApiWrapper(IConfiguration config)
     {
-        _domain = serverAddress;
-        _username = username;
-        _password = password;
+        _domain = config.GetValue<string>("ExtraViewCredentials:URL");
+        _username = config.GetValue<string>("ExtraViewCredentials:Username");
+        _password = WebUtility.UrlEncode(config.GetValue<string>("ExtraViewCredentials:Password"));
     }
 
     public async Task GetIssue(string issueNo)
     {
         _client.DefaultRequestHeaders.Add("User-agent", "OperatorsAPI");
 
-        HttpResponseMessage issue = await _client.GetAsync($"https://{_domain}/evj/ExtraView/ev_api.action?user_id={_username}&password={_password}&statevar=get&id={issueNo}");
+        string query = $"https://{_domain}/evj/ExtraView/ev_api.action?user_id={_username}&password={_password}&statevar=get&id={issueNo}";
 
-        if (issue.IsSuccessStatusCode)
-        {
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("Issue retrieved successfully.");
-            Console.ResetColor();
-        }
+        HttpResponseMessage issue = await _client.GetAsync(query);
         var issueToDisplay = await issue.Content.ReadAsStringAsync();
 
-        XDocument doc = XDocument.Parse(issueToDisplay);
-        Console.WriteLine(doc);
+        if (issue.IsSuccessStatusCode && issueToDisplay.StartsWith("<?xml"))
+        {
+            PrintNotification("Issue retrieved successfully.", ConsoleColor.Green);
+            
+            XDocument doc = XDocument.Parse(issueToDisplay);
+            Console.WriteLine(doc);
+        }
+        else
+        {
+            PrintNotification("Failed retrieveing an issue. Reason: ", ConsoleColor.Red);
+            Console.WriteLine(issueToDisplay);
+        }
     }
 
-    public async Task<HttpResponseMessage> UpdateIssue(string issueNo, params string[] queryUpdateParameters)
+    public async Task<HttpStatusCode> UpdateIssue(string issueNo, params string[] queryUpdateParameters)
     {
         _client.DefaultRequestHeaders.Add("User-agent", "OperatorsAPI");
 
@@ -46,12 +54,20 @@ class EVApiWrapper
         }
 
         HttpResponseMessage res = await _client.GetAsync(query);
+        var content = await res.Content.ReadAsStringAsync();
 
-        if (res.IsSuccessStatusCode)
+        if (res.IsSuccessStatusCode && content.Contains("updated", StringComparison.InvariantCultureIgnoreCase))
         {
-            Console.WriteLine($"Issue {issueNo} successfully updated");
+            PrintNotification(content, ConsoleColor.Green);
+        }
+        else
+        {
+            PrintNotification("Failed updating an issue. Reason: ", ConsoleColor.Red);
+            Console.WriteLine(content);
+            
+            return HttpStatusCode.BadRequest;
         }
 
-        return res;
+        return HttpStatusCode.OK;
     }
 }
