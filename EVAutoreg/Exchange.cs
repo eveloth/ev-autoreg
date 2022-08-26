@@ -61,41 +61,56 @@ public class Exchange
     {
         PrintNotification("Subscription error occurred. Trying to resubscribe...", ConsoleColor.DarkYellow);
 
-        try
+        if (Connection is null)
         {
-            Connection?.Close();
-
-            var subscription = await NewMailSubscription();
-            Connection?.AddSubscription(subscription);
-
-            Connection?.Open();
-
-            if (Connection != null) PrintConnectionStatus(Connection);
+            await CreateAndOpenConnection();
         }
-        catch (Exception)
+        else
         {
-            PrintNotification("Could not restore subscription, exiting.", ConsoleColor.Red);
-            throw;
-        }
+            try
+            {
+                if (Connection.IsOpen) Connection.Close();
 
+                var subscription = await NewMailSubscription();
+
+                Connection.AddSubscription(subscription);
+                Connection.Open();
+
+                PrintConnectionStatus(Connection);
+            }
+            catch (Exception)
+            {
+                PrintNotification("Could not restore subscription, exiting.", ConsoleColor.Red);
+                throw;
+            } 
+        }
     }
 
-    private void OnDisconnect(object sender, SubscriptionErrorEventArgs args)
+    private async void OnDisconnect(object sender, SubscriptionErrorEventArgs args)
     {
         PrintNotification("\n------<Disconnected.>------", ConsoleColor.DarkYellow);
         PrintNotification("Trying to reestablish a connection...", ConsoleColor.Yellow);
 
-        try
+        if (Connection is null)
         {
-            Connection?.Open();
+            await CreateAndOpenConnection();
         }
-        catch (Exception e)
+        else
         {
-            PrintNotification($"Could not reestablish a connection:\n{e.Message}", ConsoleColor.Red);
-            throw;
+            while (!Connection!.IsOpen)
+            {
+                try
+                {
+                    Connection.Open();
+                    PrintConnectionStatus(Connection);
+                }
+                catch (Exception e)
+                {
+                    PrintNotification($"Could not reestablish a connection:\n{e.Message}\nTrying again in 3s...", ConsoleColor.Red);
+                    await Task.Delay(3000);
+                }
+            } 
         }
-
-        if (Connection != null) PrintConnectionStatus(Connection);
     }
 
     private ExchangeService CreateService()
@@ -125,5 +140,19 @@ public class Exchange
         }
 
         return subscription;
+    }
+
+    private async Task CreateAndOpenConnection()
+    {
+        var subscription = await NewMailSubscription();
+        Connection = new StreamingSubscriptionConnection(_exchangeService, 20);
+
+        Connection.OnNotificationEvent += OnNotificationEvent;
+        Connection.OnSubscriptionError += OnSubscriptionError;
+        Connection.OnDisconnect += OnDisconnect;
+        Connection.AddSubscription(subscription);
+
+        Connection.Open();
+        PrintConnectionStatus(Connection);
     }
 }
