@@ -23,16 +23,16 @@ public class EVApiWrapper : IEVApiWrapper
     {
         _client.DefaultRequestHeaders.Add("User-agent", "OperatorsAPI");
 
-        string query = $"https://{_domain}/evj/ExtraView/ev_api.action?user_id={_username}&password={_password}&statevar=get&id={issueNo}";
+        var query = $"https://{_domain}/evj/ExtraView/ev_api.action?user_id={_username}&password={_password}&statevar=get&id={issueNo}";
 
-        HttpResponseMessage issue = await _client.GetAsync(query);
+        var issue = await _client.GetAsync(query);
         var issueToDisplay = await issue.Content.ReadAsStringAsync();
 
         if (issue.IsSuccessStatusCode && issueToDisplay.StartsWith("<?xml"))
         {
             PrintNotification("Issue retrieved successfully.", ConsoleColor.Green);
             
-            XDocument doc = XDocument.Parse(issueToDisplay);
+            var doc = XDocument.Parse(issueToDisplay);
             Console.WriteLine(doc);
         }
         else
@@ -48,12 +48,9 @@ public class EVApiWrapper : IEVApiWrapper
 
         string query = $"https://{_domain}/evj/ExtraView/ev_api.action?user_id={_username}&password={_password}&statevar=update&id={issueNo}";
 
-        foreach (var param in queryUpdateParameters)
-        {
-            query += $"&{param}";
-        }
+        query = queryUpdateParameters.Aggregate(query, (current, param) => current + $"&{param}");
 
-        HttpResponseMessage res = await _client.GetAsync(query);
+        var res = await _client.GetAsync(query);
         var content = await res.Content.ReadAsStringAsync();
 
         if (res.IsSuccessStatusCode && content.Contains("updated", StringComparison.InvariantCultureIgnoreCase))

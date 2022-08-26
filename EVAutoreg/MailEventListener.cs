@@ -84,7 +84,7 @@ public class MailEventListener : IMailEventListener
             var isOkInWork = await _evapi.UpdateIssue(issueNo, assigningParameters);
             if (isOkInWork == HttpStatusCode.OK)
             {
-                PrintNotification($"Succesfully assigned issue no. {issueNo} to first line operators", ConsoleColor.DarkGreen);
+                PrintNotification($"Successfully assigned issue no. {issueNo} to first line operators", ConsoleColor.DarkGreen);
             }
         }
     }
@@ -99,7 +99,7 @@ public class MailEventListener : IMailEventListener
 
         if (await _evapi.UpdateIssue(issueNo, registeringParameters) == HttpStatusCode.OK)
         {
-            PrintNotification($"Succesfully registered issue no. {issueNo} as an External IT issue.", ConsoleColor.DarkGreen);
+            PrintNotification($"Successfully registered issue no. {issueNo} as an External IT issue.", ConsoleColor.DarkGreen);
         }
     }
 }
