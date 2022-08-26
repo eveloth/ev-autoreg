@@ -26,16 +26,7 @@ public class Exchange
 
     public async Task StartService()
     {
-        var subscription = await NewMailSubscription();
-        Connection = new StreamingSubscriptionConnection(_exchangeService, 20);
-
-        Connection.OnNotificationEvent += OnNotificationEvent;
-        Connection.OnSubscriptionError += OnSubscriptionError;
-        Connection.OnDisconnect += OnDisconnect;
-        Connection.AddSubscription(subscription);
-        
-        Connection.Open();
-        PrintConnectionStatus(Connection);
+        await CreateAndOpenConnection();
     }
 
     private async void OnNotificationEvent(object sender, NotificationEventArgs args)
