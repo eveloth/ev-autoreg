@@ -1,6 +1,6 @@
-using System.Xml.Linq;
 using Microsoft.Extensions.Configuration;
 using System.Net;
+using System.Xml.Linq;
 using static EVAutoreg.PrettyPrinter;
 
 namespace EVAutoreg;

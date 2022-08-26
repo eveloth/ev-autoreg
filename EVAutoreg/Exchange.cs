@@ -1,8 +1,8 @@
-﻿using System.Text.RegularExpressions;
-using Microsoft.Exchange.WebServices.Data;
+﻿using Microsoft.Exchange.WebServices.Data;
 using Microsoft.Extensions.Configuration;
-using Task = System.Threading.Tasks.Task;
+using System.Text.RegularExpressions;
 using static EVAutoreg.PrettyPrinter;
+using Task = System.Threading.Tasks.Task;
 
 namespace EVAutoreg;
 

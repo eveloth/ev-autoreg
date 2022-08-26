@@ -1,7 +1,7 @@
-using System.Net;
-using System.Text.RegularExpressions;
 using Microsoft.Exchange.WebServices.Data;
 using Microsoft.Extensions.Configuration;
+using System.Net;
+using System.Text.RegularExpressions;
 using static EVAutoreg.PrettyPrinter;
 using Task = System.Threading.Tasks.Task;
 // ReSharper disable InconsistentNaming
