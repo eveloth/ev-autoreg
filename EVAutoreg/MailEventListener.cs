@@ -18,6 +18,7 @@ public class MailEventListener : IMailEventListener
     {
         Monitoring,
         ExternalIT,
+        Spam,
         None
     }
 
@@ -36,6 +37,7 @@ public class MailEventListener : IMailEventListener
 
         var action = IdentifyIssueType(subject, body, _rules) switch
         {
+            IssueType.Spam       => RegisterAsSpam(issueNo),
             IssueType.Monitoring => RegisterAsMonitoring(issueNo),
             IssueType.ExternalIT => RegisterAsExternalIT(issueNo),
             _                    => Task.CompletedTask
@@ -48,11 +50,17 @@ public class MailEventListener : IMailEventListener
     {
         return (subject, body) switch
         {
+            _ when IsSpam(subject)                     => IssueType.Spam,
             _ when IsMonitoring(subject, body) => IssueType.Monitoring,
             _ when IsExternalIT(subject, body) => IssueType.ExternalIT,
             _ => IssueType.None
 
         };
+
+        bool IsSpam(string subj)
+        {
+            return rules.SpamRules.Any(subj.Contains);
+        }
 
         bool IsMonitoring(string subj, string bdy)
         {
@@ -69,9 +77,23 @@ public class MailEventListener : IMailEventListener
         }
     }
 
+    private async Task RegisterAsSpam(string issueNo)
+    {
+        PrintNotification("Received SPAM issue, processing...", ConsoleColor.Blue);
+        Console.Write("Issue No. to process: ");
+        PrintNotification(issueNo, ConsoleColor.Magenta);
+
+        var registeringParameters = _config.GetSection("QueryParameters:QuerySpamParameters").Get<string[]>();
+
+        if (await _evapi.UpdateIssue(issueNo, registeringParameters) == HttpStatusCode.OK)
+        {
+            PrintNotification($"Successfully registered issue no. {issueNo} as SPAM issue.", ConsoleColor.DarkGreen);
+        }
+    }
+
     private async Task RegisterAsMonitoring(string issueNo)
     {
-        Console.WriteLine("Received monitoring issue, processing...");
+        PrintNotification("Received monitoring issue, processing...", ConsoleColor.Blue);
         Console.Write("Issue No. to process: ");
         PrintNotification(issueNo, ConsoleColor.Magenta);
 
@@ -92,7 +114,7 @@ public class MailEventListener : IMailEventListener
 
     private async Task RegisterAsExternalIT(string issueNo)
     {
-        Console.WriteLine("Received External IT issue, processing...");
+        PrintNotification("Received External IT issue, processing...", ConsoleColor.Blue);
         Console.Write("Issue No. to process: ");
         PrintNotification(issueNo, ConsoleColor.Magenta);
 
