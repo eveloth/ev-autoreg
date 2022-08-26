@@ -13,15 +13,17 @@ public class Exchange
     private readonly string _password;
     private readonly ExchangeService _exchangeService;
     private readonly IMailEventListener _listener;
+    private readonly Rules _rules;
     private StreamingSubscriptionConnection? Connection { get; set; }
 
-    public Exchange(IConfiguration config, IMailEventListener listener)
+    public Exchange(IConfiguration config, IMailEventListener listener, Rules rules)
     {
         _url = config.GetValue<string>("ExchangeCredentials:URL");
         _emailAddress = config.GetValue<string>("ExchangeCredentials:EmailAddress");
         _password = config.GetValue<string>("ExchangeCredentials:Password");
         _exchangeService = this.CreateService();
         _listener = listener;
+        _rules = rules;
     }
 
     public async Task StartService()
@@ -36,7 +38,7 @@ public class Exchange
             var notification = (ItemEvent) e;
             var email = await EmailMessage.Bind(_exchangeService, notification.ItemId);
             
-            if (!Regex.IsMatch(email.Subject, @"^\[.+\]: Новое"))
+            if (!Regex.IsMatch(email.Subject, _rules.RegexIssueNo))
             {
                 Console.WriteLine("Received an email that we won't process.");
                 continue;

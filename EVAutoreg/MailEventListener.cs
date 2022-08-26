@@ -12,6 +12,7 @@ public class MailEventListener : IMailEventListener
 {
     private readonly IConfiguration _config;
     private readonly IEVApiWrapper _evapi;
+    private readonly Rules _rules;
 
     private enum IssueType
     {
@@ -20,20 +21,20 @@ public class MailEventListener : IMailEventListener
         None
     }
 
-    public MailEventListener(IConfiguration config, IEVApiWrapper evapi)
+    public MailEventListener(IConfiguration config, IEVApiWrapper evapi, Rules rules)
     {
         _config = config;
         _evapi = evapi;
+        _rules = rules;
     }
 
     public async Task ProcessEvent(EmailMessage email)
     {
         var subject = email.Subject;
         var body = email.Body.Text;
-        var issueNo = Regex.Match(subject, @"^\[.+(\d{6})\]").Groups[1].Value;
-        var rules = new Rules(_config);
+        var issueNo = Regex.Match(subject, _rules.RegexIssueNo).Groups[1].Value;
 
-        var action = IdentifyIssueType(subject, body, rules) switch
+        var action = IdentifyIssueType(subject, body, _rules) switch
         {
             IssueType.Monitoring => RegisterAsMonitoring(issueNo),
             IssueType.ExternalIT => RegisterAsExternalIT(issueNo),
@@ -43,7 +44,7 @@ public class MailEventListener : IMailEventListener
         await action;
     }
 
-    private static IssueType IdentifyIssueType(string subject, string body, Rules rules)
+    private IssueType IdentifyIssueType(string subject, string body, Rules rules)
     {
         return (subject, body) switch
         {
@@ -57,14 +58,14 @@ public class MailEventListener : IMailEventListener
         {
             return rules.SubjectRules.Any(subj.Contains) && !rules.SubjectNegativeRules.Any(subj.Contains) ||
                    rules.BodyRules.Any(bdy.Contains) && !rules.BodyNegativeRules.Any(bdy.Contains) ||
-                   Regex.IsMatch(subj, @"^\[.+\]: Новое.{1,4}\d{6}(?:.{0,2})?$");
+                   Regex.IsMatch(subj, _rules.RegexMonitoring);
         }
 
         bool IsExternalIT(string subj, string bdy)
         {
             return rules.ExternalITSubjectRules.Any(subj.Contains) ||
                    rules.ExternalITBodyRules.Any(bdy.Contains) ||
-                   Regex.IsMatch(subj, @"^\[.+\]: Новое  - (\w){1,2}?(\d){2,3}");
+                   Regex.IsMatch(subj, _rules.RegexExternalIT);
         }
     }
 

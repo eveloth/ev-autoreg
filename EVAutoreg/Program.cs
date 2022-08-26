@@ -11,7 +11,9 @@ internal static class Program
     public static async Task Main(string[] args)
     {
         var host = Host.CreateDefaultBuilder(args)
-            .ConfigureServices(services => { services.AddSingleton<Exchange>();
+            .ConfigureServices(services => { 
+                services.AddSingleton<Exchange>();
+                services.AddSingleton<Rules>();
                 services.AddTransient<IMailEventListener, MailEventListener>();
                 services.AddTransient<IEVApiWrapper, EVApiWrapper>();
             })
