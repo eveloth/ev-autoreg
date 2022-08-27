@@ -1,6 +1,6 @@
 using System.Net;
 
-namespace EVAutoreg;
+namespace EVAutoreg.Interfaces;
 
 public interface IEVApiWrapper
 {
