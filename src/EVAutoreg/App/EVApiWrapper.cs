@@ -1,9 +1,10 @@
-using Microsoft.Extensions.Configuration;
 using System.Net;
 using System.Xml.Linq;
-using static EVAutoreg.PrettyPrinter;
+using EVAutoreg.Interfaces;
+using Microsoft.Extensions.Configuration;
+using static EVAutoreg.Auxiliary.PrettyPrinter;
 
-namespace EVAutoreg;
+namespace EVAutoreg.App;
 
 public class EVApiWrapper : IEVApiWrapper
 {

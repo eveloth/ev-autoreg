@@ -1,12 +1,13 @@
-using Microsoft.Exchange.WebServices.Data;
-using Microsoft.Extensions.Configuration;
 using System.Net;
 using System.Text.RegularExpressions;
-using static EVAutoreg.PrettyPrinter;
+using EVAutoreg.Interfaces;
+using Microsoft.Exchange.WebServices.Data;
+using Microsoft.Extensions.Configuration;
+using static EVAutoreg.Auxiliary.PrettyPrinter;
 using Task = System.Threading.Tasks.Task;
 // ReSharper disable InconsistentNaming
 
-namespace EVAutoreg;
+namespace EVAutoreg.App;
 
 public class MailEventListener : IMailEventListener
 {

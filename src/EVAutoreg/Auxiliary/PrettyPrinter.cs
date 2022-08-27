@@ -1,6 +1,6 @@
 using Microsoft.Exchange.WebServices.Data;
 
-namespace EVAutoreg;
+namespace EVAutoreg.Auxiliary;
 
 public static class PrettyPrinter
 {

@@ -1,10 +1,11 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using EVAutoreg.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Task = System.Threading.Tasks.Task;
 
-namespace EVAutoreg;
+namespace EVAutoreg.App;
 
-internal static class Program
+internal static class EVAutoreg
 {
     private static readonly ManualResetEvent QuitEvent = new(false);
 
