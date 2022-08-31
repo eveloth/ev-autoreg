@@ -61,7 +61,7 @@ public class MailEventListener : IMailEventListener
 
         bool IsSpam(string subj)
         {
-            return rules.SpamRules.Any(subj.Contains);
+            return rules.SpamSubjectRules.Any(subj.Contains) || rules.SpamBodyRules.Any(body.Contains);
         }
 
         bool IsMonitoring(string subj, string bdy)

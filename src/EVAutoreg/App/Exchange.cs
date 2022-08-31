@@ -39,7 +39,7 @@ public class Exchange
             var notification = (ItemEvent) e;
             var email = await EmailMessage.Bind(_exchangeService, notification.ItemId);
             
-            if (!Regex.IsMatch(email.Subject, _rules.RegexIssueNo))
+            if (!Regex.IsMatch(email.Subject, _rules.RegexNewIssue))
             {
                 Console.WriteLine("Received an email that we won't process.");
                 continue;

@@ -10,7 +10,8 @@ namespace EVAutoreg.App
         public string[] BodyNegativeRules { get; init; }
         public string[] ExternalITSubjectRules { get; init; }
         public string[] ExternalITBodyRules { get; init; }
-        public string[] SpamRules { get; init; }
+        public string[] SpamSubjectRules { get; init; }
+        public string[] SpamBodyRules { get; init; }
         public string RegexNewIssue { get; init; }
         public string RegexIssueNo { get; init; }
         public string RegexMonitoring { get; init; }
@@ -30,8 +31,10 @@ namespace EVAutoreg.App
                 ?? Array.Empty<string>().ToArray();
             ExternalITBodyRules = config.GetSection("MailAnalysisRules:ExternalITBodyRules").Get<string[]>()
                 ?? Array.Empty<string>().ToArray();
-            SpamRules = config.GetSection("MailAnalysisRules:SpamRules").Get<string[]>()
-                        ?? Array.Empty<string>().ToArray();
+            SpamSubjectRules = config.GetSection("MailAnalysisRules:SpamSubjectRules").Get<string[]>() 
+                ?? Array.Empty<string>().ToArray();
+            SpamBodyRules = config.GetSection("MailAnalysisRules:SpamBodyRules").Get<string[]>()
+                ?? Array.Empty<string>().ToArray();
 
             RegexNewIssue = config.GetValue<string>("RegexRules:NewIssue")?? string.Empty;
             RegexIssueNo = config.GetValue<string>("RegexRules:IssueNo") ?? string.Empty;
