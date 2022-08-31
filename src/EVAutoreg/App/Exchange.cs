@@ -1,10 +1,11 @@
 ﻿using System.Text.RegularExpressions;
+using EVAutoreg.Interfaces;
 using Microsoft.Exchange.WebServices.Data;
 using Microsoft.Extensions.Configuration;
+using static EVAutoreg.Auxiliary.PrettyPrinter;
 using Task = System.Threading.Tasks.Task;
-using static EVAutoreg.PrettyPrinter;
 
-namespace EVAutoreg;
+namespace EVAutoreg.App;
 
 public class Exchange
 {
@@ -13,29 +14,22 @@ public class Exchange
     private readonly string _password;
     private readonly ExchangeService _exchangeService;
     private readonly IMailEventListener _listener;
+    private readonly Rules _rules;
     private StreamingSubscriptionConnection? Connection { get; set; }
 
-    public Exchange(IConfiguration config, IMailEventListener listener)
+    public Exchange(IConfiguration config, IMailEventListener listener, Rules rules)
     {
         _url = config.GetValue<string>("ExchangeCredentials:URL");
         _emailAddress = config.GetValue<string>("ExchangeCredentials:EmailAddress");
         _password = config.GetValue<string>("ExchangeCredentials:Password");
         _exchangeService = this.CreateService();
         _listener = listener;
+        _rules = rules;
     }
 
     public async Task StartService()
     {
-        var subscription = await NewMailSubscription();
-        Connection = new StreamingSubscriptionConnection(_exchangeService, 20);
-
-        Connection.OnNotificationEvent += OnNotificationEvent;
-        Connection.OnSubscriptionError += OnSubscriptionError;
-        Connection.OnDisconnect += OnDisconnect;
-        Connection.AddSubscription(subscription);
-        
-        Connection.Open();
-        PrintConnectionStatus(Connection);
+        await CreateAndOpenConnection();
     }
 
     private async void OnNotificationEvent(object sender, NotificationEventArgs args)
@@ -45,7 +39,7 @@ public class Exchange
             var notification = (ItemEvent) e;
             var email = await EmailMessage.Bind(_exchangeService, notification.ItemId);
             
-            if (!Regex.IsMatch(email.Subject, @"^\[.+\]: Новое"))
+            if (!Regex.IsMatch(email.Subject, _rules.RegexNewIssue))
             {
                 Console.WriteLine("Received an email that we won't process.");
                 continue;
@@ -61,41 +55,56 @@ public class Exchange
     {
         PrintNotification("Subscription error occurred. Trying to resubscribe...", ConsoleColor.DarkYellow);
 
-        try
+        if (Connection is null)
         {
-            Connection?.Close();
-
-            var subscription = await NewMailSubscription();
-            Connection?.AddSubscription(subscription);
-
-            Connection?.Open();
-
-            if (Connection != null) PrintConnectionStatus(Connection);
+            await CreateAndOpenConnection();
         }
-        catch (Exception)
+        else
         {
-            PrintNotification("Could not restore subscription, exiting.", ConsoleColor.Red);
-            throw;
-        }
+            try
+            {
+                if (Connection.IsOpen) Connection.Close();
 
+                var subscription = await NewMailSubscription();
+
+                Connection.AddSubscription(subscription);
+                Connection.Open();
+
+                PrintConnectionStatus(Connection);
+            }
+            catch (Exception)
+            {
+                PrintNotification("Could not restore subscription, exiting.", ConsoleColor.Red);
+                throw;
+            } 
+        }
     }
 
-    private void OnDisconnect(object sender, SubscriptionErrorEventArgs args)
+    private async void OnDisconnect(object sender, SubscriptionErrorEventArgs args)
     {
         PrintNotification("\n------<Disconnected.>------", ConsoleColor.DarkYellow);
         PrintNotification("Trying to reestablish a connection...", ConsoleColor.Yellow);
 
-        try
+        if (Connection is null)
         {
-            Connection?.Open();
+            await CreateAndOpenConnection();
         }
-        catch (Exception e)
+        else
         {
-            PrintNotification($"Could not reestablish a connection:\n{e.Message}", ConsoleColor.Red);
-            throw;
+            while (!Connection!.IsOpen)
+            {
+                try
+                {
+                    Connection.Open();
+                    PrintConnectionStatus(Connection);
+                }
+                catch (Exception e)
+                {
+                    PrintNotification($"Could not reestablish a connection:\n{e.Message}\nTrying again in 3s...", ConsoleColor.Red);
+                    await Task.Delay(3000);
+                }
+            } 
         }
-
-        if (Connection != null) PrintConnectionStatus(Connection);
     }
 
     private ExchangeService CreateService()
@@ -125,5 +134,19 @@ public class Exchange
         }
 
         return subscription;
+    }
+
+    private async Task CreateAndOpenConnection()
+    {
+        var subscription = await NewMailSubscription();
+        Connection = new StreamingSubscriptionConnection(_exchangeService, 20);
+
+        Connection.OnNotificationEvent += OnNotificationEvent;
+        Connection.OnSubscriptionError += OnSubscriptionError;
+        Connection.OnDisconnect += OnDisconnect;
+        Connection.AddSubscription(subscription);
+
+        Connection.Open();
+        PrintConnectionStatus(Connection);
     }
 }

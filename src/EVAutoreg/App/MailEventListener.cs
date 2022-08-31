@@ -1,76 +1,101 @@
 using System.Net;
 using System.Text.RegularExpressions;
+using EVAutoreg.Interfaces;
 using Microsoft.Exchange.WebServices.Data;
 using Microsoft.Extensions.Configuration;
-using static EVAutoreg.PrettyPrinter;
+using static EVAutoreg.Auxiliary.PrettyPrinter;
 using Task = System.Threading.Tasks.Task;
 // ReSharper disable InconsistentNaming
 
-namespace EVAutoreg;
+namespace EVAutoreg.App;
 
 public class MailEventListener : IMailEventListener
 {
     private readonly IConfiguration _config;
     private readonly IEVApiWrapper _evapi;
+    private readonly Rules _rules;
 
     private enum IssueType
     {
         Monitoring,
         ExternalIT,
+        Spam,
         None
     }
 
-    public MailEventListener(IConfiguration config, IEVApiWrapper evapi)
+    public MailEventListener(IConfiguration config, IEVApiWrapper evapi, Rules rules)
     {
         _config = config;
         _evapi = evapi;
+        _rules = rules;
     }
 
     public async Task ProcessEvent(EmailMessage email)
     {
         var subject = email.Subject;
         var body = email.Body.Text;
-        var issueNo = Regex.Match(subject, @"^\[.+(\d{6})\]").Groups[1].Value;
-        var rules = new Rules(_config);
+        var issueNo = Regex.Match(subject, _rules.RegexIssueNo).Groups[1].Value;
 
-        var action = IdentifyIssueType(subject, body, rules) switch
+        var action = IdentifyIssueType(subject, body, _rules) switch
         {
+            IssueType.Spam       => RegisterAsSpam(issueNo),
             IssueType.Monitoring => RegisterAsMonitoring(issueNo),
             IssueType.ExternalIT => RegisterAsExternalIT(issueNo),
-            _                    => Task.CompletedTask
+            _                    => new Task(() => PrintNotification
+                ("The issue does not match any rules, skipping", ConsoleColor.Blue))
         };
 
         await action;
     }
 
-    private static IssueType IdentifyIssueType(string subject, string body, Rules rules)
+    private IssueType IdentifyIssueType(string subject, string body, Rules rules)
     {
         return (subject, body) switch
         {
+            _ when IsSpam(subject)                     => IssueType.Spam,
             _ when IsMonitoring(subject, body) => IssueType.Monitoring,
             _ when IsExternalIT(subject, body) => IssueType.ExternalIT,
             _ => IssueType.None
 
         };
 
+        bool IsSpam(string subj)
+        {
+            return rules.SpamSubjectRules.Any(subj.Contains) || rules.SpamBodyRules.Any(body.Contains);
+        }
+
         bool IsMonitoring(string subj, string bdy)
         {
             return rules.SubjectRules.Any(subj.Contains) && !rules.SubjectNegativeRules.Any(subj.Contains) ||
                    rules.BodyRules.Any(bdy.Contains) && !rules.BodyNegativeRules.Any(bdy.Contains) ||
-                   Regex.IsMatch(subj, @"^\[.+\]: Новое.{1,4}\d{6}(?:.{0,2})?$");
+                   Regex.IsMatch(subj, _rules.RegexMonitoring);
         }
 
         bool IsExternalIT(string subj, string bdy)
         {
             return rules.ExternalITSubjectRules.Any(subj.Contains) ||
                    rules.ExternalITBodyRules.Any(bdy.Contains) ||
-                   Regex.IsMatch(subj, @"^\[.+\]: Новое  - (\w){1,2}?(\d){2,3}");
+                   Regex.IsMatch(subj, _rules.RegexExternalIT);
+        }
+    }
+
+    private async Task RegisterAsSpam(string issueNo)
+    {
+        PrintNotification("Received SPAM issue, processing...", ConsoleColor.Blue);
+        Console.Write("Issue No. to process: ");
+        PrintNotification(issueNo, ConsoleColor.Magenta);
+
+        var registeringParameters = _config.GetSection("QueryParameters:QuerySpamParameters").Get<string[]>();
+
+        if (await _evapi.UpdateIssue(issueNo, registeringParameters) == HttpStatusCode.OK)
+        {
+            PrintNotification($"Successfully registered issue no. {issueNo} as SPAM issue.", ConsoleColor.DarkGreen);
         }
     }
 
     private async Task RegisterAsMonitoring(string issueNo)
     {
-        Console.WriteLine("Received monitoring issue, processing...");
+        PrintNotification("Received monitoring issue, processing...", ConsoleColor.Blue);
         Console.Write("Issue No. to process: ");
         PrintNotification(issueNo, ConsoleColor.Magenta);
 
@@ -84,14 +109,14 @@ public class MailEventListener : IMailEventListener
             var isOkInWork = await _evapi.UpdateIssue(issueNo, assigningParameters);
             if (isOkInWork == HttpStatusCode.OK)
             {
-                PrintNotification($"Succesfully assigned issue no. {issueNo} to first line operators", ConsoleColor.DarkGreen);
+                PrintNotification($"Successfully assigned issue no. {issueNo} to first line operators", ConsoleColor.DarkGreen);
             }
         }
     }
 
     private async Task RegisterAsExternalIT(string issueNo)
     {
-        Console.WriteLine("Received External IT issue, processing...");
+        PrintNotification("Received External IT issue, processing...", ConsoleColor.Blue);
         Console.Write("Issue No. to process: ");
         PrintNotification(issueNo, ConsoleColor.Magenta);
 
@@ -99,7 +124,7 @@ public class MailEventListener : IMailEventListener
 
         if (await _evapi.UpdateIssue(issueNo, registeringParameters) == HttpStatusCode.OK)
         {
-            PrintNotification($"Succesfully registered issue no. {issueNo} as an External IT issue.", ConsoleColor.DarkGreen);
+            PrintNotification($"Successfully registered issue no. {issueNo} as an External IT issue.", ConsoleColor.DarkGreen);
         }
     }
 }
