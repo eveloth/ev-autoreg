@@ -52,16 +52,16 @@ public class MailEventListener : IMailEventListener
     {
         return (subject, body) switch
         {
-            _ when IsSpam(subject)                     => IssueType.Spam,
+            _ when IsSpam(subject, body)       => IssueType.Spam,
             _ when IsMonitoring(subject, body) => IssueType.Monitoring,
             _ when IsExternalIT(subject, body) => IssueType.ExternalIT,
             _ => IssueType.None
 
         };
 
-        bool IsSpam(string subj)
+        bool IsSpam(string subj, string bdy)
         {
-            return rules.SpamSubjectRules.Any(subj.Contains) || rules.SpamBodyRules.Any(body.Contains);
+            return rules.SpamSubjectRules.Any(subj.Contains) || rules.SpamBodyRules.Any(bdy.Contains);
         }
 
         bool IsMonitoring(string subj, string bdy)
