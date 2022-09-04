@@ -15,8 +15,8 @@ internal static class EVAutoreg
             .ConfigureServices(services => { 
                 services.AddSingleton<Exchange>();
                 services.AddSingleton<Rules>();
-                services.AddScoped<IMailEventListener, MailEventListener>();
-                services.AddScoped<IEVApiWrapper, EVApiWrapper>();
+                services.AddSingleton<IMailEventListener, MailEventListener>();
+                services.AddSingleton<IEVApiWrapper, EVApiWrapper>();
             })
             .Build();
 
