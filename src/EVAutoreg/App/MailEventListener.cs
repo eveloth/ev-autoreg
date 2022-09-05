@@ -41,7 +41,7 @@ public class MailEventListener : IMailEventListener
             IssueType.Spam       => RegisterAsSpam(issueNo),
             IssueType.Monitoring => RegisterAsMonitoring(issueNo),
             IssueType.ExternalIT => RegisterAsExternalIT(issueNo),
-            _                    => new Task(() => PrintNotification
+            _                    => Task.Run(() => PrintNotification
                 ("The issue does not match any rules, skipping", ConsoleColor.Blue))
         };
 
