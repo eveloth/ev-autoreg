@@ -1,6 +1,4 @@
 using System.Net;
-using System.Xml.Serialization;
-using Data.DataAccess;
 using Data.DataAccess.Models;
 using EVAutoreg.Auxiliary;
 using EVAutoreg.Interfaces;
@@ -42,11 +40,6 @@ public class EVApiWrapper : IEVApiWrapper
         PrintNotification("Failed retrieveing an issue. Reason: ", ConsoleColor.Red);
         Console.WriteLine(xmlIssueString);
         return null;
-    }
-
-    public Task GetIssue<T>(string issueNo)
-    {
-        throw new NotImplementedException();
     }
 
     public async Task<HttpStatusCode> UpdateIssue(string issueNo, params string[] queryUpdateParameters)
