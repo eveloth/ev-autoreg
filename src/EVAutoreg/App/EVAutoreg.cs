@@ -15,7 +15,7 @@ internal static class EVAutoreg
             .ConfigureServices(services => { 
                 services.AddSingleton<Exchange>();
                 services.AddSingleton<Rules>();
-                services.AddSingleton<IMailEventListener, MailEventListener>();
+                services.AddSingleton<IMailEventListener, TestDbWriter>();
                 services.AddSingleton<IEVApiWrapper, EVApiWrapper>();
             })
             .Build();
