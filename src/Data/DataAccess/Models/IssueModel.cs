@@ -1,28 +1,15 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Xml.Serialization;
+﻿namespace Data.DataAccess.Models;
 
-namespace Data.DataAccess.Models;
-
-[XmlRoot("PROBLEM_RECORD")]
 public class IssueModel
 {
-    public int Id { get; set; }
-
-    [XmlElement("ID"), NotNull] public string IssueNo { get; set; }
-
-    [XmlElement("DATE_CREATED"), NotNull] public string DateCreated { get; set; }
-
-    [XmlElement("ORIGINATOR")] public string? Author { get; set; } = string.Empty;
-
-    [XmlElement("CTI_CUST_LIST")] public string? Company { get; set; } = string.Empty;
-
-    [XmlElement("STATUS"), NotNull] public string Status { get; set; }
-
-    [XmlElement("PRIORITY"), NotNull] public string Priority { get; set; }
-
-    [XmlElement("CTI_ASSIGNEDGROUP")] public string? AssignedGroup { get; set; } = string.Empty;
-
-    [XmlElement("ASSIGNED_TO")] public string? Assignee { get; set; } = string.Empty;
-
-    [XmlElement("SHORT_DESCR"), NotNull] public string Description { get; set; }
+    public int p_id { get; set; }
+    public string p_issue_no { get; set; }
+    public DateTime p_date_created { get; set; }
+    public string p_author { get; set; } = string.Empty;
+    public string p_company { get; set; } = string.Empty;
+    public string p_status { get; set; }
+    public string p_priority { get; set; }
+    public string p_assigned_group { get; set; } = string.Empty;
+    public string p_assignee { get; set; } = string.Empty;
+    public string p_description { get; set; }
 }

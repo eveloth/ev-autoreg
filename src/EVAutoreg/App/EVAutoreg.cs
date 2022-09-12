@@ -1,4 +1,6 @@
-﻿using EVAutoreg.Interfaces;
+﻿using Data.Data;
+using Data.DataAccess.SqlDataAccess;
+using EVAutoreg.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Task = System.Threading.Tasks.Task;
@@ -17,6 +19,8 @@ internal static class EVAutoreg
                 services.AddSingleton<Rules>();
                 services.AddSingleton<IMailEventListener, TestDbWriter>();
                 services.AddSingleton<IEVApiWrapper, EVApiWrapper>();
+                services.AddSingleton<ISqlDataAccess, SqlDataAccess>();
+                services.AddSingleton<IIssueData, IssueData>();
             })
             .Build();
 

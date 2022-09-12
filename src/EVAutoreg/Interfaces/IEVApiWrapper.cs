@@ -5,6 +5,6 @@ namespace EVAutoreg.Interfaces;
 
 public interface IEVApiWrapper
 {
-    Task<IssueModel?> GetIssue(string issueNo);
+    Task<XmlIssueModel?> GetIssue(string issueNo);
     Task<HttpStatusCode> UpdateIssue(string issueNo, params string[] queryUpdateParameters);
 }

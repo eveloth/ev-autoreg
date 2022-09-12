@@ -21,7 +21,7 @@ public class EVApiWrapper : IEVApiWrapper
         _password = WebUtility.UrlEncode(config.GetValue<string>("ExtraViewCredentials:Password"));
     }
 
-    public async Task<IssueModel?> GetIssue(string issueNo)
+    public async Task<XmlIssueModel?> GetIssue(string issueNo)
     {
         _client.DefaultRequestHeaders.Add("User-agent", "OperatorsAPI");
 
@@ -34,7 +34,13 @@ public class EVApiWrapper : IEVApiWrapper
         {
             PrintNotification("Issue retrieved successfully.", ConsoleColor.Green);
 
-            return XmlParser.Deserialize<IssueModel>(xmlIssueString);
+            return XmlParser.Deserialize<XmlIssueModel>(xmlIssueString);
+        }
+
+        if(xmlIssueString.Contains("AREA TITLE"))
+        {
+            PrintNotification("Issue was marked as SPAM.", ConsoleColor.Green);
+            return null;
         }
 
         PrintNotification("Failed retrieveing an issue. Reason: ", ConsoleColor.Red);
