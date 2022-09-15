@@ -1,4 +1,4 @@
-﻿using Data.DataAccess.Models;
+﻿using Data.Models;
 
 namespace Data.Extensions;
 

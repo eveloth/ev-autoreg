@@ -1,6 +1,7 @@
-﻿using Data.DataAccess.Models;
-using Data.DataAccess.SqlDataAccess;
+﻿using Dapper;
 using Data.Extensions;
+using Data.Models;
+using Data.SqlDataAccess;
 
 namespace Data.Data;
 
@@ -24,7 +25,7 @@ public class IssueData : IIssueData
         Console.WriteLine($"New datetime: {issue.DateCreated}");
     }
 
-    public async Task<IEnumerable<IssueModel>> GetAllIssues() => await _db.LoadAll<IssueModel>("p_get_all_issue");
+    public async Task<IEnumerable<IssueModel>> GetAllIssues() => await _db.LoadAll<IssueModel>("SELECT * FROM issue");
 
     public async Task<IssueModel?> GetIssue(int id)
     {
@@ -32,5 +33,9 @@ public class IssueData : IIssueData
         return results.FirstOrDefault();
     }
 
-    public async Task UpsertIssue(dynamic issue) => await _db.SaveData("p_upsert_issue", issue);
+    public async Task UpsertIssue(dynamic issue)
+    {
+        var parameters = new DynamicParameters(issue);
+        await _db.SaveData("p_upsert_issue", parameters);
+    }
 }

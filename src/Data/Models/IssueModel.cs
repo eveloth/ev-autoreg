@@ -1,4 +1,4 @@
-﻿namespace Data.DataAccess.Models;
+﻿namespace Data.Models;
 
 public class IssueModel
 {

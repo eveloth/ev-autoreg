@@ -33,20 +33,7 @@ public class TestDbWriter : IMailEventListener
             _issueData.PrintIssue(xmlIssue);
             var issue = xmlIssue.ConvertToSqlModel();
 
-            var parameters = new
-            {
-                issue.IssueNo,
-                issue.DateCreated,
-                issue.Author,
-                issue.Company,
-                issue.Status,
-                issue.Priority,
-                issue.AssignedGroup,
-                issue.Assignee,
-                issue.Description
-            };
-
-            await _issueData.UpsertIssue(parameters);
+            await _issueData.UpsertIssue(issue);
         }
     }
 }

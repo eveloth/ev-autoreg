@@ -1,6 +1,6 @@
 ﻿using System.Xml.Serialization;
 
-namespace Data.DataAccess.Models;
+namespace Data.Models;
 
 [XmlRoot("PROBLEM_RECORD")]
 public class XmlIssueModel

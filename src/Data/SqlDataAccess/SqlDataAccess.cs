@@ -1,9 +1,9 @@
 ﻿using System.Data;
+using Dapper;
 using Microsoft.Extensions.Configuration;
 using Npgsql;
-using Dapper;
 
-namespace Data.DataAccess.SqlDataAccess;
+namespace Data.SqlDataAccess;
 
 public class SqlDataAccess : ISqlDataAccess
 {
@@ -15,12 +15,12 @@ public class SqlDataAccess : ISqlDataAccess
     }
 
     public async Task<IEnumerable<TModel>> LoadAll<TModel>(
-        string procedure,
+        string sql,
         string connectionId = "Default")
     {
         using IDbConnection connection = new NpgsqlConnection(_config.GetConnectionString(connectionId));
-
-        return await connection.QueryAsync<TModel>(procedure, commandType: CommandType.StoredProcedure);
+        
+        return await connection.QueryAsync<TModel>(sql);
     }
     public async Task<IEnumerable<TModel>> LoadData<TModel, TParameters>(
         string procedure,
