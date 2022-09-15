@@ -8,15 +8,15 @@ public static class IssueExtensions
     {
         return new IssueModel()
         {
-            p_issue_no = xmlIssue.IssueNo,
-            p_date_created = DateTime.Parse(xmlIssue.DateCreated),
-            p_author = xmlIssue.Author,
-            p_company = xmlIssue.Company,
-            p_status = xmlIssue.Status,
-            p_priority = xmlIssue.Priority,
-            p_assigned_group = xmlIssue.AssignedGroup,
-            p_assignee = xmlIssue.Assignee,
-            p_description = xmlIssue.Description
+            IssueNo = xmlIssue.IssueNo,
+            DateCreated = DateTime.Parse(xmlIssue.DateCreated),
+            Author = xmlIssue.Author,
+            Company = xmlIssue.Company,
+            Status = xmlIssue.Status,
+            Priority = xmlIssue.Priority,
+            AssignedGroup = xmlIssue.AssignedGroup,
+            Assignee = xmlIssue.Assignee,
+            Description = xmlIssue.Description
         };
     }
 }

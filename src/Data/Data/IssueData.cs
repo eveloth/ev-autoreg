@@ -21,7 +21,7 @@ public class IssueData : IIssueData
         var issue = xmlIssue.ConvertToSqlModel();
 
         Console.ForegroundColor = ConsoleColor.DarkRed;
-        Console.WriteLine($"New datetime: {issue.p_date_created}");
+        Console.WriteLine($"New datetime: {issue.DateCreated}");
     }
 
     public async Task<IEnumerable<IssueModel>> GetAllIssues() => await _db.LoadAll<IssueModel>("p_get_all_issue");
