@@ -23,6 +23,7 @@ public class EVApiWrapper : IEVApiWrapper
 
     public async Task<XmlIssueModel?> GetIssue(string issueNo)
     {
+        PrintNotification("Retrieveing the issue from EV server...", ConsoleColor.Yellow);
         _client.DefaultRequestHeaders.Add("User-agent", "OperatorsAPI");
 
         var query = $"https://{_domain}/evj/ExtraView/ev_api.action?user_id={_username}&password={_password}&statevar=get&id={issueNo}";
@@ -61,7 +62,7 @@ public class EVApiWrapper : IEVApiWrapper
 
         if (res.IsSuccessStatusCode && content.Contains("updated", StringComparison.InvariantCultureIgnoreCase))
         {
-            PrintNotification(content, ConsoleColor.Green);
+            PrintNotification("EV server: " + content, ConsoleColor.Green);
         }
         else
         {

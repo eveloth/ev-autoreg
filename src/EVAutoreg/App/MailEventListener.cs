@@ -88,6 +88,7 @@ public class MailEventListener : IMailEventListener
         PrintNotification("Received SPAM issue, processing...", ConsoleColor.Blue);
         Console.Write("Issue No. to process: ");
         PrintNotification(issueNo, ConsoleColor.Magenta);
+        Console.WriteLine();
 
         var xmlIssue = await _evapi.GetIssue(issueNo);
         var issue = xmlIssue!.ConvertToSqlModel();
@@ -108,7 +109,7 @@ public class MailEventListener : IMailEventListener
 
         if (await _evapi.UpdateIssue(issueNo, registeringParameters) == HttpStatusCode.OK)
         {
-            PrintNotification($"Successfully registered issue no. {issueNo} as SPAM issue.", ConsoleColor.DarkGreen);
+            PrintNotification($"Successfully registered issue no. {issueNo} as SPAM issue.\n", ConsoleColor.DarkGreen);
         }
     }
 
@@ -117,6 +118,7 @@ public class MailEventListener : IMailEventListener
         PrintNotification("Received monitoring issue, processing...", ConsoleColor.Blue);
         Console.Write("Issue No. to process: ");
         PrintNotification(issueNo, ConsoleColor.Magenta);
+        Console.WriteLine();
 
         var registeringParameters = _config.GetSection("QueryParameters:QueryRegisterParameters").Get<string[]>();
         var assigningParameters = _config.GetSection("QueryParameters:QueryInWorkParameters").Get<string[]>();
@@ -128,15 +130,16 @@ public class MailEventListener : IMailEventListener
             var isOkInWork = await _evapi.UpdateIssue(issueNo, assigningParameters);
             if (isOkInWork == HttpStatusCode.OK)
             {
-                PrintNotification($"Successfully assigned issue no. {issueNo} to first line operators", ConsoleColor.DarkGreen);
+                PrintNotification($"Successfully assigned issue no. {issueNo} to first line operators.", ConsoleColor.DarkGreen);
 
                 var xmlIssue = await _evapi.GetIssue(issueNo);
                 var issue = xmlIssue!.ConvertToSqlModel();
 
                 try
                 {
+                    PrintNotification("Initiating database transaction...", ConsoleColor.Yellow);
                     await _issueData.UpsertIssue(issue);
-                    PrintNotification($"Added issue no {issueNo} to database", ConsoleColor.DarkCyan);
+                    PrintNotification($"Issue no. {issueNo} id added to the database.\n", ConsoleColor.DarkCyan);
                 }
                 catch (Exception e)
                 {
@@ -151,12 +154,13 @@ public class MailEventListener : IMailEventListener
         PrintNotification("Received External IT issue, processing...", ConsoleColor.Blue);
         Console.Write("Issue No. to process: ");
         PrintNotification(issueNo, ConsoleColor.Magenta);
+        Console.WriteLine();
 
         var registeringParameters = _config.GetSection("QueryParameters:QueryExternalITParameters").Get<string[]>();
 
         if (await _evapi.UpdateIssue(issueNo, registeringParameters) == HttpStatusCode.OK)
         {
-            PrintNotification($"Successfully registered issue no. {issueNo} as an External IT issue.", ConsoleColor.DarkGreen);
+            PrintNotification($"Successfully registered issue no. {issueNo} as an External IT issue.\n", ConsoleColor.DarkGreen);
         }
     }
 }
