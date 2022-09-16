@@ -1,6 +1,7 @@
 ﻿using System.Text.RegularExpressions;
 using Data.Data;
 using Data.Extensions;
+using EVAutoreg.Auxiliary;
 using EVAutoreg.Interfaces;
 using Microsoft.Exchange.WebServices.Data;
 using Microsoft.Extensions.Configuration;
@@ -51,7 +52,16 @@ public class TestDbWriter : IMailEventListener
                 issue.p_description
             };
 
-            await _issueData.UpsertIssue(parameters);
+            try
+            {
+                await _issueData.UpsertIssue(parameters);
+                PrettyPrinter.PrintNotification($"Added issue no {issueNo} to database", ConsoleColor.DarkCyan);
+
+            }
+            catch (Exception e)
+            {
+                PrettyPrinter.PrintNotification($"Failed to commit transaction, reason: {e.Message}", ConsoleColor.Red);
+            }
         }
     }
 }
