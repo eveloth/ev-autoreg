@@ -23,21 +23,21 @@ public class SqlDataAccess : ISqlDataAccess
         return await connection.QueryAsync<TModel>(sql);
     }
     public async Task<IEnumerable<TModel>> LoadData<TModel, TParameters>(
-        string procedure,
+        string sql,
         TParameters parameters,
         string connectionId = "Default")
     {
         using IDbConnection connection = new NpgsqlConnection(_config.GetConnectionString(connectionId));
 
-        return await connection.QueryAsync<TModel>(procedure, parameters, commandType: CommandType.StoredProcedure);
+        return await connection.QueryAsync<TModel>(sql, parameters);
     }
     public async Task SaveData<TParameters>(
-        string procedure,
+        string sql,
         TParameters parameters,
         string connectionId = "Default")
     {
         using IDbConnection connection = new NpgsqlConnection(_config.GetConnectionString(connectionId));
 
-        await connection.ExecuteAsync(procedure, parameters, commandType: CommandType.StoredProcedure);
+        await connection.ExecuteAsync(sql, parameters);
     }
 }
