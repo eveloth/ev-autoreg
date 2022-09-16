@@ -4,6 +4,7 @@ using EVAutoreg.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Task = System.Threading.Tasks.Task;
+using static EVAutoreg.Auxiliary.PrettyPrinter;
 
 namespace EVAutoreg.App;
 
@@ -21,16 +22,22 @@ internal static class EVAutoreg
                 services.AddSingleton<IEVApiWrapper, EVApiWrapper>();
                 services.AddSingleton<ISqlDataAccess, SqlDataAccess>();
                 services.AddSingleton<IIssueData, IssueData>();
+                services.AddSingleton<HttpListenerApi>();
             })
             .Build();
 
         Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
 
-        var exchange = host.Services.GetRequiredService<Exchange>();
+        //var exchange = host.Services.GetRequiredService<Exchange>();
         
         Console.WriteLine("Welcome to EV Autoregistrator!");
         
-        await exchange.StartService();
+        //await exchange.StartService();
+
+        var listenerApi = host.Services.GetRequiredService<HttpListenerApi>();
+
+        await listenerApi.SimpleListener(new[] { "http://localhost:5050/enable/", "http://localhost:5050/disable/" });
+
         
         Console.CancelKeyPress += (sender, eArgs) => {
             QuitEvent.Set();
@@ -49,7 +56,7 @@ internal static class EVAutoreg
 
         #region Methods
 
-        void HealthCheck() => Console.WriteLine($"{DateTime.Now}: Application is running...");
+        void HealthCheck() => PrintNotification($"{DateTime.Now}: Application is running...", ConsoleColor.Gray);
 
         #endregion
     }

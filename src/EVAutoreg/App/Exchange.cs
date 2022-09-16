@@ -17,6 +17,7 @@ public class Exchange
     private readonly Rules _rules;
     private StreamingSubscriptionConnection? Connection { get; set; }
 
+    public bool IsServiceEnabled { get; set; }
     public Exchange(IConfiguration config, IMailEventListener listener, Rules rules)
     {
         _url = config.GetValue<string>("ExchangeCredentials:URL");
@@ -30,6 +31,13 @@ public class Exchange
     public async Task StartService()
     {
         await CreateAndOpenConnection();
+    }
+
+    public void StopService()
+    {
+       Connection!.Close();
+       PrintConnectionStatus(Connection);
+       Connection = null;
     }
 
     private async void OnNotificationEvent(object sender, NotificationEventArgs args)
@@ -84,6 +92,12 @@ public class Exchange
     {
         PrintNotification("\n------<Disconnected.>------", ConsoleColor.DarkYellow);
         PrintNotification("Trying to reestablish a connection...", ConsoleColor.Yellow);
+
+        if (!IsServiceEnabled)
+        {
+            PrintNotification("Service was disabled by user.", ConsoleColor.Red);
+            return;
+        }
 
         if (Connection is null)
         {
@@ -147,6 +161,7 @@ public class Exchange
         Connection.AddSubscription(subscription);
 
         Connection.Open();
+        IsServiceEnabled = true;
         PrintConnectionStatus(Connection);
     }
 }
