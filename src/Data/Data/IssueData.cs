@@ -27,13 +27,15 @@ public class IssueData : IIssueData
 
     public async Task<IEnumerable<IssueModel>> GetAllIssues() => await _db.LoadAll<IssueModel>("SELECT * FROM issue");
 
-    public async Task<IssueModel?> GetIssue(int id)
+    public async Task<IssueModel?> GetIssue(string issueNo)
     {
-        var results = await _db.LoadData<IssueModel, int>("SELECT * FROM issue WHERE id = @Id", id);
+        var results = await _db.LoadData<IssueModel, string>
+            ("SELECT * FROM issue WHERE issue_no = @IssueNo", issueNo);
+
         return results.FirstOrDefault();
     }
 
-    public async Task UpsertIssue(dynamic issue)
+    public async Task UpsertIssue(IssueModel issue)
     {
         var parameters = new DynamicParameters(issue);
         const string sql = @"INSERT INTO issue (issue_no, date_created, author, company,
@@ -44,6 +46,16 @@ public class IssueData : IIssueData
                   author = EXCLUDED.author, company = EXCLUDED.company,
                   status = EXCLUDED.status, priority = EXCLUDED.priority,
                   assigned_group = EXCLUDED.assigned_group, assignee = EXCLUDED.assignee";
+
+        await _db.SaveData(sql, parameters);
+    }
+
+    public async Task UpdateIssue(IssueModel issue)
+    {
+        var parameters = new DynamicParameters(issue);
+        const string sql = @"UPDATE issue SET author = @Author, company = @Company,
+                           status = @Status, priority = @Priority, assigned_group = @AssignedGroup,
+                           assignee = @Assignee WHERE issue_no = @IssueNo";
 
         await _db.SaveData(sql, parameters);
     }
