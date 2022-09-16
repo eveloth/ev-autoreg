@@ -1,5 +1,7 @@
 using System.Net;
 using System.Text.RegularExpressions;
+using Data.Data;
+using Data.Extensions;
 using EVAutoreg.Interfaces;
 using Microsoft.Exchange.WebServices.Data;
 using Microsoft.Extensions.Configuration;
@@ -14,6 +16,7 @@ public class MailEventListener : IMailEventListener
     private readonly IConfiguration _config;
     private readonly IEVApiWrapper _evapi;
     private readonly Rules _rules;
+    private readonly IIssueData _issueData;
 
     private enum IssueType
     {
@@ -23,11 +26,12 @@ public class MailEventListener : IMailEventListener
         None
     }
 
-    public MailEventListener(IConfiguration config, IEVApiWrapper evapi, Rules rules)
+    public MailEventListener(IConfiguration config, IEVApiWrapper evapi, Rules rules, IIssueData issueData)
     {
         _config = config;
         _evapi = evapi;
         _rules = rules;
+        _issueData = issueData;
     }
 
     public async Task ProcessEvent(EmailMessage email)
@@ -85,6 +89,21 @@ public class MailEventListener : IMailEventListener
         Console.Write("Issue No. to process: ");
         PrintNotification(issueNo, ConsoleColor.Magenta);
 
+        var xmlIssue = await _evapi.GetIssue(issueNo);
+        var issue = xmlIssue!.ConvertToSqlModel();
+
+        issue.Status = "SPAM";
+
+        try
+        {
+            await _issueData.UpsertIssue(issue);
+            PrintNotification($"Added issue no {issueNo} to database", ConsoleColor.DarkCyan);
+        }
+        catch (Exception e)
+        {
+            PrintNotification($"Failed to commit transaction, reason: {e.Message}", ConsoleColor.Red);
+        }
+
         var registeringParameters = _config.GetSection("QueryParameters:QuerySpamParameters").Get<string[]>();
 
         if (await _evapi.UpdateIssue(issueNo, registeringParameters) == HttpStatusCode.OK)
@@ -110,6 +129,19 @@ public class MailEventListener : IMailEventListener
             if (isOkInWork == HttpStatusCode.OK)
             {
                 PrintNotification($"Successfully assigned issue no. {issueNo} to first line operators", ConsoleColor.DarkGreen);
+
+                var xmlIssue = await _evapi.GetIssue(issueNo);
+                var issue = xmlIssue!.ConvertToSqlModel();
+
+                try
+                {
+                    await _issueData.UpsertIssue(issue);
+                    PrintNotification($"Added issue no {issueNo} to database", ConsoleColor.DarkCyan);
+                }
+                catch (Exception e)
+                {
+                    PrintNotification($"Failed to commit transaction, reason: {e.Message}", ConsoleColor.Red);
+                }
             }
         }
     }
