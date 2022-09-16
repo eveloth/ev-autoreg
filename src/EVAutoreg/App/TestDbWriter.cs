@@ -14,14 +14,12 @@ public class TestDbWriter : IMailEventListener
     private readonly IEVApiWrapper _evapi;
     private readonly Rules _rules;
     private readonly IIssueData _issueData;
-    private readonly IConfiguration _config;
 
     public TestDbWriter(Rules rules, IEVApiWrapper evapi, IIssueData issueData, IConfiguration config)
     {
         _rules = rules;
         _evapi = evapi;
         _issueData = issueData;
-        _config = config;
     }
 
     public async Task ProcessEvent(EmailMessage email)
@@ -35,26 +33,10 @@ public class TestDbWriter : IMailEventListener
         {
             _issueData.PrintIssue(xmlIssue);
             var issue = xmlIssue.ConvertToSqlModel();
-            //                var sql =
-            //                    $@"INSERT INTO issue (issue_no, date_created, author, company, status, priority, assigned_group, assignee, description)
-            //VALUES (@issue_no, @date_created_utc, @author, @company, @status, @priority, @assigned_group, @assignee, @description)";
-
-            var parameters = new
-            {
-                issue.p_issue_no,
-                issue.p_date_created,
-                issue.p_author,
-                issue.p_company,
-                issue.p_status,
-                issue.p_priority,
-                issue.p_assigned_group,
-                issue.p_assignee,
-                issue.p_description
-            };
 
             try
             {
-                await _issueData.UpsertIssue(parameters);
+            	await _issueData.UpsertIssue(issue);
                 PrettyPrinter.PrintNotification($"Added issue no {issueNo} to database", ConsoleColor.DarkCyan);
 
             }

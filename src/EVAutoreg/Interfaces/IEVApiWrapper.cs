@@ -1,5 +1,5 @@
 using System.Net;
-using Data.DataAccess.Models;
+using Data.Models;
 
 namespace EVAutoreg.Interfaces;
 

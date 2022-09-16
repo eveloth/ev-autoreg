@@ -1,5 +1,5 @@
 ﻿using Data.Data;
-using Data.DataAccess.SqlDataAccess;
+using Data.SqlDataAccess;
 using EVAutoreg.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -23,6 +23,8 @@ internal static class EVAutoreg
                 services.AddSingleton<IIssueData, IssueData>();
             })
             .Build();
+
+        Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
 
         var exchange = host.Services.GetRequiredService<Exchange>();
         

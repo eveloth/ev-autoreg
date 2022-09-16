@@ -1,5 +1,5 @@
 using System.Net;
-using Data.DataAccess.Models;
+using Data.Models;
 using EVAutoreg.Auxiliary;
 using EVAutoreg.Interfaces;
 using Microsoft.Extensions.Configuration;
