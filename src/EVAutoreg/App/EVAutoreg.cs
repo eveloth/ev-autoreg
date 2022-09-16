@@ -1,4 +1,6 @@
-﻿using EVAutoreg.Interfaces;
+﻿using Data.Data;
+using Data.SqlDataAccess;
+using EVAutoreg.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Task = System.Threading.Tasks.Task;
@@ -15,10 +17,14 @@ internal static class EVAutoreg
             .ConfigureServices(services => { 
                 services.AddSingleton<Exchange>();
                 services.AddSingleton<Rules>();
-                services.AddSingleton<IMailEventListener, MailEventListener>();
+                services.AddSingleton<IMailEventListener, TestDbWriter>();
                 services.AddSingleton<IEVApiWrapper, EVApiWrapper>();
+                services.AddSingleton<ISqlDataAccess, SqlDataAccess>();
+                services.AddSingleton<IIssueData, IssueData>();
             })
             .Build();
+
+        Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
 
         var exchange = host.Services.GetRequiredService<Exchange>();
         

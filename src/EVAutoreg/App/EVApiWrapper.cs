@@ -1,5 +1,6 @@
 using System.Net;
-using System.Xml.Linq;
+using Data.Models;
+using EVAutoreg.Auxiliary;
 using EVAutoreg.Interfaces;
 using Microsoft.Extensions.Configuration;
 using static EVAutoreg.Auxiliary.PrettyPrinter;
@@ -20,34 +21,38 @@ public class EVApiWrapper : IEVApiWrapper
         _password = WebUtility.UrlEncode(config.GetValue<string>("ExtraViewCredentials:Password"));
     }
 
-    public async Task GetIssue(string issueNo)
+    public async Task<XmlIssueModel?> GetIssue(string issueNo)
     {
         _client.DefaultRequestHeaders.Add("User-agent", "OperatorsAPI");
 
         var query = $"https://{_domain}/evj/ExtraView/ev_api.action?user_id={_username}&password={_password}&statevar=get&id={issueNo}";
 
-        var issue = await _client.GetAsync(query);
-        var issueToDisplay = await issue.Content.ReadAsStringAsync();
+        var res = await _client.GetAsync(query);
+        var xmlIssueString = await res.Content.ReadAsStringAsync();
 
-        if (issue.IsSuccessStatusCode && issueToDisplay.StartsWith("<?xml"))
+        if (res.IsSuccessStatusCode && xmlIssueString.StartsWith("<?xml"))
         {
             PrintNotification("Issue retrieved successfully.", ConsoleColor.Green);
-            
-            var doc = XDocument.Parse(issueToDisplay);
-            Console.WriteLine(doc);
+
+            return XmlParser.Deserialize<XmlIssueModel>(xmlIssueString);
         }
-        else
+
+        if(xmlIssueString.Contains("AREA TITLE"))
         {
-            PrintNotification("Failed retrieveing an issue. Reason: ", ConsoleColor.Red);
-            Console.WriteLine(issueToDisplay);
+            PrintNotification("Issue was marked as SPAM.", ConsoleColor.Green);
+            return null;
         }
+
+        PrintNotification("Failed retrieveing an issue. Reason: ", ConsoleColor.Red);
+        Console.WriteLine(xmlIssueString);
+        return null;
     }
 
     public async Task<HttpStatusCode> UpdateIssue(string issueNo, params string[] queryUpdateParameters)
     {
         _client.DefaultRequestHeaders.Add("User-agent", "OperatorsAPI");
 
-        string query = $"https://{_domain}/evj/ExtraView/ev_api.action?user_id={_username}&password={_password}&statevar=update&id={issueNo}";
+        var query = $"https://{_domain}/evj/ExtraView/ev_api.action?user_id={_username}&password={_password}&statevar=update&id={issueNo}";
 
         query = queryUpdateParameters.Aggregate(query, (current, param) => current + $"&{param}");
 
