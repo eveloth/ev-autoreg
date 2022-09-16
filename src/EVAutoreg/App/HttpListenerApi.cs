@@ -41,6 +41,11 @@ namespace EVAutoreg.App
                 {
                     var response = context.Response;
 
+                    response.AddHeader("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With");
+                    response.AddHeader("Access-Control-Allow-Methods", "GET, POST");
+                    response.AddHeader("Access-Control-Max-Age", "1728000");
+                    response.AppendHeader("Access-Control-Allow-Origin", "*");
+
                     const string responseText = "SERVICE ENABLED";
                     var buffer = Encoding.UTF8.GetBytes(responseText);
 
