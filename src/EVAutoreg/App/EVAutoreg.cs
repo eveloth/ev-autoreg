@@ -4,6 +4,7 @@ using EVAutoreg.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Task = System.Threading.Tasks.Task;
+using static EVAutoreg.Auxiliary.PrettyPrinter;
 
 namespace EVAutoreg.App;
 
@@ -17,7 +18,7 @@ internal static class EVAutoreg
             .ConfigureServices(services => { 
                 services.AddSingleton<Exchange>();
                 services.AddSingleton<Rules>();
-                services.AddSingleton<IMailEventListener, TestDbWriter>();
+                services.AddSingleton<IMailEventListener, MailEventListener>();
                 services.AddSingleton<IEVApiWrapper, EVApiWrapper>();
                 services.AddSingleton<ISqlDataAccess, SqlDataAccess>();
                 services.AddSingleton<IIssueData, IssueData>();
@@ -49,7 +50,7 @@ internal static class EVAutoreg
 
         #region Methods
 
-        void HealthCheck() => Console.WriteLine($"{DateTime.Now}: Application is running...");
+        void HealthCheck() => PrintNotification($"{DateTime.Now}: Application is running...", ConsoleColor.DarkGray);
 
         #endregion
     }
