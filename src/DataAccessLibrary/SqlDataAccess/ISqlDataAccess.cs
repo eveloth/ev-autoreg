@@ -1,4 +1,6 @@
-﻿namespace DataAccessLibrary.SqlDataAccess;
+﻿using DataAccessLibrary.Models;
+
+namespace DataAccessLibrary.SqlDataAccess;
 
 public interface ISqlDataAccess
 {
