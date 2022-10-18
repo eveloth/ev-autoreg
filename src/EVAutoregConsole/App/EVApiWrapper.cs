@@ -1,11 +1,11 @@
 using System.Net;
 using Data.Models;
-using EVAutoreg.Auxiliary;
-using EVAutoreg.Interfaces;
+using EVAutoregConsole.Auxiliary;
+using EVAutoregConsole.Interfaces;
 using Microsoft.Extensions.Configuration;
-using static EVAutoreg.Auxiliary.PrettyPrinter;
+using static EVAutoregConsole.Auxiliary.PrettyPrinter;
 
-namespace EVAutoreg.App;
+namespace EVAutoregConsole.App;
 
 public class EVApiWrapper : IEVApiWrapper
 {

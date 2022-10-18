@@ -1,7 +1,7 @@
 using Microsoft.Exchange.WebServices.Data;
 using Task = System.Threading.Tasks.Task;
 
-namespace EVAutoreg.Interfaces;
+namespace EVAutoregConsole.Interfaces;
 
 public interface IMailEventListener
 {

@@ -1,11 +1,11 @@
 ﻿using System.Text.RegularExpressions;
-using EVAutoreg.Interfaces;
+using EVAutoregConsole.Interfaces;
 using Microsoft.Exchange.WebServices.Data;
 using Microsoft.Extensions.Configuration;
-using static EVAutoreg.Auxiliary.PrettyPrinter;
+using static EVAutoregConsole.Auxiliary.PrettyPrinter;
 using Task = System.Threading.Tasks.Task;
 
-namespace EVAutoreg.App;
+namespace EVAutoregConsole.App;
 
 public class Exchange
 {

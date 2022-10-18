@@ -1,6 +1,6 @@
 ﻿using System.Xml.Serialization;
 
-namespace EVAutoreg.Auxiliary;
+namespace EVAutoregConsole.Auxiliary;
 
 public static class XmlParser
 {

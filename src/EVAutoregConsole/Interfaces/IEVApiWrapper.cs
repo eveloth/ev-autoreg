@@ -1,7 +1,7 @@
 using System.Net;
 using Data.Models;
 
-namespace EVAutoreg.Interfaces;
+namespace EVAutoregConsole.Interfaces;
 
 public interface IEVApiWrapper
 {
