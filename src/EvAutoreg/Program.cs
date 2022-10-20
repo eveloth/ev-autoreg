@@ -1,4 +1,4 @@
-using DataAccessLibrary.Data;
+using DataAccessLibrary.Repositories;
 using DataAccessLibrary.SqlDataAccess;
 using EvAutoreg.Services;
 
@@ -10,6 +10,8 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddRouting(options => options.LowercaseUrls = true);
 
 builder.Services.AddSingleton<ISqlDataAccess, SqlDataAccess>();
 builder.Services.AddSingleton<IUserRepository, UserRepository>();
