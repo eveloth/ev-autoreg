@@ -1,8 +1,9 @@
 ﻿using Dapper;
 using DataAccessLibrary.Models;
 using DataAccessLibrary.SqlDataAccess;
+using System.Linq;
 
-namespace DataAccessLibrary.Data;
+namespace DataAccessLibrary.Repositories;
 
 public class UserRepository : IUserRepository 
 {
@@ -13,6 +14,20 @@ public class UserRepository : IUserRepository
         _db = db;
     }
 
+    public async Task<bool> DoesUserExist(int id)
+    {
+        const string sql = @"SELECT EXISTS (SELECT true FROM app_user WHERE id = @Id";
+
+        return await _db.LoadFirst<bool, int>(sql, id);
+    }
+
+    public async Task<bool> DoesUserExist(string email)
+    {
+        const string sql = @"SELECT EXISTS (SELECT true FROM app_user WHERE email = @Email)";
+
+        return await _db.LoadFirst<bool, object>(sql, new { email });
+    }
+    
     public async Task CreateUser(UserModel user)
     {
         var parameters = new DynamicParameters(user);
@@ -30,8 +45,7 @@ public class UserRepository : IUserRepository
             false => @"SELECT * FROM app_user WHERE id = @Id and is_deleted = false"
         };
 
-        var result = await _db.LoadData<UserModel, int>(sql, id);
-        return result.FirstOrDefault();
+        return await _db.LoadFirst<UserModel, int>(sql, id);
     }
     
     public async Task<UserModel?> GetUserByEmail(string email, bool includeDeleted = false)
@@ -44,8 +58,7 @@ public class UserRepository : IUserRepository
         
         // В отличие от ситуции, когда в качестве параметра передаётся int, просто так передать string в качестве
         // параметра у меня не вышло; operator does not exist: @ character varying
-        var result = await _db.LoadData<UserModel, object>(sql, new { email });
-        return result.FirstOrDefault();
+        return await _db.LoadFirst<UserModel, object>(sql, new { email });
     }
 
     public async Task<IEnumerable<UserModel>> GetAllUsers(bool includeDeleted = false)
@@ -68,6 +81,18 @@ public class UserRepository : IUserRepository
 
         await _db.SaveData(sql, parameters);
     }
+
+    public async Task UpdateUserEmail(int id, string newEmail)
+    {
+        var paramaters = new DynamicParameters( new { Id = id, Email = newEmail });
+        const string sql = @"UPDATE app_user SET email = @Email WHERE id = @Id";
+
+        await _db.SaveData(sql, paramaters);
+    }
+    
+    public async Task UpdateUserProfile(){}
+    
+    public async Task ChangeUserPassword(){}
 
     public async Task DeleteUser(int id)
     {

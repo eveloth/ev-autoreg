@@ -13,6 +13,12 @@ public interface ISqlDataAccess
         TParameters parameters,
         string connectionId = "Default");
 
+    Task<TModel?> LoadFirst<TModel, TParameters>(
+        string sql,
+        TParameters parameters,
+        string connectionId = "Default"
+    );
+
     Task SaveData<TParameters>(
         string sql,
         TParameters parameters,

@@ -8,12 +8,12 @@ namespace EvAutoreg
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class UserManagementController : ControllerBase
+    public class UsersController : ControllerBase
     {
         private readonly IUserRepository _userRepository;
         private readonly IPasswordHasher _passwordHasher;
 
-        public UserManagementController(IUserRepository userRepository, IPasswordHasher passwordHasher)
+        public UsersController(IUserRepository userRepository, IPasswordHasher passwordHasher)
         {
             _userRepository = userRepository;
             _passwordHasher = passwordHasher;
