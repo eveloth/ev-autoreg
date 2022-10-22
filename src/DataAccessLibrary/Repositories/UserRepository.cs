@@ -16,9 +16,9 @@ public class UserRepository : IUserRepository
 
     public async Task<bool> DoesUserExist(int id)
     {
-        const string sql = @"SELECT EXISTS (SELECT true FROM app_user WHERE id = @Id";
+        const string sql = @"SELECT EXISTS (SELECT true FROM app_user WHERE id = @Id)";
 
-        return await _db.LoadFirst<bool, int>(sql, id);
+        return await _db.LoadFirst<bool, object>(sql, new { Id = id});
     }
 
     public async Task<bool> DoesUserExist(string email)
@@ -45,7 +45,7 @@ public class UserRepository : IUserRepository
             false => @"SELECT * FROM app_user WHERE id = @Id and is_deleted = false"
         };
 
-        return await _db.LoadFirst<UserModel, int>(sql, id);
+        return await _db.LoadFirst<UserModel, object>(sql, new { Id = id });
     }
     
     public async Task<UserModel?> GetUserByEmail(string email, bool includeDeleted = false)
@@ -82,7 +82,7 @@ public class UserRepository : IUserRepository
         await _db.SaveData(sql, parameters);
     }
 
-    public async Task ChangeUserPassword(int id, string passwordHash)
+    public async Task UpdateUserPassword(int id, string passwordHash)
     {
         var parameters = new DynamicParameters(new {Id = id, PasswordHash = passwordHash});
         const string sql = @"UPDATE app_user SET password_hash = @PasswordHash WHERE id = @Id";
@@ -92,10 +92,10 @@ public class UserRepository : IUserRepository
 
     public async Task UpdateUserEmail(int id, string newEmail)
     {
-        var paramaters = new DynamicParameters(new {Id = id, Email = newEmail});
+        var parameters = new DynamicParameters(new { Id = id, Email = newEmail});
         const string sql = @"UPDATE app_user SET email = @Email WHERE id = @Id";
 
-        await _db.SaveData(sql, paramaters);
+        await _db.SaveData(sql, parameters);
     }
 
     public async Task UpdateUserProfile(int id, string firstName, string lastName)
@@ -110,13 +110,13 @@ public class UserRepository : IUserRepository
     {
         const string sql = @"UPDATE app_user SET is_blocked = true WHERE id = @Id";
 
-        await _db.SaveData(sql, id);
+        await _db.SaveData(sql, new { Id = id});
     }
     
     public async Task DeleteUser(int id)
     {
         const string sql = @"UPDATE app_user SET is_deleted = true WHERE id = @Id";
 
-        await _db.SaveData(sql, id);
+        await _db.SaveData(sql, new {Id = id});
     }
 }

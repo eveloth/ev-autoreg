@@ -11,7 +11,7 @@ public interface IUserRepository
     Task<UserModel?> GetUserByEmail(string email, bool includeDeleted = false);
     Task<IEnumerable<UserModel>> GetAllUsers(bool includeDeleted = false);
     Task UpdateUser(UserModel user);
-    Task ChangeUserPassword(int id, string passwordHash);
+    Task UpdateUserPassword(int id, string passwordHash);
     Task UpdateUserEmail(int id, string newEmail);
     Task UpdateUserProfile(int id, string firstName, string lastName);
     Task BlockUser(int id);
