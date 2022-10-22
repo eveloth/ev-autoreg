@@ -15,6 +15,7 @@ builder.Services.AddRouting(options => options.LowercaseUrls = true);
 
 builder.Services.AddSingleton<ISqlDataAccess, SqlDataAccess>();
 builder.Services.AddSingleton<IUserRepository, UserRepository>();
+builder.Services.AddSingleton<IUserRolesRepository, UserRolesRepository>();
 builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
 
 
