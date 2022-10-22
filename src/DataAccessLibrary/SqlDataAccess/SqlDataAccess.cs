@@ -42,9 +42,7 @@ public class SqlDataAccess : ISqlDataAccess
     {
         using IDbConnection connection = new NpgsqlConnection(_config.GetConnectionString(connectionId));
 
-        var result = await connection.QueryAsync <TModel>(sql, parameters);
-
-        return result.FirstOrDefault();
+        return await connection.QueryFirstOrDefaultAsync<TModel>(sql, parameters);
     }
     
     public async Task SaveData<TParameters>(
