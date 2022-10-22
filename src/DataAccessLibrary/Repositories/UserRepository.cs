@@ -82,28 +82,40 @@ public class UserRepository : IUserRepository
         await _db.SaveData(sql, parameters);
     }
 
+    public async Task ChangeUserPassword(int id, string passwordHash)
+    {
+        var parameters = new DynamicParameters(new {Id = id, PasswordHash = passwordHash});
+        const string sql = @"UPDATE app_user SET password_hash = @PasswordHash WHERE id = @Id";
+
+        await _db.SaveData(sql, parameters);
+    }
+
     public async Task UpdateUserEmail(int id, string newEmail)
     {
-        var paramaters = new DynamicParameters( new { Id = id, Email = newEmail });
+        var paramaters = new DynamicParameters(new {Id = id, Email = newEmail});
         const string sql = @"UPDATE app_user SET email = @Email WHERE id = @Id";
 
         await _db.SaveData(sql, paramaters);
     }
-    
-    public async Task UpdateUserProfile(){}
-    
-    public async Task ChangeUserPassword(){}
 
-    public async Task DeleteUser(int id)
+    public async Task UpdateUserProfile(int id, string firstName, string lastName)
     {
-        const string sql = @"UPDATE app_user SET is_deleted = true WHERE id = @Id";
+        var parameters = new DynamicParameters(new {Id = id, FirstName = firstName, LastName = lastName});
+        const string sql = @"UPDATE app_user SET first_name = @FirstName, last_name = @LastName WHERE id = @Id";
 
-        await _db.SaveData(sql, id);
+        await _db.SaveData(sql, parameters);
     }
     
     public async Task BlockUser(int id)
     {
         const string sql = @"UPDATE app_user SET is_blocked = true WHERE id = @Id";
+
+        await _db.SaveData(sql, id);
+    }
+    
+    public async Task DeleteUser(int id)
+    {
+        const string sql = @"UPDATE app_user SET is_deleted = true WHERE id = @Id";
 
         await _db.SaveData(sql, id);
     }
