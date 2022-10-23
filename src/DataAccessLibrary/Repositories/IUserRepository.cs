@@ -15,5 +15,6 @@ public interface IUserRepository
     Task UpdateUserEmail(int id, string newEmail);
     Task UpdateUserProfile(int id, string firstName, string lastName);
     Task BlockUser(int id);
+    Task UnblockUser(int id);
     Task DeleteUser(int id);
 }

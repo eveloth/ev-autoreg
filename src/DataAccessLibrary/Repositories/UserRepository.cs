@@ -1,7 +1,6 @@
 ﻿using Dapper;
 using DataAccessLibrary.Models;
 using DataAccessLibrary.SqlDataAccess;
-using System.Linq;
 
 namespace DataAccessLibrary.Repositories;
 
@@ -111,6 +110,13 @@ public class UserRepository : IUserRepository
         const string sql = @"UPDATE app_user SET is_blocked = true WHERE id = @Id";
 
         await _db.SaveData(sql, new { Id = id});
+    }
+
+    public async Task UnblockUser(int id)
+    {
+        const string sql = @"UPDATE app_user SET is_blocked = false WHERE id = @Id";
+
+        await _db.SaveData(sql, new {Id = id});
     }
     
     public async Task DeleteUser(int id)
