@@ -1,4 +1,5 @@
-﻿using Dapper;
+﻿using System.Threading.Tasks.Dataflow;
+using Dapper;
 using DataAccessLibrary.Models;
 using DataAccessLibrary.SqlDataAccess;
 
@@ -32,6 +33,19 @@ public class UserRolesRepository : IUserRolesRepository
         const string sql = @"INSERT INTO role (role_name) VALUES (@RoleName)";
 
         await _db.SaveData(sql, new {RoleName = roleName});
+    }
+
+    public async Task<UserRoleModel?> GetUserRole(int id)
+    {
+        const string sql = @"SELECT app_user.id AS user_id, email, role_name
+                             FROM app_user
+                             INNER JOIN user_roles
+                             ON app_user.id = user_roles.user_id
+                             INNER JOIN role
+                             ON user_roles.role_id = role.id
+                             WHERE app_user.id = @Id";
+
+        return await _db.LoadFirst<UserRoleModel?, object>(sql, new {Id = id});
     }
 
     public async Task<IEnumerable<UserRoleModel?>> GetUserRoles()

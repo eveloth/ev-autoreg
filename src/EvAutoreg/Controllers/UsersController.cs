@@ -1,9 +1,14 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using DataAccessLibrary.Models;
 using DataAccessLibrary.Repositories;
 using EvAutoreg.Dto;
 using EvAutoreg.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 
 namespace EvAutoreg.Controllers;
 
@@ -12,12 +17,16 @@ namespace EvAutoreg.Controllers;
 public class UsersController : ControllerBase
 {
     private readonly IUserRepository _userRepository;
+    private readonly IUserRolesRepository _userRolesRepository;
     private readonly IPasswordHasher _passwordHasher;
+    private readonly IConfiguration _config;
 
-    public UsersController(IUserRepository userRepository, IPasswordHasher passwordHasher)
+    public UsersController(IUserRepository userRepository, IPasswordHasher passwordHasher, IConfiguration config, IUserRolesRepository userRolesRepository)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
+        _config = config;
+        _userRolesRepository = userRolesRepository;
     }
         
     [HttpPost]
@@ -42,7 +51,7 @@ public class UsersController : ControllerBase
         return Ok(newUser.Email);
     }
 
-    [Route("/token")]
+    [Route("old_token")]
     [HttpPost]
     public async Task<IActionResult> Login(UserCredentialsDto request)
     {
@@ -61,6 +70,42 @@ public class UsersController : ControllerBase
         }
 
         return BadRequest("Wrong credentials");
+    }
+    
+    [AllowAnonymous]
+    [Route("token")]
+    [HttpPost]
+    public async Task<IActionResult> GetToken(UserCredentialsDto request)
+    {
+        var email = request.Email.ToLower();
+
+        var existingUser = await _userRepository.GetUserByEmail(email);
+
+        if (existingUser is null)
+        {
+            return NotFound("User doesn't exist");
+        }
+
+        if (_passwordHasher.VerifyPassword(existingUser.PasswordHash, request.Password) !=
+            PasswordVerificationResult.Success) return Unauthorized();
+        
+        var userRole = await _userRolesRepository.GetUserRole(existingUser.Id);
+        var role = userRole?.RoleName ?? "Anonymous";
+        var issuer = _config["Jwt:Issuer"];
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
+
+        var claims = new[]
+        {
+            new Claim(ClaimTypes.NameIdentifier, existingUser.Id.ToString()),
+            new Claim(ClaimTypes.Role, role)
+        };
+
+        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        var tokenDescriptor = new JwtSecurityToken(issuer, claims: claims, expires: DateTime.Now.AddHours(12),
+            signingCredentials: credentials);
+        var token = new JwtSecurityTokenHandler().WriteToken(tokenDescriptor);
+
+        return Ok($"bearer {token}");
     }
 
     [HttpGet]
