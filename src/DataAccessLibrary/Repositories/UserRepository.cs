@@ -47,7 +47,7 @@ public class UserRepository : IUserRepository
         return await _db.LoadFirst<UserModel, object>(sql, new { Id = id }, cts);
     }
     
-    public async Task<UserModel?> GetUserByEmail(string email, CancellationToken cts,bool includeDeleted = false)
+    public async Task<UserModel?> GetUserByEmail(string email, CancellationToken cts, bool includeDeleted = false)
     {
         var sql = includeDeleted switch
         {
