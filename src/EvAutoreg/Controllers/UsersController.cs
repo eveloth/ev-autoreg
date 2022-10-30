@@ -20,44 +20,44 @@ public class UsersController : ControllerBase
     }
         
     [HttpGet]
-    public async Task<IActionResult> GetAllUsers()
+    public async Task<IActionResult> GetAllUsers(CancellationToken cts)
     {
-        return Ok(await _userRepository.GetAllUsers());
+        return Ok(await _userRepository.GetAllUsers(cts));
     }
 
     [Route("{id:int}")]
     [HttpGet]
-    public async Task<IActionResult> GetUserById(int id)
+    public async Task<IActionResult> GetUserById(int id, CancellationToken cts)
     {
-        var user = await _userRepository.GetUserById(id);
+        var user = await _userRepository.GetUserById(id, cts);
 
         return user is null ? NotFound("User not found.") : Ok(user);
     }
 
     [Route("{id:int}/email")]
     [HttpPatch]
-    public async Task<IActionResult> UpdateEmail(int id, UserEmailDto email)
+    public async Task<IActionResult> UpdateEmail(int id, UserEmailDto email, CancellationToken cts)
     {
-        var userExists = await _userRepository.DoesUserExist(id);
+        var userExists = await _userRepository.DoesUserExist(id, cts);
 
         if (!userExists) return NotFound("User not found");
 
-        await _userRepository.UpdateUserEmail(id, email.NewEmail);
+        await _userRepository.UpdateUserEmail(id, email.NewEmail, cts);
 
         return Ok("Email was updated");
     }
 
     [Route("{id:int}/password")]
     [HttpPatch]
-    public async Task<IActionResult> UpdatePassword(int id, UserPasswordDto password)
+    public async Task<IActionResult> UpdatePassword(int id, UserPasswordDto password, CancellationToken cts)
     {
-        var userExists = await _userRepository.DoesUserExist(id);
+        var userExists = await _userRepository.DoesUserExist(id, cts);
 
         if (!userExists) return NotFound("User not found");
 
         var passwordHash = _passwordHasher.HashPassword(password.NewPassword);
 
-        await _userRepository.UpdateUserPassword(id, passwordHash);
+        await _userRepository.UpdateUserPassword(id, passwordHash, cts);
 
         return Ok("Password was updated");
     }
@@ -65,52 +65,52 @@ public class UsersController : ControllerBase
     [Authorize(Roles="Admin")]
     [Route("{id:int}/password/reset")]
     [HttpPost]
-    public async Task<IActionResult> ResetPassword(int id, UserPasswordDto password)
+    public async Task<IActionResult> ResetPassword(int id, UserPasswordDto password, CancellationToken cts)
     {
-        var userExists = await _userRepository.DoesUserExist(id);
+        var userExists = await _userRepository.DoesUserExist(id, cts);
 
         if (!userExists) return NotFound("User not found");
 
         var passwordHash = _passwordHasher.HashPassword(password.NewPassword);
 
-        await _userRepository.UpdateUserPassword(id, passwordHash);
+        await _userRepository.UpdateUserPassword(id, passwordHash, cts);
             
         return Ok("Password was reset");
     }
 
     [Route("{id:int}/block")]
     [HttpPost]
-    public async Task<IActionResult> BlockUser(int id)
+    public async Task<IActionResult> BlockUser(int id, CancellationToken cts)
     {
-        var userExists = await _userRepository.DoesUserExist(id);
+        var userExists = await _userRepository.DoesUserExist(id, cts);
 
         if (!userExists) return NotFound("User not found.");
             
-        await _userRepository.BlockUser(id);
+        await _userRepository.BlockUser(id, cts);
         return Ok("User was blocked.");
     }
         
     [Route("{id:int}/unblock")]
     [HttpPost]
-    public async Task<IActionResult> UnblockUser(int id)
+    public async Task<IActionResult> UnblockUser(int id, CancellationToken cts)
     {
-        var userExists = await _userRepository.DoesUserExist(id);
+        var userExists = await _userRepository.DoesUserExist(id, cts);
 
         if (!userExists) return NotFound("User not found.");
             
-        await _userRepository.UnblockUser(id);
+        await _userRepository.UnblockUser(id, cts);
         return Ok("User was unblocked.");
     }
 
     [Route("{id:int}")]
     [HttpDelete]
-    public async Task<IActionResult> DeleteUser(int id)
+    public async Task<IActionResult> DeleteUser(int id, CancellationToken cts)
     {
-        var userExists = await _userRepository.DoesUserExist(id);
+        var userExists = await _userRepository.DoesUserExist(id, cts);
 
         if (!userExists) return NotFound("User not found");
             
-        await _userRepository.DeleteUser(id);
+        await _userRepository.DeleteUser(id, cts);
         return Ok("User was deleted.");
     }
 }

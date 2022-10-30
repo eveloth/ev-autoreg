@@ -4,14 +4,14 @@ namespace DataAccessLibrary.Repositories;
 
 public interface IUserRolesRepository
 {
-    Task<bool> DoesRoleExist(int roleId);
-    Task<bool> DoesRecordExist(int userId, int roleId);
-    Task<IEnumerable<RoleModel?>> GetRoles();
-    Task AddRole(string roleName);
-    Task ChangeRoleName(int roleId, string newRoleName);
-    Task DeleteRole(int roleId);
-    Task<IEnumerable<UserRoleModel?>> GetAllUserRoles();
-    Task<UserRoleModel?> GetUserRole(int id);
-    Task<bool> SetUserRole(int userId, int roleId);
-    Task<bool> DeleteUserFromRole(int userId, int roleId);
+    Task<bool> DoesRoleExist(int roleId, CancellationToken cts);
+    Task<bool> DoesRecordExist(int userId, int roleId, CancellationToken cts);
+    Task<IEnumerable<RoleModel?>> GetRoles(CancellationToken cts);
+    Task AddRole(string roleName, CancellationToken cts);
+    Task ChangeRoleName(int roleId, string newRoleName, CancellationToken cts);
+    Task DeleteRole(int roleId, CancellationToken cts);
+    Task<IEnumerable<UserRoleModel?>> GetAllUserRoles(CancellationToken cts);
+    Task<UserRoleModel?> GetUserRole(int id, CancellationToken cts);
+    Task<bool> SetUserRole(int userId, int roleId, CancellationToken cts);
+    Task<bool> DeleteUserFromRole(int userId, int roleId, CancellationToken cts);
 }

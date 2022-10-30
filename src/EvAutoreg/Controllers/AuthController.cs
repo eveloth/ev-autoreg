@@ -32,11 +32,11 @@ public class AuthController : ControllerBase
     [AllowAnonymous]
     [Route("token")]
     [HttpPost]
-    public async Task<IActionResult> Login(UserCredentialsDto request)
+    public async Task<IActionResult> Login(UserCredentialsDto request, CancellationToken cts)
     {
         var email = request.Email.ToLower();
 
-        var existingUser = await _userRepository.GetUserByEmail(email);
+        var existingUser = await _userRepository.GetUserByEmail(email, cts);
 
         if (existingUser is null)
         {
@@ -47,7 +47,7 @@ public class AuthController : ControllerBase
             PasswordVerificationResult.Success) 
             return Unauthorized();
             
-        var userRole = await _userRolesRepository.GetUserRole(existingUser.Id);
+        var userRole = await _userRolesRepository.GetUserRole(existingUser.Id, cts);
         var role = userRole?.RoleName ?? "Anonymous";
         var issuer = _config["Jwt:Issuer"];
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
@@ -69,11 +69,11 @@ public class AuthController : ControllerBase
     [AllowAnonymous]
     [Route("register")]
     [HttpPost]
-    public async Task<IActionResult> RegisterUser(UserCredentialsDto request)
+    public async Task<IActionResult> RegisterUser(UserCredentialsDto request, CancellationToken cts)
     {
         var email = request.Email.ToLower();
 
-        var userExists = await _userRepository.DoesUserExist(email);
+        var userExists = await _userRepository.DoesUserExist(email, cts);
 
         if (userExists) return BadRequest("User already exists.");
 
@@ -85,7 +85,7 @@ public class AuthController : ControllerBase
             PasswordHash = passwordHash
         };
 
-        await _userRepository.CreateUser(newUser);
+        await _userRepository.CreateUser(newUser, cts);
 
         return Ok(newUser.Email);
     }

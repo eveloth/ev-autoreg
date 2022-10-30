@@ -20,20 +20,20 @@ public class RoleController : ControllerBase
 
     [Authorize(Roles="admin")]
     [HttpGet]
-    public async Task<IActionResult> GetRoles()
+    public async Task<IActionResult> GetRoles(CancellationToken cts)
     {
-        var roles = await _userRolesRepository.GetRoles();
+        var roles = await _userRolesRepository.GetRoles(cts);
 
         return Ok(roles);
     }
 
     [Authorize(Roles="admin")]
     [HttpPost]
-    public async Task<IActionResult> AddRole(RoleDto role)
+    public async Task<IActionResult> AddRole(RoleDto role, CancellationToken cts)
     {
         var roleName = role.RoleName.ToLower();
             
-        await _userRolesRepository.AddRole(roleName);
+        await _userRolesRepository.AddRole(roleName, cts);
 
         return Ok($"{roleName} role was added.");
     }
@@ -41,11 +41,11 @@ public class RoleController : ControllerBase
     [Authorize(Roles = "admin")]
     [Route("{id:int}")]
     [HttpPut]
-    public async Task<IActionResult> ChangeRoleName(int id, RoleDto role)
+    public async Task<IActionResult> ChangeRoleName(int id, RoleDto role, CancellationToken cts)
     {
         var newRoleName = role.RoleName.ToLower();
 
-        await _userRolesRepository.ChangeRoleName(id, newRoleName);
+        await _userRolesRepository.ChangeRoleName(id, newRoleName, cts);
 
         return Ok("Rolename was changed");
     }
@@ -53,9 +53,9 @@ public class RoleController : ControllerBase
     [Authorize(Roles = "admin")]
     [Route("{id:int}")]
     [HttpDelete]
-    public async Task<IActionResult> DeleteRole(int id)
+    public async Task<IActionResult> DeleteRole(int id, CancellationToken cts)
     {
-        await _userRolesRepository.DeleteRole(id);
+        await _userRolesRepository.DeleteRole(id, cts);
 
         return Ok("Role was deleted");
     }
@@ -63,9 +63,9 @@ public class RoleController : ControllerBase
     [Authorize(Roles = "admin")]
     [Route("user-roles")]
     [HttpGet]
-    public async Task<IActionResult> GetAllUserRoles()
+    public async Task<IActionResult> GetAllUserRoles(CancellationToken cts)
     {
-        var userRoles = await _userRolesRepository.GetAllUserRoles();
+        var userRoles = await _userRolesRepository.GetAllUserRoles(cts);
 
         return Ok(userRoles);
     }
@@ -73,9 +73,9 @@ public class RoleController : ControllerBase
     [Authorize(Roles = "admin")]
     [Route("user-roles/{id:int}")]
     [HttpGet]
-    public async Task<IActionResult> GetUserRole(int id)
+    public async Task<IActionResult> GetUserRole(int id, CancellationToken cts)
     {
-        var userRole = await _userRolesRepository.GetUserRole(id);
+        var userRole = await _userRolesRepository.GetUserRole(id, cts);
 
         return Ok(userRole);
     } 
@@ -83,23 +83,23 @@ public class RoleController : ControllerBase
     [Authorize(Roles = "admin")]
     [Route("user-roles")]
     [HttpPost]
-    public async Task<IActionResult> AddUserToRole(UserRoleDto userRole)
+    public async Task<IActionResult> AddUserToRole(UserRoleDto userRole, CancellationToken cts)
     {
-        var userExists = await _userRepository.DoesUserExist(userRole.UserId);
+        var userExists = await _userRepository.DoesUserExist(userRole.UserId, cts);
 
         if (!userExists)
         {
             return NotFound("User doesn't exist");
         }
 
-        var roleExists = await _userRolesRepository.DoesRoleExist(userRole.RoleId);
+        var roleExists = await _userRolesRepository.DoesRoleExist(userRole.RoleId, cts);
 
         if (!roleExists)
         {
             return NotFound("Role doesn't exist.");
         }
 
-        var isOperationSuccessfull = await _userRolesRepository.SetUserRole(userRole.UserId, userRole.RoleId);
+        var isOperationSuccessfull = await _userRolesRepository.SetUserRole(userRole.UserId, userRole.RoleId, cts);
 
         if (!isOperationSuccessfull)
         {
@@ -112,13 +112,13 @@ public class RoleController : ControllerBase
     [Authorize(Roles = "admin")]
     [Route("user-roles")]
     [HttpDelete]
-    public async Task<IActionResult> DeleteUserFromRole(UserRoleDto userRole)
+    public async Task<IActionResult> DeleteUserFromRole(UserRoleDto userRole, CancellationToken cts)
     {
-        var recordExists = await _userRolesRepository.DoesRecordExist(userRole.UserId, userRole.RoleId);
+        var recordExists = await _userRolesRepository.DoesRecordExist(userRole.UserId, userRole.RoleId, cts);
 
         if (!recordExists) return NotFound("No user with the specified role found.");
 
-        var isOperationSuccessfull = await _userRolesRepository.DeleteUserFromRole(userRole.UserId, userRole.RoleId);
+        var isOperationSuccessfull = await _userRolesRepository.DeleteUserFromRole(userRole.UserId, userRole.RoleId, cts);
 
         if (!isOperationSuccessfull) return BadRequest("Something went wrong");
 
