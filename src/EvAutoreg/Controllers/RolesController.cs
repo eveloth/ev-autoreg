@@ -7,12 +7,12 @@ namespace EvAutoreg.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class RoleController : ControllerBase
+public class RolesController : ControllerBase
 {
     private readonly IUserRolesRepository _userRolesRepository;
     private readonly IUserRepository _userRepository;
 
-    public RoleController(IUserRolesRepository userRolesRepository, IUserRepository userRepository)
+    public RolesController(IUserRolesRepository userRolesRepository, IUserRepository userRepository)
     {
         _userRolesRepository = userRolesRepository;
         _userRepository = userRepository;
