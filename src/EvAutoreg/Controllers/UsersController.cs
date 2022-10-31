@@ -3,6 +3,7 @@ using EvAutoreg.Dto;
 using EvAutoreg.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using static EvAutoreg.Errors.ErrorCodes;
 
 namespace EvAutoreg.Controllers;
 
@@ -19,6 +20,7 @@ public class UsersController : ControllerBase
         _passwordHasher = passwordHasher;
     }
         
+    [Authorize(Roles = "manager, admin")]
     [HttpGet]
     public async Task<IActionResult> GetAllUsers(CancellationToken cts)
     {
@@ -31,7 +33,7 @@ public class UsersController : ControllerBase
     {
         var user = await _userRepository.GetUserById(id, cts);
 
-        return user is null ? NotFound("User not found.") : Ok(user);
+        return user is null ? NotFound(ErrorCode[2001]) : Ok(user);
     }
 
     [Route("{id:int}/email")]

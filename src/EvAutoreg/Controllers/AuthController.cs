@@ -1,6 +1,3 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 using DataAccessLibrary.Models;
 using DataAccessLibrary.Repositories;
 using EvAutoreg.Dto;
@@ -8,7 +5,7 @@ using EvAutoreg.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
+using static EvAutoreg.Errors.ErrorCodes;
 
 namespace EvAutoreg.Controllers;
 
@@ -19,14 +16,14 @@ public class AuthController : ControllerBase
     private readonly IUserRepository _userRepository;
     private readonly IUserRolesRepository _userRolesRepository;
     private readonly IPasswordHasher _passwordHasher;
-    private readonly IConfiguration _config;
+    private readonly IAuthenticationService _authService;
 
-    public AuthController(IUserRepository userRepository, IUserRolesRepository userRolesRepository, IConfiguration config, IPasswordHasher passwordHasher)
+    public AuthController(IUserRepository userRepository, IUserRolesRepository userRolesRepository, IConfiguration config, IPasswordHasher passwordHasher, IAuthenticationService authService)
     {
         _userRepository = userRepository;
         _userRolesRepository = userRolesRepository;
-        _config = config;
         _passwordHasher = passwordHasher;
+        _authService = authService;
     }
         
     [AllowAnonymous]
@@ -40,30 +37,28 @@ public class AuthController : ControllerBase
 
         if (existingUser is null)
         {
-            return NotFound("User doesn't exist");
+            return NotFound(ErrorCode[1004]);
         }
 
         if (_passwordHasher.VerifyPassword(existingUser.PasswordHash, request.Password) !=
-            PasswordVerificationResult.Success) 
-            return Unauthorized();
-            
-        var userRole = await _userRolesRepository.GetUserRole(existingUser.Id, cts);
-        var role = userRole?.RoleName ?? "Anonymous";
-        var issuer = _config["Jwt:Issuer"];
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
-
-        var claims = new[]
+            PasswordVerificationResult.Success)
         {
-            new Claim(ClaimTypes.NameIdentifier, existingUser.Id.ToString()),
-            new Claim(ClaimTypes.Role, role)
-        };
+            return Unauthorized(ErrorCode[1005]);
+        }
 
-        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-        var tokenDescriptor = new JwtSecurityToken(issuer, claims: claims, expires: DateTime.Now.AddHours(12),
-            signingCredentials: credentials);
-        var token = new JwtSecurityTokenHandler().WriteToken(tokenDescriptor);
+        if (existingUser.IsBlocked)
+        {
+            return BadRequest(ErrorCode[1006]);
+        }
+        
+        var userRole = await _userRolesRepository.GetUserRole(existingUser.Id, cts);
+        
+        var role = userRole?.RoleName ?? "anonymous";
+        var id = existingUser.Id.ToString();
 
-        return Ok($"bearer {token}");
+        var token = _authService.GenerateToken(id, role);
+
+        return Ok(token);
     }
        
     [AllowAnonymous]
@@ -72,10 +67,23 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> RegisterUser(UserCredentialsDto request, CancellationToken cts)
     {
         var email = request.Email.ToLower();
+        
+        if (!_authService.IsEmailValid(email))
+        {
+            return BadRequest(ErrorCode[1001]);
+        }
+
+        if (!_authService.IsPasswordValid(email, request.Password))
+        {
+            return BadRequest(ErrorCode[1002]);
+        }
 
         var userExists = await _userRepository.DoesUserExist(email, cts);
 
-        if (userExists) return BadRequest("User already exists.");
+        if (userExists)
+        {
+            return BadRequest(ErrorCode[1003]);
+        }
 
         var passwordHash = _passwordHasher.HashPassword(request.Password);
 
@@ -85,8 +93,15 @@ public class AuthController : ControllerBase
             PasswordHash = passwordHash
         };
 
-        await _userRepository.CreateUser(newUser, cts);
-
-        return Ok(newUser.Email);
+        try
+        {
+            await _userRepository.CreateUser(newUser, cts);
+            return Ok(newUser.Email);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            return StatusCode(500, ErrorCode[9001]);
+        }
     }
 }
