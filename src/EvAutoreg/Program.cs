@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text;
 using DataAccessLibrary.Repositories;
 using DataAccessLibrary.SqlDataAccess;
@@ -26,6 +27,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo {Title = "EvAutoreg", Version = "v0.4.0"});
+    
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         In = ParameterLocation.Header,
@@ -35,6 +37,7 @@ builder.Services.AddSwaggerGen(options =>
         BearerFormat = "JWT",
         Scheme = "Bearer"
     });
+    
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
@@ -49,6 +52,9 @@ builder.Services.AddSwaggerGen(options =>
             Array.Empty<string>()
         }
     });
+
+    var xmlCommentsFileName = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlCommentsFileName));
 });
 
 builder.Services.AddRouting(options => options.LowercaseUrls = true);

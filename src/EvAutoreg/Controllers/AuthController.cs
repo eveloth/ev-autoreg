@@ -25,7 +25,17 @@ public class AuthController : ControllerBase
         _passwordHasher = passwordHasher;
         _authService = authService;
     }
-        
+    
+    /// <summary>
+    /// Logs user in.
+    /// </summary>
+    /// <param name="request"></param>
+    /// <param name="cts"></param>
+    /// <returns>A JWT token to include in HTTP request header or an error object with the error context</returns>
+    /// <response code="200">Returns JWT token</response>
+    /// <response code="401">If credentials are invalid</response>
+    /// <response code="400">If user is blocked</response>
+    /// <response code="404">If user doesn't exist</response>
     [AllowAnonymous]
     [Route("token")]
     [HttpPost]
