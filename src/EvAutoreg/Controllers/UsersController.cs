@@ -1,8 +1,9 @@
+using System.Security.Claims;
 using DataAccessLibrary.Repositories;
 using EvAutoreg.Dto;
-using EvAutoreg.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Npgsql;
 using static EvAutoreg.Errors.ErrorCodes;
 
 namespace EvAutoreg.Controllers;
@@ -11,99 +12,119 @@ namespace EvAutoreg.Controllers;
 [ApiController]
 public class UsersController : ControllerBase
 {
+    private readonly ILogger<UsersController> _logger;
     private readonly IUserRepository _userRepository;
-    private readonly IPasswordHasher _passwordHasher;
 
-    public UsersController(IUserRepository userRepository, IPasswordHasher passwordHasher, IConfiguration config, IUserRolesRepository userRolesRepository)
+    public UsersController(IUserRepository userRepository, ILogger<UsersController> logger)
     {
         _userRepository = userRepository;
-        _passwordHasher = passwordHasher;
+        _logger = logger;
     }
         
     [Authorize(Roles = "manager, admin")]
     [HttpGet]
     public async Task<IActionResult> GetAllUsers(CancellationToken cts)
     {
-        return Ok(await _userRepository.GetAllUsers(cts));
+        try
+        {
+            var users = await _userRepository.GetAllUserProfiles(cts);
+            return Ok(users);
+        }
+        catch (NpgsqlException e)
+        {
+            _logger.LogError("{ErrorMessage}", e.Message);
+            return StatusCode(500, ErrorCode[9001]);
+        }
     }
 
     [Route("{id:int}")]
     [HttpGet]
-    public async Task<IActionResult> GetUserById(int id, CancellationToken cts)
+    public async Task<IActionResult> GetUser(int id, CancellationToken cts)
     {
-        var user = await _userRepository.GetUserById(id, cts);
+        try
+        {
+            var user = await _userRepository.GetUserProfle(id, cts);
+            return user is null ? NotFound(ErrorCode[2001]) : Ok(user);
+        }
+        catch (NpgsqlException e)
+        {
+            _logger.LogError("{ErrorMessage}", e.Message);
+            return StatusCode(500, ErrorCode[9001]);
+        }
 
-        return user is null ? NotFound(ErrorCode[2001]) : Ok(user);
     }
 
-    [Route("{id:int}/email")]
+    [Route("/profile")]
     [HttpPatch]
-    public async Task<IActionResult> UpdateEmail(int id, UserEmailDto email, CancellationToken cts)
+    public async Task<IActionResult> UpdateUserProfile(UserProfileDto profile, CancellationToken cts)
     {
-        var userExists = await _userRepository.DoesUserExist(id, cts);
+        var userId = 
+            int.Parse(HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value);
 
-        if (!userExists) return NotFound("User not found");
-
-        await _userRepository.UpdateUserEmail(id, email.NewEmail, cts);
-
-        return Ok("Email was updated");
+        try
+        {
+            var user = await _userRepository.UpdateUserProfile(userId,profile.FisrtName, profile.LastName, cts);
+            _logger.LogInformation("User profile was updated for user ID {UserId}", userId);
+            return Ok(user);
+        }
+        catch (NpgsqlException e)
+        {
+            _logger.LogError("{ErrorMessage}", e.Message);
+            return StatusCode(500, ErrorCode[9001]);
+        }
     }
 
-    [Route("{id:int}/password")]
-    [HttpPatch]
-    public async Task<IActionResult> UpdatePassword(int id, UserPasswordDto password, CancellationToken cts)
-    {
-        var userExists = await _userRepository.DoesUserExist(id, cts);
-
-        if (!userExists) return NotFound("User not found");
-
-        var passwordHash = _passwordHasher.HashPassword(password.NewPassword);
-
-        await _userRepository.UpdateUserPassword(id, passwordHash, cts);
-
-        return Ok("Password was updated");
-    }
-
-    [Authorize(Roles="Admin")]
-    [Route("{id:int}/password/reset")]
-    [HttpPost]
-    public async Task<IActionResult> ResetPassword(int id, UserPasswordDto password, CancellationToken cts)
-    {
-        var userExists = await _userRepository.DoesUserExist(id, cts);
-
-        if (!userExists) return NotFound("User not found");
-
-        var passwordHash = _passwordHasher.HashPassword(password.NewPassword);
-
-        await _userRepository.UpdateUserPassword(id, passwordHash, cts);
-            
-        return Ok("Password was reset");
-    }
-
+    [Authorize(Roles = "admin")]
     [Route("{id:int}/block")]
     [HttpPost]
     public async Task<IActionResult> BlockUser(int id, CancellationToken cts)
     {
-        var userExists = await _userRepository.DoesUserExist(id, cts);
+        var existingUser = await _userRepository.GetUserProfle(id, cts);
 
-        if (!userExists) return NotFound("User not found.");
-            
-        await _userRepository.BlockUser(id, cts);
-        return Ok("User was blocked.");
+        if (existingUser is null || existingUser.IsDeleted)
+        {
+            return NotFound(ErrorCode[2001]);
+        }
+        
+        try
+        {
+            var userId = await _userRepository.BlockUser(id, cts);
+            _logger.LogInformation("User ID {UserId} was blocked", userId);
+            return Ok(userId);
+        }
+        catch (NpgsqlException e)
+        {
+            _logger.LogError("{ErrorMessage}", e.Message);
+            return StatusCode(500, ErrorCode[9001]);
+        }
     }
         
+    [Authorize(Roles = "admin")]
     [Route("{id:int}/unblock")]
     [HttpPost]
     public async Task<IActionResult> UnblockUser(int id, CancellationToken cts)
     {
-        var userExists = await _userRepository.DoesUserExist(id, cts);
+        var existingUser = await _userRepository.GetUserProfle(id, cts);
 
-        if (!userExists) return NotFound("User not found.");
-            
-        await _userRepository.UnblockUser(id, cts);
-        return Ok("User was unblocked.");
+        if (existingUser is null || existingUser.IsDeleted)
+        {
+            return NotFound(ErrorCode[2001]);
+        }
+
+        try
+        {
+            var userId = await _userRepository.UnblockUser(id, cts);
+            _logger.LogInformation("User ID {UserId} was unblocked", userId);
+            return Ok(userId);
+        }
+        catch (NpgsqlException e)
+        {
+            _logger.LogError("{ErrorMessage}", e.Message);
+            return StatusCode(500, ErrorCode[9001]);
+        }
     }
 
+    [Authorize(Roles = "admin")]
     [Route("{id:int}")]
     [HttpDelete]
     public async Task<IActionResult> DeleteUser(int id, CancellationToken cts)
@@ -111,8 +132,17 @@ public class UsersController : ControllerBase
         var userExists = await _userRepository.DoesUserExist(id, cts);
 
         if (!userExists) return NotFound("User not found");
-            
-        await _userRepository.DeleteUser(id, cts);
-        return Ok("User was deleted.");
+
+        try
+        {
+            var user = await _userRepository.DeleteUser(id, cts);
+            _logger.LogInformation("User ID {UserId} was deleted", user.Id);
+            return Ok(user);
+        }
+        catch (NpgsqlException e)
+        {
+            _logger.LogError("{ErrorMessage}", e.Message);
+            return StatusCode(500, ErrorCode[9001]);
+        }
     }
 }

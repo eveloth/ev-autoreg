@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using DataAccessLibrary.Models;
 using DataAccessLibrary.Repositories;
 using EvAutoreg.Dto;
@@ -5,6 +6,7 @@ using EvAutoreg.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Npgsql;
 using static EvAutoreg.Errors.ErrorCodes;
 
 namespace EvAutoreg.Controllers;
@@ -13,17 +15,19 @@ namespace EvAutoreg.Controllers;
 [ApiController]
 public class AuthController : ControllerBase
 {
+    private readonly ILogger<AuthController> _logger;
     private readonly IUserRepository _userRepository;
     private readonly IUserRolesRepository _userRolesRepository;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IAuthenticationService _authService;
 
-    public AuthController(IUserRepository userRepository, IUserRolesRepository userRolesRepository, IConfiguration config, IPasswordHasher passwordHasher, IAuthenticationService authService)
+    public AuthController(IUserRepository userRepository, IUserRolesRepository userRolesRepository, IConfiguration config, IPasswordHasher passwordHasher, IAuthenticationService authService, ILogger<AuthController> logger)
     {
         _userRepository = userRepository;
         _userRolesRepository = userRolesRepository;
         _passwordHasher = passwordHasher;
         _authService = authService;
+        _logger = logger;
     }
     
     /// <summary>
@@ -67,6 +71,8 @@ public class AuthController : ControllerBase
         var id = existingUser.Id.ToString();
 
         var token = _authService.GenerateToken(id, role);
+        
+        _logger.LogInformation("User ID {UserId} was logged in", existingUser.Id);
 
         return Ok(token);
     }
@@ -105,12 +111,104 @@ public class AuthController : ControllerBase
 
         try
         {
-            await _userRepository.CreateUser(newUser, cts);
-            return Ok(newUser.Email);
+            var createdUser = await _userRepository.CreateUser(newUser, cts);
+            _logger.LogInformation("User ID {UserId} was registered", createdUser.Id);
+            return Ok(createdUser);
         }
-        catch (Exception e)
+        catch (NpgsqlException e)
         {
-            Console.WriteLine(e);
+            _logger.LogError("{ErrorMessage}", e.Message);
+            return StatusCode(500, ErrorCode[9001]);
+        }
+    }   
+    
+    [Route("user/email")]
+    [HttpPatch]
+    public async Task<IActionResult> UpdateEmail(UserEmailDto email, CancellationToken cts)
+    {
+        var userId = 
+            int.Parse(HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value);
+
+        var newEmail = email.NewEmail.ToLower();
+
+        if (!_authService.IsEmailValid(newEmail))
+        {
+            return BadRequest(ErrorCode[1001]);
+        }
+
+        try
+        {
+            var userProfile = await _userRepository.UpdateUserEmail(userId, newEmail, cts);
+            _logger.LogInformation("Email was updated to {NewEmail} for user ID {UserId}", userProfile.Email, userProfile.Id);
+            return Ok(userProfile);
+        }
+        catch (NpgsqlException e)
+        {
+            _logger.LogError("{ErrorMessage}", e.Message);
+            return StatusCode(500, ErrorCode[9001]);
+        }
+    }
+    
+    [Route("user/password")]
+    [HttpPatch]
+    public async Task<IActionResult> UpdatePassword(UserPasswordDto password, CancellationToken cts)
+    {
+        var userId = 
+            int.Parse(HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value);
+
+        var user = await _userRepository.GetUserById(userId, cts);
+        var email = user!.Email;
+        
+        if (!_authService.IsPasswordValid(email, password.NewPassword))
+        {
+            return BadRequest(ErrorCode[1002]);
+        }
+        
+        var passwordHash = _passwordHasher.HashPassword(password.NewPassword);
+
+        try
+        {
+            var userWithChangedPassword = await _userRepository.UpdateUserPassword(userId, passwordHash, cts);
+            _logger.LogInformation("Password was changed for user ID {UserId}", userWithChangedPassword);
+            return Ok(userWithChangedPassword);
+        }
+        catch (NpgsqlException e)
+        {
+            _logger.LogError("{ErrorMessage}", e.Message);
+            return StatusCode(500, ErrorCode[9001]);
+        }
+    }
+
+    [Authorize(Roles="admin")]
+    [Route("user/{id:int}/password/reset")]
+    [HttpPost]
+    public async Task<IActionResult> ResetPassword(int id, UserPasswordDto password, CancellationToken cts)
+    {
+        var existingUser = await _userRepository.GetUserProfle(id, cts);
+
+        if (existingUser is null)
+        {
+            return NotFound(ErrorCode[2001]);
+        }
+
+        var email = existingUser.Email.ToLower();
+
+        if (!_authService.IsPasswordValid(email, password.NewPassword))
+        {
+            return BadRequest(ErrorCode[1002]);
+        }
+        
+        var passwordHash = _passwordHasher.HashPassword(password.NewPassword);
+
+        try
+        {
+            var userWithPassswordReset = await _userRepository.UpdateUserPassword(id, passwordHash, cts);
+            _logger.LogInformation("Password was reset for user ID {UserId}", userWithPassswordReset);
+            return Ok(userWithPassswordReset);
+        }
+        catch (NpgsqlException e)
+        {
+            _logger.LogError("{ErrorMessage}", e.Message);
             return StatusCode(500, ErrorCode[9001]);
         }
     }

@@ -22,7 +22,7 @@ public interface ISqlDataAccess
         string connectionId = "Default"
     );
 
-    Task SaveData<TParameters>(
+    Task<TResult> SaveData<TParameters, TResult>(
         string sql,
         TParameters parameters,
         CancellationToken cts,

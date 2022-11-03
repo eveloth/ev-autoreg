@@ -10,7 +10,7 @@ public class AuthenticationService : IAuthenticationService
 {
     // This is, of course, not quite comprehensive check, but we don't send confirmation emails either,
     // so we accept any string that matches the most common email pattern as an email
-    private const string _emailValidationRegex = @"[\w\d\-\.\+]+@[\w\d]+.\w+";
+    private const string _emailValidationRegex = @"[\w\d\-\.\+]+@[\w\d]+\.\w+";
     
     // Matches a password with minimum 8 characters, at least one uppercase letter, lowercase letter,
     // a number and a special character. Our security standards are highhh....

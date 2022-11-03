@@ -36,45 +36,45 @@ public class UserRolesRepository : IUserRolesRepository
         return await _db.LoadAllData<RoleModel?>(sql, cts);
     }
     
-    public async Task AddRole(string roleName, CancellationToken cts)
+    public async Task<RoleModel> AddRole(string roleName, CancellationToken cts)
     {
-        const string sql = @"INSERT INTO role (role_name) VALUES (@RoleName)";
+        const string sql = @"INSERT INTO role (role_name) VALUES (@RoleName) RETURNING *";
 
-        await _db.SaveData(sql, new {RoleName = roleName}, cts);
+        return await _db.SaveData<object, RoleModel>(sql, new {RoleName = roleName}, cts);
     }
 
 
-    public async Task ChangeRoleName(int roleId, string newRoleName, CancellationToken cts)
+    public async Task<RoleModel> ChangeRoleName(int roleId, string newRoleName, CancellationToken cts)
     {
-        const string sql = @"UPDATE role SET role_name = @RoleName WHERE id = @Id";
+        const string sql = @"UPDATE role SET role_name = @RoleName WHERE id = @Id RETURNING *";
         
         var parameters = new DynamicParameters(new {RoleName = newRoleName, Id = roleId});
         
-        await _db.SaveData(sql, parameters, cts);
+        return await _db.SaveData<object, RoleModel>(sql, parameters, cts);
     }
 
-    public async Task DeleteRole(int roleId, CancellationToken cts)
+    public async Task<RoleModel> DeleteRole(int roleId, CancellationToken cts)
     {
-        const string sql = @"DELETE FROM role WHERE id = @Id";
+        const string sql = @"DELETE FROM role WHERE id = @Id RETURNING *";
 
-        await _db.SaveData(sql, new {Id = roleId}, cts);
+        return await _db.SaveData<object, RoleModel>(sql, new {Id = roleId}, cts);
     }
     
-    public async Task<IEnumerable<UserRoleModel?>> GetAllUserRoles(CancellationToken cts)
+    public async Task<IEnumerable<UserRoleDisplayModel?>> GetAllUserRoles(CancellationToken cts)
     {
-        const string sql = @"SELECT app_user.id AS user_id, email, role_name
+        const string sql = @"SELECT app_user.id AS user_id, email, role_id, role_name
                              FROM app_user
                              INNER JOIN user_roles
                              ON app_user.id = user_roles.user_id
                              INNER JOIN role
                              ON user_roles.role_id = role.id";
 
-        return await _db.LoadAllData<UserRoleModel?>(sql, cts);
+        return await _db.LoadAllData<UserRoleDisplayModel?>(sql, cts);
     }
     
-    public async Task<UserRoleModel?> GetUserRole(int id, CancellationToken cts)
+    public async Task<UserRoleDisplayModel?> GetUserRole(int id, CancellationToken cts)
     {
-        const string sql = @"SELECT app_user.id AS user_id, email, role_name
+        const string sql = @"SELECT app_user.id AS user_id, email, role_id, role_name
                              FROM app_user
                              INNER JOIN user_roles
                              ON app_user.id = user_roles.user_id
@@ -82,47 +82,28 @@ public class UserRolesRepository : IUserRolesRepository
                              ON user_roles.role_id = role.id
                              WHERE app_user.id = @Id";
 
-        return await _db.LoadFirst<UserRoleModel?, object>(sql, new {Id = id}, cts);
+        return await _db.LoadFirst<UserRoleDisplayModel?, object>(sql, new {Id = id}, cts);
     }
 
-    public async Task<bool> SetUserRole(int userId, int roleId, CancellationToken cts)
+    public async Task<UserRoleRecordModel> SetUserRole(int userId, int roleId, CancellationToken cts)
     {
         const string addUserToRoleQuery = @"INSERT INTO user_roles (user_id, role_id)
                                             VALUES (@UserId, @RoleId)
                                             ON CONFLICT (user_id)
                                             DO UPDATE SET
-                                            role_id = EXCLUDED.role_id";
+                                            role_id = EXCLUDED.role_id RETURNING user_id, role_id";
 
         var parameters = new DynamicParameters(new {UserId = userId, RoleId = roleId });
 
-        try
-        {
-            await _db.SaveData(addUserToRoleQuery, parameters, cts);
-            return true;
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine("Domething went wrong.");
-            Console.WriteLine(e.Message);
-            return false;
-        }
+        return await _db.SaveData<object, UserRoleRecordModel>(addUserToRoleQuery, parameters, cts);
     }
 
-    public async Task<bool> DeleteUserFromRole(int userId, int roleId, CancellationToken cts)
+    public async Task<UserRoleRecordModel> DeleteUserFromRole(int userId, int roleId, CancellationToken cts)
     {
-        const string existingRecordQuery = 
-            @"SELECT EXISTS (SELECT true FROM user_roles WHERE user_id = @UserId and role_id = @RoleId)";
-        
         var parameters = new DynamicParameters(new {UserId = userId, RoleId = roleId });
 
-        var recordExists = await _db.LoadFirst<bool, object>(existingRecordQuery, parameters, cts);
+        const string deleteFromRoleQuery = @"DELETE FROM user_roles WHERE user_id = @UserId and role_id = @RoleId RETURNING user_id, role_id";
 
-        if (!recordExists) return false;
-
-        const string deleteFromRoleQuery = @"DELETE FROM user_roles WHERE user_id = @UserId and role_id = @RoleId";
-
-        await _db.SaveData(deleteFromRoleQuery, parameters, cts);
-
-        return true;
+        return await _db.SaveData<object, UserRoleRecordModel>(deleteFromRoleQuery, parameters, cts);
     }
 }

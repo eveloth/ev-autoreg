@@ -48,7 +48,7 @@ public class SqlDataAccess : ISqlDataAccess
         return await connection.QueryFirstOrDefaultAsync<TModel?>(new CommandDefinition(sql, parameters, cancellationToken: cts));
     }
     
-    public async Task SaveData<TParameters>(
+    public async Task<TResult> SaveData<TParameters, TResult>(
         string sql,
         TParameters parameters,
         CancellationToken cts,
@@ -56,6 +56,6 @@ public class SqlDataAccess : ISqlDataAccess
     {
         using IDbConnection connection = new NpgsqlConnection(_config.GetConnectionString(connectionId));
 
-        await connection.ExecuteAsync(new CommandDefinition(sql, parameters, cancellationToken: cts));
+        return await connection.QueryFirstAsync<TResult>(new CommandDefinition(sql, parameters, cancellationToken: cts));
     }
 }
