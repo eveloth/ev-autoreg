@@ -20,7 +20,7 @@ public class UsersController : ControllerBase
         _userRepository = userRepository;
         _logger = logger;
     }
-        
+
     [Authorize(Roles = "manager, admin")]
     [HttpGet]
     public async Task<IActionResult> GetAllUsers(CancellationToken cts)
@@ -51,19 +51,27 @@ public class UsersController : ControllerBase
             _logger.LogError("{ErrorMessage}", e.Message);
             return StatusCode(500, ErrorCode[9001]);
         }
-
     }
 
     [Route("/profile")]
     [HttpPatch]
-    public async Task<IActionResult> UpdateUserProfile(UserProfileDto profile, CancellationToken cts)
+    public async Task<IActionResult> UpdateUserProfile(
+        UserProfileDto profile,
+        CancellationToken cts
+    )
     {
-        var userId = 
-            int.Parse(HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value);
+        var userId = int.Parse(
+            HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
+        );
 
         try
         {
-            var user = await _userRepository.UpdateUserProfile(userId,profile.FisrtName, profile.LastName, cts);
+            var user = await _userRepository.UpdateUserProfile(
+                userId,
+                profile.FisrtName,
+                profile.LastName,
+                cts
+            );
             _logger.LogInformation("User profile was updated for user ID {UserId}", userId);
             return Ok(user);
         }
@@ -81,11 +89,8 @@ public class UsersController : ControllerBase
     {
         var existingUser = await _userRepository.GetUserProfle(id, cts);
 
-        if (existingUser is null || existingUser.IsDeleted)
-        {
-            return NotFound(ErrorCode[2001]);
-        }
-        
+        if (existingUser is null || existingUser.IsDeleted) return NotFound(ErrorCode[2001]);
+
         try
         {
             var userId = await _userRepository.BlockUser(id, cts);
@@ -98,7 +103,7 @@ public class UsersController : ControllerBase
             return StatusCode(500, ErrorCode[9001]);
         }
     }
-        
+
     [Authorize(Roles = "admin")]
     [Route("{id:int}/unblock")]
     [HttpPost]
@@ -106,10 +111,7 @@ public class UsersController : ControllerBase
     {
         var existingUser = await _userRepository.GetUserProfle(id, cts);
 
-        if (existingUser is null || existingUser.IsDeleted)
-        {
-            return NotFound(ErrorCode[2001]);
-        }
+        if (existingUser is null || existingUser.IsDeleted) return NotFound(ErrorCode[2001]);
 
         try
         {
@@ -131,7 +133,8 @@ public class UsersController : ControllerBase
     {
         var userExists = await _userRepository.DoesUserExist(id, cts);
 
-        if (!userExists) return NotFound("User not found");
+        if (!userExists)
+            return NotFound("User not found");
 
         try
         {

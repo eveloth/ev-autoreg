@@ -15,14 +15,18 @@ public class RolesController : ControllerBase
     private readonly IUserRolesRepository _userRolesRepository;
     private readonly IUserRepository _userRepository;
 
-    public RolesController(IUserRolesRepository userRolesRepository, IUserRepository userRepository, ILogger<RolesController> logger)
+    public RolesController(
+        IUserRolesRepository userRolesRepository,
+        IUserRepository userRepository,
+        ILogger<RolesController> logger
+    )
     {
         _userRolesRepository = userRolesRepository;
         _userRepository = userRepository;
         _logger = logger;
     }
 
-    [Authorize(Roles="admin")]
+    [Authorize(Roles = "admin")]
     [HttpGet]
     public async Task<IActionResult> GetRoles(CancellationToken cts)
     {
@@ -38,7 +42,7 @@ public class RolesController : ControllerBase
         }
     }
 
-    [Authorize(Roles="admin")]
+    [Authorize(Roles = "admin")]
     [HttpPost]
     public async Task<IActionResult> AddRole(RoleDto role, CancellationToken cts)
     {
@@ -47,7 +51,11 @@ public class RolesController : ControllerBase
         try
         {
             var newRole = await _userRolesRepository.AddRole(roleName, cts);
-            _logger.LogInformation("Role ID {RoleId} was added with name {RoleName}", newRole.Id, newRole.RoleName);
+            _logger.LogInformation(
+                "Role ID {RoleId} was added with name {RoleName}",
+                newRole.Id,
+                newRole.RoleName
+            );
             return Ok(newRole);
         }
         catch (NpgsqlException e)
@@ -67,7 +75,11 @@ public class RolesController : ControllerBase
         try
         {
             var newRole = await _userRolesRepository.ChangeRoleName(id, newRoleName, cts);
-            _logger.LogInformation("Role ID {RoleId} name was changed to {RoleName}", newRole.Id, newRole.RoleName);
+            _logger.LogInformation(
+                "Role ID {RoleId} name was changed to {RoleName}",
+                newRole.Id,
+                newRole.RoleName
+            );
             return Ok(newRole);
         }
         catch (NpgsqlException e)
@@ -91,7 +103,11 @@ public class RolesController : ControllerBase
         try
         {
             var deletedRole = await _userRolesRepository.DeleteRole(id, cts);
-            _logger.LogInformation("Role ID {RoleId} with name {RoleName} was deleted", deletedRole.Id, deletedRole.RoleName);
+            _logger.LogInformation(
+                "Role ID {RoleId} with name {RoleName} was deleted",
+                deletedRole.Id,
+                deletedRole.RoleName
+            );
             return Ok(deletedRole);
         }
         catch (NpgsqlException e)
@@ -133,7 +149,7 @@ public class RolesController : ControllerBase
             _logger.LogError("{ErrorMessage}", e.Message);
             return StatusCode(500, ErrorCode[9001]);
         }
-    } 
+    }
 
     [Authorize(Roles = "admin")]
     [Route("user-roles")]
@@ -156,8 +172,16 @@ public class RolesController : ControllerBase
 
         try
         {
-            var newUserRole = await _userRolesRepository.SetUserRole(userRole.UserId, userRole.RoleId, cts);
-            _logger.LogInformation("User ID {UserId} was added to role ID {RoleId}", newUserRole.UserId, newUserRole.RoleId);
+            var newUserRole = await _userRolesRepository.SetUserRole(
+                userRole.UserId,
+                userRole.RoleId,
+                cts
+            );
+            _logger.LogInformation(
+                "User ID {UserId} was added to role ID {RoleId}",
+                newUserRole.UserId,
+                newUserRole.RoleId
+            );
             return Ok(newUserRole);
         }
         catch (NpgsqlException e)
@@ -172,20 +196,33 @@ public class RolesController : ControllerBase
     [HttpDelete]
     public async Task<IActionResult> DeleteUserFromRole(UserRoleDto userRole, CancellationToken cts)
     {
-        var recordExists = await _userRolesRepository.DoesRecordExist(userRole.UserId, userRole.RoleId, cts);
+        var recordExists = await _userRolesRepository.DoesRecordExist(
+            userRole.UserId,
+            userRole.RoleId,
+            cts
+        );
 
-        if (!recordExists) return NotFound("No user with the specified role found.");
+        if (!recordExists)
+            return NotFound("No user with the specified role found.");
 
         try
         {
-            var deletedUserRole = await _userRolesRepository.DeleteUserFromRole(userRole.UserId, userRole.RoleId, cts);
-            _logger.LogInformation("User ID {UserId} was removed from role ID {RoleId}", deletedUserRole.UserId, deletedUserRole.RoleId);
+            var deletedUserRole = await _userRolesRepository.DeleteUserFromRole(
+                userRole.UserId,
+                userRole.RoleId,
+                cts
+            );
+            _logger.LogInformation(
+                "User ID {UserId} was removed from role ID {RoleId}",
+                deletedUserRole.UserId,
+                deletedUserRole.RoleId
+            );
             return Ok(deletedUserRole);
         }
         catch (NpgsqlException e)
         {
-           _logger.LogError("{ErrorMessage}", e.Message);
-           return StatusCode(500, ErrorCode[9001]);
+            _logger.LogError("{ErrorMessage}", e.Message);
+            return StatusCode(500, ErrorCode[9001]);
         }
     }
 }

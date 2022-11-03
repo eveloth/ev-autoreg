@@ -17,23 +17,32 @@ public class SqlDataAccess : ISqlDataAccess
     public async Task<IEnumerable<TModel>> LoadAllData<TModel>(
         string sql,
         CancellationToken cts,
-        string connectionId = "Default")
+        string connectionId = "Default"
+    )
     {
-        using IDbConnection connection = new NpgsqlConnection(_config.GetConnectionString(connectionId));
+        using IDbConnection connection = new NpgsqlConnection(
+            _config.GetConnectionString(connectionId)
+        );
 
-        return await connection.QueryAsync<TModel>(new CommandDefinition(sql, cancellationToken: cts)) ?? 
-               Enumerable.Empty<TModel>();
+        return await connection.QueryAsync<TModel>(
+                new CommandDefinition(sql, cancellationToken: cts)
+            ) ?? Enumerable.Empty<TModel>();
     }
-    
+
     public async Task<IEnumerable<TModel>> LoadData<TModel, TParameters>(
         string sql,
         TParameters parameters,
         CancellationToken cts,
-        string connectionId = "Default")
+        string connectionId = "Default"
+    )
     {
-        using IDbConnection connection = new NpgsqlConnection(_config.GetConnectionString(connectionId));
-        
-        return await connection.QueryAsync<TModel>(new CommandDefinition(sql, parameters, cancellationToken: cts));
+        using IDbConnection connection = new NpgsqlConnection(
+            _config.GetConnectionString(connectionId)
+        );
+
+        return await connection.QueryAsync<TModel>(
+            new CommandDefinition(sql, parameters, cancellationToken: cts)
+        );
     }
 
     public async Task<TModel?> LoadFirst<TModel, TParameters>(
@@ -43,19 +52,28 @@ public class SqlDataAccess : ISqlDataAccess
         string connectionId = "Default"
     )
     {
-        using IDbConnection connection = new NpgsqlConnection(_config.GetConnectionString(connectionId));
+        using IDbConnection connection = new NpgsqlConnection(
+            _config.GetConnectionString(connectionId)
+        );
 
-        return await connection.QueryFirstOrDefaultAsync<TModel?>(new CommandDefinition(sql, parameters, cancellationToken: cts));
+        return await connection.QueryFirstOrDefaultAsync<TModel?>(
+            new CommandDefinition(sql, parameters, cancellationToken: cts)
+        );
     }
-    
+
     public async Task<TResult> SaveData<TParameters, TResult>(
         string sql,
         TParameters parameters,
         CancellationToken cts,
-        string connectionId = "Default")
+        string connectionId = "Default"
+    )
     {
-        using IDbConnection connection = new NpgsqlConnection(_config.GetConnectionString(connectionId));
+        using IDbConnection connection = new NpgsqlConnection(
+            _config.GetConnectionString(connectionId)
+        );
 
-        return await connection.QueryFirstAsync<TResult>(new CommandDefinition(sql, parameters, cancellationToken: cts));
+        return await connection.QueryFirstAsync<TResult>(
+            new CommandDefinition(sql, parameters, cancellationToken: cts)
+        );
     }
 }

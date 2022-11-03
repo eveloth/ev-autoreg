@@ -21,7 +21,13 @@ public class AuthController : ControllerBase
     private readonly IPasswordHasher _passwordHasher;
     private readonly IAuthenticationService _authService;
 
-    public AuthController(IUserRepository userRepository, IUserRolesRepository userRolesRepository, IConfiguration config, IPasswordHasher passwordHasher, IAuthenticationService authService, ILogger<AuthController> logger)
+    public AuthController(
+        IUserRepository userRepository,
+        IUserRolesRepository userRolesRepository,
+        IPasswordHasher passwordHasher,
+        IAuthenticationService authService,
+        ILogger<AuthController> logger
+    )
     {
         _userRepository = userRepository;
         _userRolesRepository = userRolesRepository;
@@ -29,7 +35,7 @@ public class AuthController : ControllerBase
         _authService = authService;
         _logger = logger;
     }
-    
+
     /// <summary>
     /// Logs user in.
     /// </summary>
@@ -54,8 +60,10 @@ public class AuthController : ControllerBase
             return NotFound(ErrorCode[1004]);
         }
 
-        if (_passwordHasher.VerifyPassword(existingUser.PasswordHash, request.Password) !=
-            PasswordVerificationResult.Success)
+        if (
+            _passwordHasher.VerifyPassword(existingUser.PasswordHash, request.Password)
+            != PasswordVerificationResult.Success
+        )
         {
             return Unauthorized(ErrorCode[1005]);
         }
@@ -64,26 +72,26 @@ public class AuthController : ControllerBase
         {
             return BadRequest(ErrorCode[1006]);
         }
-        
+
         var userRole = await _userRolesRepository.GetUserRole(existingUser.Id, cts);
-        
+
         var role = userRole?.RoleName ?? "anonymous";
         var id = existingUser.Id.ToString();
 
         var token = _authService.GenerateToken(id, role);
-        
+
         _logger.LogInformation("User ID {UserId} was logged in", existingUser.Id);
 
         return Ok(token);
     }
-       
+
     [AllowAnonymous]
     [Route("register")]
     [HttpPost]
     public async Task<IActionResult> RegisterUser(UserCredentialsDto request, CancellationToken cts)
     {
         var email = request.Email.ToLower();
-        
+
         if (!_authService.IsEmailValid(email))
         {
             return BadRequest(ErrorCode[1001]);
@@ -103,11 +111,7 @@ public class AuthController : ControllerBase
 
         var passwordHash = _passwordHasher.HashPassword(request.Password);
 
-        var newUser = new UserModel
-        {
-            Email = email,
-            PasswordHash = passwordHash
-        };
+        var newUser = new UserModel { Email = email, PasswordHash = passwordHash };
 
         try
         {
@@ -120,14 +124,15 @@ public class AuthController : ControllerBase
             _logger.LogError("{ErrorMessage}", e.Message);
             return StatusCode(500, ErrorCode[9001]);
         }
-    }   
-    
+    }
+
     [Route("user/email")]
     [HttpPatch]
     public async Task<IActionResult> UpdateEmail(UserEmailDto email, CancellationToken cts)
     {
-        var userId = 
-            int.Parse(HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value);
+        var userId = int.Parse(
+            HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
+        );
 
         var newEmail = email.NewEmail.ToLower();
 
@@ -139,7 +144,11 @@ public class AuthController : ControllerBase
         try
         {
             var userProfile = await _userRepository.UpdateUserEmail(userId, newEmail, cts);
-            _logger.LogInformation("Email was updated to {NewEmail} for user ID {UserId}", userProfile.Email, userProfile.Id);
+            _logger.LogInformation(
+                "Email was updated to {NewEmail} for user ID {UserId}",
+                userProfile.Email,
+                userProfile.Id
+            );
             return Ok(userProfile);
         }
         catch (NpgsqlException e)
@@ -148,28 +157,36 @@ public class AuthController : ControllerBase
             return StatusCode(500, ErrorCode[9001]);
         }
     }
-    
+
     [Route("user/password")]
     [HttpPatch]
     public async Task<IActionResult> UpdatePassword(UserPasswordDto password, CancellationToken cts)
     {
-        var userId = 
-            int.Parse(HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value);
+        var userId = int.Parse(
+            HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
+        );
 
         var user = await _userRepository.GetUserById(userId, cts);
         var email = user!.Email;
-        
+
         if (!_authService.IsPasswordValid(email, password.NewPassword))
         {
             return BadRequest(ErrorCode[1002]);
         }
-        
+
         var passwordHash = _passwordHasher.HashPassword(password.NewPassword);
 
         try
         {
-            var userWithChangedPassword = await _userRepository.UpdateUserPassword(userId, passwordHash, cts);
-            _logger.LogInformation("Password was changed for user ID {UserId}", userWithChangedPassword);
+            var userWithChangedPassword = await _userRepository.UpdateUserPassword(
+                userId,
+                passwordHash,
+                cts
+            );
+            _logger.LogInformation(
+                "Password was changed for user ID {UserId}",
+                userWithChangedPassword
+            );
             return Ok(userWithChangedPassword);
         }
         catch (NpgsqlException e)
@@ -179,10 +196,14 @@ public class AuthController : ControllerBase
         }
     }
 
-    [Authorize(Roles="admin")]
+    [Authorize(Roles = "admin")]
     [Route("user/{id:int}/password/reset")]
     [HttpPost]
-    public async Task<IActionResult> ResetPassword(int id, UserPasswordDto password, CancellationToken cts)
+    public async Task<IActionResult> ResetPassword(
+        int id,
+        UserPasswordDto password,
+        CancellationToken cts
+    )
     {
         var existingUser = await _userRepository.GetUserProfle(id, cts);
 
@@ -197,13 +218,20 @@ public class AuthController : ControllerBase
         {
             return BadRequest(ErrorCode[1002]);
         }
-        
+
         var passwordHash = _passwordHasher.HashPassword(password.NewPassword);
 
         try
         {
-            var userWithPassswordReset = await _userRepository.UpdateUserPassword(id, passwordHash, cts);
-            _logger.LogInformation("Password was reset for user ID {UserId}", userWithPassswordReset);
+            var userWithPassswordReset = await _userRepository.UpdateUserPassword(
+                id,
+                passwordHash,
+                cts
+            );
+            _logger.LogInformation(
+                "Password was reset for user ID {UserId}",
+                userWithPassswordReset
+            );
             return Ok(userWithPassswordReset);
         }
         catch (NpgsqlException e)

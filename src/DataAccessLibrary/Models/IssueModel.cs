@@ -1,6 +1,3 @@
 ﻿namespace DataAccessLibrary.Models;
 
-public class IssueModel
-{
-    
-}
+public class IssueModel { }
