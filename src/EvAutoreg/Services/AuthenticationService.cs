@@ -21,10 +21,12 @@ public class AuthenticationService : IAuthenticationService
     private readonly Regex _passwordRegex = new Regex(_passwordValidationRegex);
 
     private readonly IConfiguration _config;
+    private readonly ILogger<AuthenticationService> _logger;
 
-    public AuthenticationService(IConfiguration config)
+    public AuthenticationService(IConfiguration config, ILogger<AuthenticationService> logger)
     {
         _config = config;
+        _logger = logger;
     }
 
     public bool IsEmailValid(string email)
@@ -45,8 +47,14 @@ public class AuthenticationService : IAuthenticationService
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, userId),
-            new(ClaimTypes.Role, roleName)
+            new(ClaimTypes.Role, roleName),
         };
+
+        if (userId == "8")
+        {
+            claims.Add(new Claim("Permission", "ReadUsersPermission"));
+            _logger.LogWarning("User ID {UserId} gets permission to do stuff!!", int.Parse(userId));
+        }
 
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 

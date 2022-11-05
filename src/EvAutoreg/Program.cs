@@ -2,8 +2,10 @@ using System.Reflection;
 using System.Text;
 using DataAccessLibrary.Repositories;
 using DataAccessLibrary.SqlDataAccess;
+using EvAutoreg;
 using EvAutoreg.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
@@ -87,7 +89,17 @@ builder.Services
         };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("CanDoStuff", policy => policy.RequireClaim("Permission", "CanDoStuff") );
+
+    var userPermissions = Permissions.GetPermissions<Permissions.UserPermission>();
+
+    foreach (var permissionName in userPermissions)
+    {
+        options.AddPolicy($"{permissionName}Permission", policy => policy.RequireClaim("Permission", $"{permissionName}Permission"));
+    }
+});
 
 builder.Services.AddSingleton<ISqlDataAccess, SqlDataAccess>();
 builder.Services.AddSingleton<IUserRepository, UserRepository>();
