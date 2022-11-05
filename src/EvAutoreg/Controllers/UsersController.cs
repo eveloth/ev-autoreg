@@ -53,7 +53,7 @@ public class UsersController : ControllerBase
         }
     }
 
-    [Route("/profile")]
+    [Route("profile")]
     [HttpPatch]
     public async Task<IActionResult> UpdateUserProfile(
         UserProfileDto profile,
