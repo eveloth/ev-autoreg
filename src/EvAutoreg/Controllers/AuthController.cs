@@ -126,6 +126,22 @@ public class AuthController : ControllerBase
         }
     }
 
+    [Authorize]
+    [Route("me")]
+    [HttpGet]
+    public IActionResult GetMe()
+    {
+        var userId = int.Parse(
+            HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
+        );
+
+        var claims = HttpContext.User.Claims.Where(n => n.Type == "Permission");
+
+        var clst = claims.Select(claim => claim.Type + ": " + claim.Value).ToList();
+
+        return Ok(clst);
+    }
+
     [Route("user/email")]
     [HttpPatch]
     public async Task<IActionResult> UpdateEmail(UserEmailDto email, CancellationToken cts)
