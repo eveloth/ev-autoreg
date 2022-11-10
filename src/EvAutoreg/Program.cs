@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Text;
+using DataAccessLibrary.Extensions;
 using DataAccessLibrary.Repositories;
 using DataAccessLibrary.SqlDataAccess;
 using EvAutoreg;
@@ -104,6 +105,7 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddSingleton<ISqlDataAccess, SqlDataAccess>();
 builder.Services.AddSingleton<IUserRepository, UserRepository>();
 builder.Services.AddSingleton<IUserRolesRepository, UserRolesRepository>();
+builder.Services.AddSingleton<IAccessControlRepository, AccessControlRepository>();
 builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
 builder.Services.AddSingleton<IAuthenticationService, AuthenticationService>();
 
@@ -124,5 +126,8 @@ app.UseAuthorization();
 app.MapControllers();
 
 Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
+
+var sqlDataAccess = app.Services.GetService<ISqlDataAccess>();
+app.UseAffixForDbMapping(sqlDataAccess, "Model");
 
 app.Run();

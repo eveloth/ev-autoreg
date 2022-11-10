@@ -8,6 +8,7 @@ using static EvAutoreg.Errors.ErrorCodes;
 
 namespace EvAutoreg.Controllers;
 
+[AllowAnonymous]
 [Route("api/[controller]")]
 [ApiController]
 public class UsersController : ControllerBase
@@ -21,7 +22,7 @@ public class UsersController : ControllerBase
         _logger = logger;
     }
 
-    [Authorize(Roles = "manager, admin")]
+    //[Authorize(Roles = "manager, admin")]
     [HttpGet]
     public async Task<IActionResult> GetAllUsers(CancellationToken cts)
     {
@@ -147,5 +148,13 @@ public class UsersController : ControllerBase
             _logger.LogError("{ErrorMessage}", e.Message);
             return StatusCode(500, ErrorCode[9001]);
         }
+    }
+
+    [AllowAnonymous]
+    [Route("fancynewuser/{id:int}")]
+    [HttpGet]
+    public async Task<IActionResult> GetUserWithRole(int id, CancellationToken cts)
+    {
+        return Ok(await _userRepository.GetNewUserModel(id, cts));
     }
 }
