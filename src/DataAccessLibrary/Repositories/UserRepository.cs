@@ -38,7 +38,7 @@ public class UserRepository : IUserRepository
             false => @"SELECT * FROM app_user WHERE is_deleted = false"
         };
 
-        return await _db.LoadAllData<UserModel>(sql, cts);
+        return await _db.LoadAllData<UserModel, RoleModel>(sql, cts);
     }
 
     public async Task<UserModel?> GetUserById(
@@ -53,7 +53,7 @@ public class UserRepository : IUserRepository
             false => @"SELECT * FROM app_user WHERE id = @Id and is_deleted = false"
         };
 
-        return await _db.LoadFirst<UserModel, object>(sql, new { Id = id }, cts);
+        return await _db.LoadFirst<UserModel, RoleModel, object>(sql, new { Id = id }, cts);
     }
 
     public async Task<UserModel?> GetUserByEmail(
@@ -70,21 +70,25 @@ public class UserRepository : IUserRepository
 
         // В отличие от ситуции, когда в качестве параметра передаётся int, просто так передать string в качестве
         // параметра у меня не вышло; operator does not exist: @ character varying
-        return await _db.LoadFirst<UserModel, object>(sql, new { email }, cts);
+        return await _db.LoadFirst<UserModel, RoleModel, object>(sql, new { email }, cts);
     }
 
-    public async Task<UserProfile> CreateUser(UserModel user, CancellationToken cts)
+    public async Task<UserProfileModel> CreateUser(UserModel user, CancellationToken cts)
     {
         var parameters = new DynamicParameters(user);
-        const string sql =
-            @"INSERT INTO app_user (email, password_hash, first_name, last_name, is_blocked, is_deleted)
-                             VALUES (@Email, @PasswordHash, @FirstName, @LastName, @IsBlocked, @IsDeleted)
-                             RETURNING id, email, first_name, last_name, is_blocked, is_deleted";
 
-        return await _db.SaveData<object, UserProfile>(sql, parameters, cts);
+        const string sql = @"WITH inserted AS
+                             (INSERT INTO app_user (email, password_hash)
+                             VALUES (@Email, @PasswordHash)
+                             RETURNING * )
+                             SELECT * FROM inserted
+                             LEFT JOIN role
+                             ON inserted.role_id = role.id";
+
+        return await _db.SaveData<object, UserProfileModel, RoleModel>(sql, parameters, cts);
     }
 
-    public async Task<IEnumerable<UserProfile>> GetAllUserProfiles(
+    public async Task<IEnumerable<UserProfileModel>> GetAllUserProfiles(
         CancellationToken cts,
         bool includeDeleted = false
     )
@@ -98,10 +102,10 @@ public class UserRepository : IUserRepository
                      WHERE is_deleted = false"
         };
 
-        return await _db.LoadAllData<UserProfile>(sql, cts);
+        return await _db.LoadAllData<UserProfileModel>(sql, cts);
     }
 
-    public async Task<UserProfile?> GetUserProfle(
+    public async Task<UserProfileModel?> GetUserProfle(
         int id,
         CancellationToken cts,
         bool includeDeleted = false
@@ -115,7 +119,7 @@ public class UserRepository : IUserRepository
                 => @"SELECT id, email, first_name, last_name, is_deleted, is_blocked FROM app_user WHERE id = @Id and is_deleted = false"
         };
 
-        return await _db.LoadFirst<UserProfile?, object>(sql, new { Id = id }, cts);
+        return await _db.LoadFirst<UserProfileModel?, object>(sql, new { Id = id }, cts);
     }
 
     public async Task<int> UpdateUserPassword(int id, string passwordHash, CancellationToken cts)
@@ -127,17 +131,17 @@ public class UserRepository : IUserRepository
         return await _db.SaveData<object, int>(sql, parameters, cts);
     }
 
-    public async Task<UserProfile> UpdateUserEmail(int id, string newEmail, CancellationToken cts)
+    public async Task<UserProfileModel> UpdateUserEmail(int id, string newEmail, CancellationToken cts)
     {
         var parameters = new DynamicParameters(new { Id = id, Email = newEmail });
         const string sql =
             @"UPDATE app_user SET email = @Email WHERE id = @Id
                              RETURNING id, email, first_name, last_name, is_deleted, is_blocked";
 
-        return await _db.SaveData<object, UserProfile>(sql, parameters, cts);
+        return await _db.SaveData<object, UserProfileModel>(sql, parameters, cts);
     }
 
-    public async Task<UserProfile> UpdateUserProfile(
+    public async Task<UserProfileModel> UpdateUserProfile(
         int id,
         string firstName,
         string lastName,
@@ -151,7 +155,7 @@ public class UserRepository : IUserRepository
             @"UPDATE app_user SET first_name = @FirstName, last_name = @LastName WHERE id = @Id
                              RETURNING id, email, first_name, last_name, is_deleted, is_blocked";
 
-        return await _db.SaveData<object, UserProfile>(sql, parameters, cts);
+        return await _db.SaveData<object, UserProfileModel>(sql, parameters, cts);
     }
 
     public async Task<int> BlockUser(int id, CancellationToken cts)
@@ -168,12 +172,26 @@ public class UserRepository : IUserRepository
         return await _db.SaveData<object, int>(sql, new { Id = id }, cts);
     }
 
-    public async Task<UserProfile> DeleteUser(int id, CancellationToken cts)
+    public async Task<UserProfileModel> DeleteUser(int id, CancellationToken cts)
     {
         const string sql =
             @"UPDATE app_user SET is_deleted = true WHERE id = @Id
                              RETURNING id, email, first_name, last_name, is_deleted, is_blocked";
 
-        return await _db.SaveData<object, UserProfile>(sql, new { Id = id }, cts);
+        return await _db.SaveData<object, UserProfileModel>(sql, new { Id = id }, cts);
     }
+    
+    public async Task<NewUserModel?> GetNewUserModel(
+        int id,
+        CancellationToken cts
+    )
+    {
+        const string sql = @"SELECT * FROM app_user
+                             LEFT JOIN role
+                             ON app_user.role_id = role.id
+                             WHERE app_user.id = @UserId";
+
+        return await _db.LoadFirst<NewUserModel, RoleModel, object>(sql, new {UserId = id}, cts);
+    }
+    
 }

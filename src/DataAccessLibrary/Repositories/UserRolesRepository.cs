@@ -20,6 +20,7 @@ public class UserRolesRepository : IUserRolesRepository
         return await _db.LoadFirst<bool, object>(sql, new { RoleId = roleId }, cts);
     }
 
+    
     public async Task<bool> DoesRecordExist(int userId, int roleId, CancellationToken cts)
     {
         const string sql =
