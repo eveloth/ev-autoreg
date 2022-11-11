@@ -1,4 +1,4 @@
-﻿using DataAccessLibrary.Models;
+﻿using DataAccessLibrary.DisplayModels;
 
 namespace DataAccessLibrary.Repositories;
 

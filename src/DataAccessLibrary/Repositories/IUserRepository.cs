@@ -1,19 +1,12 @@
-﻿using DataAccessLibrary.Models;
+﻿using DataAccessLibrary.DbModels;
+using DataAccessLibrary.DisplayModels;
 
 namespace DataAccessLibrary.Repositories;
 
 public interface IUserRepository
 {
-    Task<bool> DoesUserExist(int id, CancellationToken cts);
-    Task<bool> DoesUserExist(string email, CancellationToken cts);
-
-    Task<IEnumerable<UserModel>> GetAllUsers(
-        CancellationToken cts,
-        bool includeDeleted = false
-    );
-
     Task<UserModel?> GetUserById(
-        int id,
+        int userId,
         CancellationToken cts,
         bool includeDeleted = false
     );
@@ -24,35 +17,42 @@ public interface IUserRepository
         bool includeDeleted = false
     );
 
-    Task<UserProfileModel> CreateUser(UserModel user, CancellationToken cts);
-
     Task<IEnumerable<UserProfileModel>> GetAllUserProfiles(
         CancellationToken cts,
         bool includeDeleted = false
     );
 
     Task<UserProfileModel?> GetUserProfle(
-        int id,
+        int userId,
         CancellationToken cts,
         bool includeDeleted = false
     );
 
-    Task<int> UpdateUserPassword(int id, string passwordHash, CancellationToken cts);
-    Task<UserProfileModel> UpdateUserEmail(int id, string newEmail, CancellationToken cts);
+    Task<UserProfileModel> CreateUser(UserModel user, CancellationToken cts);
+
+    Task<int> UpdateUserPassword(
+        int userId,
+        string passwordHash,
+        CancellationToken cts
+    );
+
+    Task<UserProfileModel> UpdateUserEmail(
+        int userId,
+        string newEmail,
+        CancellationToken cts
+    );
 
     Task<UserProfileModel> UpdateUserProfile(
-        int id,
+        int userId,
         string firstName,
         string lastName,
         CancellationToken cts
     );
 
-    Task<int> BlockUser(int id, CancellationToken cts);
-    Task<int> UnblockUser(int id, CancellationToken cts);
-    Task<UserProfileModel> DeleteUser(int id, CancellationToken cts);
-
-    Task<NewUserModel?> GetNewUserModel(
-        int id,
-        CancellationToken cts
-    );
+    Task<UserProfileModel> BlockUser(int userId, CancellationToken cts);
+    Task<UserProfileModel> UnblockUser(int userId, CancellationToken cts);
+    Task<UserProfileModel> DeleteUser(int userId, CancellationToken cts);
+    Task<UserProfileModel> RestoreUser(int userId, CancellationToken cts);
+    Task<bool> DoesUserExist(int userId, CancellationToken cts);
+    Task<bool> DoesUserExist(string email, CancellationToken cts);
 }

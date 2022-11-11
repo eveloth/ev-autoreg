@@ -1,5 +1,5 @@
 ﻿using Dapper;
-using DataAccessLibrary.Models;
+using DataAccessLibrary.DisplayModels;
 using DataAccessLibrary.SqlDataAccess;
 
 namespace DataAccessLibrary.Repositories;

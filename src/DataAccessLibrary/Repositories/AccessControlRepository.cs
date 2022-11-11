@@ -1,5 +1,6 @@
 using Dapper;
-using DataAccessLibrary.Models;
+using DataAccessLibrary.DbModels;
+using DataAccessLibrary.DisplayModels;
 using DataAccessLibrary.SqlDataAccess;
 
 namespace DataAccessLibrary.Repositories;
@@ -56,32 +57,24 @@ public class AccessControlRepository : IAccessControlRepository
 
         return await _db.LoadAllData<PermissionModel>(sql, cts);
     }
-
-    public async Task<PermissionModel> AddPermission(string permissionName, CancellationToken cts)
-    {
-        const string sql =
-            @"INSERT INTO permission (permission_name) VALUES (@PermissionName)
-                             RETURNING *";
-
-        return await _db.SaveData<object, PermissionModel>(
-            sql,
-            new { PermissionName = permissionName },
-            cts
-        );
-    }
-
-    public async Task<PermissionModel> ChangePermissionName(
+    
+    public async Task<PermissionModel> AddPermission(
         PermissionModel permission,
         CancellationToken cts
     )
     {
         const string sql =
-            @"UPDATE permission SET permission_name = @PermissionName WHERE id = @id
-                             RETURNING id, permission_name";
+            @"INSERT INTO permission (permission_name, description) 
+              VALUES (@PermissionName, @Description)
+              RETURNING *";
 
         var parameters = new DynamicParameters(permission);
 
-        return await _db.SaveData<object, PermissionModel>(sql, parameters, cts);
+        return await _db.SaveData<object, PermissionModel>(
+            sql,
+            parameters,
+            cts
+        );
     }
 
     public async Task<PermissionModel> DeletePermission(int permissionId, CancellationToken cts)
@@ -89,6 +82,30 @@ public class AccessControlRepository : IAccessControlRepository
         const string sql = @"DELETE FROM permission WHERE id = @Id RETURNING *";
 
         return await _db.SaveData<object, PermissionModel>(sql, new { Id = permissionId }, cts);
+    }
+
+    public async Task<int> ClearPermissions(CancellationToken cts)
+    {
+        const string sql = @"WITH deleted AS
+                             (DELETE FROM permission
+                             RETURNING 1)
+                             SELECT COUNT(*) FROM deleted";
+
+        return await _db.SaveData<int>(sql, cts);
+    }
+
+    public async Task<bool> DoesPermissionExist(int permissionId, CancellationToken cts)
+    {
+        const string sql = @"SELECT EXISTS (SELECT true FROM permission WHERE id = @PermissionId)";
+
+        return await _db.LoadFirst<bool, object>(sql, new { PermissionId = permissionId }, cts);
+    }
+
+    public async Task<bool> DoesPermissionExist(string permissionName, CancellationToken cts)
+    {
+        const string sql = @"SELECT EXISTS (SELECT true FROM permission WHERE permission_name = @PermissionName)";
+
+        return await _db.LoadFirst<bool, object>(sql, new { PermissionName = permissionName }, cts);
     }
 
     public async Task<IEnumerable<RolePermissionModel>> GetAllRolePermissions(CancellationToken cts)
@@ -123,6 +140,7 @@ public class AccessControlRepository : IAccessControlRepository
                              p.permission_name AS permission_name
                              FROM role 
                              LEFT JOIN role_permission rp ON role.id = rp.role_id
+                             LEFT JOIN permission p ON rp.permission_id = p.id
                              WHERE role.id = @RoleId";
 
         var rolePermissionSet = await _db.LoadData<RolePermissionRecordModel, object>(
@@ -145,14 +163,13 @@ public class AccessControlRepository : IAccessControlRepository
     )
     {
         const string sql =
-            @"INSERT INTO role_permission (role_id, permission_id)
-                             VALUES (@RoleId, @PermissionId)";
+            @"INSERT INTO role_permission (role_id, permission_id) VALUES (@RoleId, @PermissionId) RETURNING role_id";
 
         var parameters = new DynamicParameters(
             new { RoleId = roleId, PermissionId = permissionId }
         );
 
-        await _db.SaveData<object, object>(sql, parameters, cts);
+        roleId = await _db.SaveData<object, int>(sql, parameters, cts);
 
         return await GetRolePermissions(roleId, cts);
     }
@@ -165,20 +182,28 @@ public class AccessControlRepository : IAccessControlRepository
     {
         const string sql =
             @"DELETE FROM role_permission
-                             WHERE role_id = @RoleId and permission_id = @PermissionId";
+                             WHERE role_id = @RoleId and permission_id = @PermissionId RETURNING role_id";
 
         var parameters = new DynamicParameters(
             new { RoleId = roleId, PermissionId = permissionId }
         );
 
-        await _db.SaveData<object, object>(sql, parameters, cts);
+        roleId = await _db.SaveData<object, int>(sql, parameters, cts);
 
         return await GetRolePermissions(roleId, cts);
     }
 
+    public async Task<bool> DoesRolePermissionCorrecationExist(int roleId, int permissionId, CancellationToken cts)
+    {
+        const string sql = @"SELECT EXISTS (SELECT true FROM role_permission WHERE role_id = @RoleId AND permission_id = @PermissionId)";
+
+        return await _db.LoadFirst<bool, object>(sql, new { RoleId = roleId, Permissionid = permissionId }, cts);
+    }
+
     public async Task<UserProfileModel> SetUserRole(int userId, int roleId, CancellationToken cts)
     {
-        const string sql = @"WITH updated AS
+        const string sql =
+            @"WITH updated AS
                             (UPDATE app_user 
                              SET role_id = @RoleId WHERE id = @UserId 
                              RETURNING *)
@@ -193,9 +218,20 @@ public class AccessControlRepository : IAccessControlRepository
 
     public async Task<UserProfileModel> RemoveUserFromRole(int userId, CancellationToken cts)
     {
-        const string sql = @"UPDATE app_user SET role_id = null WHERE id = @UserId RETURNING *";
+        const string sql =
+            @"WITH updated AS
+                            (UPDATE app_user SET role_id = null 
+                             WHERE id = @UserId
+                             RETURNING *)
+                             SELECT * FROM updated
+                             LEFT JOIN role
+                             ON updated.role_id = role.id";
 
-        return await _db.SaveData<object, UserProfileModel>(sql, new { UserId = userId }, cts);
+        return await _db.SaveData<object, UserProfileModel, RoleModel>(
+            sql,
+            new { UserId = userId },
+            cts
+        );
     }
 
     private static RolePermissionModel ConvertToRolePermissionModel(
@@ -220,7 +256,8 @@ public class AccessControlRepository : IAccessControlRepository
                 new PermissionModel
                 {
                     Id = record.PermissionId,
-                    PermissionName = record.PermissionName
+                    PermissionName = record.PermissionName,
+                    Description = record.Description
                 }
             );
         }

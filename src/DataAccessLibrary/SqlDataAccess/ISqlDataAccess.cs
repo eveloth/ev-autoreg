@@ -4,6 +4,7 @@ public interface ISqlDataAccess
 {
     bool HasAffix { get; set; }
     string Affix { get; set; }
+    string SplitOn { get; set; }
 
     Task<IEnumerable<TModel>> LoadAllData<TModel>(
         string sql,
@@ -41,6 +42,12 @@ public interface ISqlDataAccess
     Task<TParent?> LoadFirst<TParent, TChild, TParameters>(
         string sql,
         TParameters parameters,
+        CancellationToken cts,
+        string connectionId = "Default"
+    );
+
+    Task<TResult> SaveData<TResult>(
+        string sql,
         CancellationToken cts,
         string connectionId = "Default"
     );

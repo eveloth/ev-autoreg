@@ -13,6 +13,8 @@ public class SqlDataAccess : ISqlDataAccess
     public bool HasAffix { get; set; } = false;
     public string Affix { get; set; } = string.Empty;
 
+    public string SplitOn { get; set; } = "Id";
+
     public SqlDataAccess(IConfiguration config)
     {
         _config = config;
@@ -45,7 +47,8 @@ public class SqlDataAccess : ISqlDataAccess
 
         var result = await connection.QueryAsync<TParent, TChild, TParent>(
             new CommandDefinition(sql, cancellationToken: cts),
-            MapNestedObjects
+            MapNestedObjects, 
+            SplitOn
         );
 
         return result;
@@ -80,7 +83,8 @@ public class SqlDataAccess : ISqlDataAccess
 
         var result = await connection.QueryAsync<TParent, TChild, TParent>(
             new CommandDefinition(sql, parameters, cancellationToken: cts),
-            MapNestedObjects
+            MapNestedObjects,
+            SplitOn
         );
 
         return result;
@@ -115,12 +119,28 @@ public class SqlDataAccess : ISqlDataAccess
 
         var result = await connection.QueryAsync<TParent, TChild, TParent>(
             new CommandDefinition(sql, parameters, cancellationToken: cts),
-            MapNestedObjects
+            MapNestedObjects,
+            SplitOn
         );
 
         return result.FirstOrDefault();
     }
+    
+    public async Task<TResult> SaveData<TResult>(
+        string sql,
+        CancellationToken cts,
+        string connectionId = "Default"
+    )
+    {
+        using IDbConnection connection = new NpgsqlConnection(
+            _config.GetConnectionString(connectionId)
+        );
 
+        return await connection.QueryFirstAsync<TResult>(
+            new CommandDefinition(sql, cancellationToken: cts)
+        );
+    }
+    
     public async Task<TResult> SaveData<TParameters, TResult>(
         string sql,
         TParameters parameters,
@@ -150,7 +170,8 @@ public class SqlDataAccess : ISqlDataAccess
 
         var result = await connection.QueryAsync<TResultParent, TResultChild, TResultParent>(
             new CommandDefinition(sql, parameters, cancellationToken: cts),
-            MapNestedObjects
+            MapNestedObjects,
+            SplitOn
         );
 
         return result.First();
