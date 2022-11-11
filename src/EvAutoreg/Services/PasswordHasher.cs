@@ -30,4 +30,5 @@ public sealed class PasswordHasher : IPasswordHasher
 
         return isValid ? PasswordVerificationResult.Success : PasswordVerificationResult.Failed;
     }
+
 }
