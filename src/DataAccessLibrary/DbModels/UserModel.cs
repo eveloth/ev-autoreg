@@ -1,4 +1,4 @@
-﻿namespace DataAccessLibrary.Models;
+﻿namespace DataAccessLibrary.DbModels;
 
 public class UserModel
 {
@@ -11,7 +11,7 @@ public class UserModel
     public string? LastName { get; set; }
     public bool IsBlocked { get; set; }
     public bool IsDeleted { get; set; }
-    public RoleModel? Role { get; set; } = null;
+    public int? RoleId { get; set; } = null;
 
 #pragma warning restore
 }

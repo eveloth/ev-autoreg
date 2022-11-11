@@ -1,6 +1,6 @@
-﻿namespace DataAccessLibrary.Models;
+﻿namespace DataAccessLibrary.DisplayModels;
 
-public class NewUserModel
+public class UserProfileModel
 {
 #pragma warning disable CS8618
 
@@ -10,7 +10,7 @@ public class NewUserModel
     public string LastName { get; set; } = string.Empty;
     public bool IsBlocked { get; set; }
     public bool IsDeleted { get; set; }
-    public RoleModel Role { get; set; }
+    public RoleModel? Role { get; set; } = null;
 
 #pragma warning restore
 }
