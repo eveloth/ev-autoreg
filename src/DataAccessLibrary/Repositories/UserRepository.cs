@@ -72,16 +72,12 @@ public class UserRepository : IUserRepository
         var sql = includeDeleted switch
         {
             true
-                => @"SELECT app_user.id AS id, 
-                     email, first_name, last_name, 
-                     is_deleted, is_blocked, role_id 
+                => @"SELECT *
                      FROM app_user
                      LEFT JOIN role
                      ON app_user.role_id = role.id",
             false
-                => @"SELECT app_user.id AS id, 
-                     email, first_name, last_name, 
-                     is_deleted, is_blocked, role_id 
+                => @"SELECT * 
                      FROM app_user
                      LEFT JOIN role
                      ON app_user.role_id = role.id
@@ -100,9 +96,7 @@ public class UserRepository : IUserRepository
         var sql = includeDeleted switch
         {
             true
-                => @"SELECT app_user.id AS id, 
-                     email, first_name, last_name, 
-                     is_deleted, is_blocked, role_id 
+                => @"SELECT *
                      FROM app_user
                      LEFT JOIN role
                      ON app_user.role_id = role.id
