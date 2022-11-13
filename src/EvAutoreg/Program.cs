@@ -106,12 +106,12 @@ internal static class Program
         //     }
         // });
     
-        builder.Services.AddSingleton<ISqlDataAccess, SqlDataAccess>();
-        builder.Services.AddSingleton<IUserRepository, UserRepository>();
-        builder.Services.AddSingleton<IUserRolesRepository, UserRolesRepository>();
-        builder.Services.AddSingleton<IAccessControlRepository, AccessControlRepository>();
-        builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
-        builder.Services.AddSingleton<IAuthenticationService, AuthenticationService>();
+        builder.Services.AddScoped<ISqlDataAccess, SqlDataAccess>();
+        builder.Services.AddScoped<IUserRepository, UserRepository>();
+        builder.Services.AddScoped<IUserRolesRepository, UserRolesRepository>();
+        builder.Services.AddScoped<IAccessControlRepository, AccessControlRepository>();
+        builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
+        builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
     
         var app = builder.Build();
 
