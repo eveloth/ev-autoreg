@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using System.Data.Common;
 using Dapper;
 using Extensions;
 
@@ -7,13 +8,13 @@ namespace DataAccessLibrary.SqlDataAccess;
 public class SqlDataAccess : ISqlDataAccess
 {
     private readonly IDbConnection _connection;
-    private readonly IDbTransaction _transaction;
+    private readonly DbTransaction _transaction;
 
     public bool HasAffix { get; set; } = SqlDataAccessOptions.HasAffix;
     public string Affix { get; set; } = SqlDataAccessOptions.Affix;
     public string SplitOn { get; set; } = SqlDataAccessOptions.SplitOn;
 
-    public SqlDataAccess(IDbConnection connection, IDbTransaction transaction)
+    public SqlDataAccess(IDbConnection connection, DbTransaction transaction)
     {
         _connection = connection;
         _transaction = transaction;

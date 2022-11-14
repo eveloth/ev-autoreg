@@ -1,3 +1,5 @@
+using System.Data;
+using System.Data.Common;
 using System.Reflection;
 using System.Text;
 using Dapper;
@@ -8,6 +10,7 @@ using EvAutoreg.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Npgsql;
 using Serilog;
 
 namespace EvAutoreg;
@@ -105,13 +108,27 @@ internal static class Program
         //         options.AddPolicy($"{permissionName}Permission", policy => policy.RequireClaim("Permission", $"{permissionName}Permission"));
         //     }
         // });
-    
+
+        builder.Services.AddScoped<IDbConnection>(_ =>
+            new NpgsqlConnection(builder.Configuration.GetConnectionString("Default")));
+        builder.Services.AddScoped<DbTransaction>(s =>
+        {
+            var connection = s.GetRequiredService<IDbConnection>();
+            connection.Open();
+            return (DbTransaction)connection.BeginTransaction();
+        });
+
+        builder.Services.ConfigureSqlDataAccess().UseAffixForModelMapping2("Model");
         builder.Services.AddScoped<ISqlDataAccess, SqlDataAccess>();
+
+        builder.Services.AddScoped<IGeneralPurposeRepository, GeneralPurposeRepository>();
         builder.Services.AddScoped<IUserRepository, UserRepository>();
         builder.Services.AddScoped<IUserRolesRepository, UserRolesRepository>();
         builder.Services.AddScoped<IAccessControlRepository, AccessControlRepository>();
         builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
         builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+
+        builder.Services.AddTransient<DatabaseSeeder>();
     
         var app = builder.Build();
 
@@ -128,11 +145,15 @@ internal static class Program
         app.UseAuthorization();
     
         app.MapControllers();
+
+        using (var scope = app.Services.CreateScope())
+        {
+            var seeder = scope.ServiceProvider.GetService<DatabaseSeeder>();
+
+            seeder.SeedData();
+        }
     
         DefaultTypeMap.MatchNamesWithUnderscores = true;
-    
-        var sqlDataAccess = app.Services.GetService<ISqlDataAccess>();
-        app.UseDataAccess(sqlDataAccess).UseAffixForDbMapping("Model");
     
         await app.RunAsync();
     }
