@@ -1,52 +1,41 @@
 ﻿using System.Data;
 using Dapper;
 using Extensions;
-using Microsoft.Extensions.Configuration;
-using Npgsql;
 
 namespace DataAccessLibrary.SqlDataAccess;
 
 public class SqlDataAccess : ISqlDataAccess
 {
-    private readonly IConfiguration _config;
+    private readonly IDbConnection _connection;
+    private readonly IDbTransaction _transaction;
 
-    public bool HasAffix { get; set; } = false;
-    public string Affix { get; set; } = string.Empty;
+    public bool HasAffix { get; set; } = SqlDataAccessOptions.HasAffix;
+    public string Affix { get; set; } = SqlDataAccessOptions.Affix;
+    public string SplitOn { get; set; } = SqlDataAccessOptions.SplitOn;
 
-    public string SplitOn { get; set; } = "Id";
-
-    public SqlDataAccess(IConfiguration config)
+    public SqlDataAccess(IDbConnection connection, IDbTransaction transaction)
     {
-        _config = config;
+        _connection = connection;
+        _transaction = transaction;
     }
 
     public async Task<IEnumerable<TModel>> LoadAllData<TModel>(
         string sql,
-        CancellationToken cts,
-        string connectionId = "Default"
+        CancellationToken cts
     )
     {
-        using IDbConnection connection = new NpgsqlConnection(
-            _config.GetConnectionString(connectionId)
-        );
-
-        return await connection.QueryAsync<TModel>(
-                new CommandDefinition(sql, cancellationToken: cts)
+        return await _connection.QueryAsync<TModel>(
+                new CommandDefinition(sql, cancellationToken: cts, transaction: _transaction)
             ) ?? Enumerable.Empty<TModel>();
     }
 
     public async Task<IEnumerable<TParent>> LoadAllData<TParent, TChild>(
         string sql,
-        CancellationToken cts,
-        string connectionId = "Default"
+        CancellationToken cts
     )
     {
-        using IDbConnection connection = new NpgsqlConnection(
-            _config.GetConnectionString(connectionId)
-        );
-
-        var result = await connection.QueryAsync<TParent, TChild, TParent>(
-            new CommandDefinition(sql, cancellationToken: cts),
+        var result = await _connection.QueryAsync<TParent, TChild, TParent>(
+            new CommandDefinition(sql, cancellationToken: cts, transaction: _transaction),
             MapNestedObjects, 
             SplitOn
         );
@@ -57,15 +46,10 @@ public class SqlDataAccess : ISqlDataAccess
     public async Task<IEnumerable<TModel>> LoadData<TModel, TParameters>(
         string sql,
         TParameters parameters,
-        CancellationToken cts,
-        string connectionId = "Default"
+        CancellationToken cts
     )
     {
-        using IDbConnection connection = new NpgsqlConnection(
-            _config.GetConnectionString(connectionId)
-        );
-
-        return await connection.QueryAsync<TModel>(
+        return await _connection.QueryAsync<TModel>(
             new CommandDefinition(sql, parameters, cancellationToken: cts)
         );
     }
@@ -73,15 +57,10 @@ public class SqlDataAccess : ISqlDataAccess
     public async Task<IEnumerable<TParent>> LoadData<TParent, TChild, TParameters>(
         string sql,
         TParameters parameters,
-        CancellationToken cts,
-        string connectionId = "Default"
+        CancellationToken cts
     )
     {
-        using IDbConnection connection = new NpgsqlConnection(
-            _config.GetConnectionString(connectionId)
-        );
-
-        var result = await connection.QueryAsync<TParent, TChild, TParent>(
+        var result = await _connection.QueryAsync<TParent, TChild, TParent>(
             new CommandDefinition(sql, parameters, cancellationToken: cts),
             MapNestedObjects,
             SplitOn
@@ -93,15 +72,10 @@ public class SqlDataAccess : ISqlDataAccess
     public async Task<TModel?> LoadFirst<TModel, TParameters>(
         string sql,
         TParameters parameters,
-        CancellationToken cts,
-        string connectionId = "Default"
+        CancellationToken cts
     )
     {
-        using IDbConnection connection = new NpgsqlConnection(
-            _config.GetConnectionString(connectionId)
-        );
-
-        return await connection.QueryFirstOrDefaultAsync<TModel?>(
+        return await _connection.QueryFirstOrDefaultAsync<TModel?>(
             new CommandDefinition(sql, parameters, cancellationToken: cts)
         );
     }
@@ -109,15 +83,10 @@ public class SqlDataAccess : ISqlDataAccess
     public async Task<TParent?> LoadFirst<TParent, TChild, TParameters>(
         string sql,
         TParameters parameters,
-        CancellationToken cts,
-        string connectionId = "Default"
+        CancellationToken cts
     )
     {
-        using IDbConnection connection = new NpgsqlConnection(
-            _config.GetConnectionString(connectionId)
-        );
-
-        var result = await connection.QueryAsync<TParent, TChild, TParent>(
+        var result = await _connection.QueryAsync<TParent, TChild, TParent>(
             new CommandDefinition(sql, parameters, cancellationToken: cts),
             MapNestedObjects,
             SplitOn
@@ -128,15 +97,10 @@ public class SqlDataAccess : ISqlDataAccess
     
     public async Task<TResult> SaveData<TResult>(
         string sql,
-        CancellationToken cts,
-        string connectionId = "Default"
+        CancellationToken cts
     )
     {
-        using IDbConnection connection = new NpgsqlConnection(
-            _config.GetConnectionString(connectionId)
-        );
-
-        return await connection.QueryFirstAsync<TResult>(
+        return await _connection.QueryFirstAsync<TResult>(
             new CommandDefinition(sql, cancellationToken: cts)
         );
     }
@@ -144,15 +108,10 @@ public class SqlDataAccess : ISqlDataAccess
     public async Task<TResult> SaveData<TParameters, TResult>(
         string sql,
         TParameters parameters,
-        CancellationToken cts,
-        string connectionId = "Default"
+        CancellationToken cts
     )
     {
-        using IDbConnection connection = new NpgsqlConnection(
-            _config.GetConnectionString(connectionId)
-        );
-
-        return await connection.QueryFirstAsync<TResult>(
+        return await _connection.QueryFirstAsync<TResult>(
             new CommandDefinition(sql, parameters, cancellationToken: cts)
         );
     }
@@ -160,15 +119,10 @@ public class SqlDataAccess : ISqlDataAccess
     public async Task<TResultParent> SaveData<TParameters, TResultParent, TResultChild>(
         string sql,
         TParameters parameters,
-        CancellationToken cts,
-        string connectionId = "Default"
+        CancellationToken cts
     )
     {
-        using IDbConnection connection = new NpgsqlConnection(
-            _config.GetConnectionString(connectionId)
-        );
-
-        var result = await connection.QueryAsync<TResultParent, TResultChild, TResultParent>(
+        var result = await _connection.QueryAsync<TResultParent, TResultChild, TResultParent>(
             new CommandDefinition(sql, parameters, cancellationToken: cts),
             MapNestedObjects,
             SplitOn

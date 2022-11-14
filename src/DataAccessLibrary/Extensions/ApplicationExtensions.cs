@@ -1,30 +1,29 @@
 using System.Runtime.CompilerServices;
 using DataAccessLibrary.SqlDataAccess;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace DataAccessLibrary.Extensions;
 
 public static class ApplicationExtensions
 {
-    private static ISqlDataAccess _db;
-    public static IApplicationBuilder UseDataAccess(this IApplicationBuilder app, ISqlDataAccess db)
+    public static IServiceCollection ConfigureSqlDataAccess(this IServiceCollection services)
     {
-        _db = db;
-
-        return app;
-    }
-    public static IApplicationBuilder UseAffixForDbMapping(this IApplicationBuilder app, string affix)
-    {
-        _db.HasAffix = true;
-        _db.Affix = affix;
-
-        return app;
-    }
-
-    public static IApplicationBuilder UseCustomSplitOn(this IApplicationBuilder app, string splitOn)
-    {
-        _db.SplitOn = splitOn;
-        return app;
+        return services;
     }
     
+    public static IServiceCollection UseAffixForModelMapping2(this IServiceCollection services, string affix)
+    {
+        SqlDataAccessOptions.HasAffix = true;
+        SqlDataAccessOptions.Affix = affix;
+
+        return services;
+    }
+    
+    public static IServiceCollection UseCustomSplitOn2(this IServiceCollection services, string splitOn)
+    {
+        SqlDataAccessOptions.SplitOn = splitOn;
+        
+        return services;
+    }
 }
