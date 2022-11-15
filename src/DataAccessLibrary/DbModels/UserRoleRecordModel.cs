@@ -1,4 +1,4 @@
-﻿namespace DataAccessLibrary.DisplayModels;
+﻿namespace DataAccessLibrary.DbModels;
 
 public class UserRoleRecordModel
 {

@@ -1,7 +1,7 @@
 ﻿using DataAccessLibrary.DbModels;
 using DataAccessLibrary.DisplayModels;
 
-namespace DataAccessLibrary.Repositories;
+namespace DataAccessLibrary.Repository;
 
 public interface IUserRepository
 {
@@ -17,18 +17,18 @@ public interface IUserRepository
         bool includeDeleted = false
     );
 
-    Task<IEnumerable<UserProfileModel>> GetAllUserProfiles(
+    Task<IEnumerable<UserProfile>> GetAllUserProfiles(
         CancellationToken cts,
         bool includeDeleted = false
     );
 
-    Task<UserProfileModel?> GetUserProfle(
+    Task<UserProfile?> GetUserProfle(
         int userId,
         CancellationToken cts,
         bool includeDeleted = false
     );
 
-    Task<UserProfileModel> CreateUser(UserModel user, CancellationToken cts);
+    Task<UserProfile> CreateUser(UserModel user, CancellationToken cts);
 
     Task<int> UpdateUserPassword(
         int userId,
@@ -36,23 +36,23 @@ public interface IUserRepository
         CancellationToken cts
     );
 
-    Task<UserProfileModel> UpdateUserEmail(
+    Task<UserProfile> UpdateUserEmail(
         int userId,
         string newEmail,
         CancellationToken cts
     );
 
-    Task<UserProfileModel> UpdateUserProfile(
+    Task<UserProfile> UpdateUserProfile(
         int userId,
         string firstName,
         string lastName,
         CancellationToken cts
     );
 
-    Task<UserProfileModel> BlockUser(int userId, CancellationToken cts);
-    Task<UserProfileModel> UnblockUser(int userId, CancellationToken cts);
-    Task<UserProfileModel> DeleteUser(int userId, CancellationToken cts);
-    Task<UserProfileModel> RestoreUser(int userId, CancellationToken cts);
+    Task<UserProfile> BlockUser(int userId, CancellationToken cts);
+    Task<UserProfile> UnblockUser(int userId, CancellationToken cts);
+    Task<UserProfile> DeleteUser(int userId, CancellationToken cts);
+    Task<UserProfile> RestoreUser(int userId, CancellationToken cts);
     Task<bool> DoesUserExist(int userId, CancellationToken cts);
     Task<bool> DoesUserExist(string email, CancellationToken cts);
 }

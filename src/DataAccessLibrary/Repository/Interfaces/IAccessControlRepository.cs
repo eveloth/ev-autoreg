@@ -1,6 +1,7 @@
+using DataAccessLibrary.DbModels;
 using DataAccessLibrary.DisplayModels;
 
-namespace DataAccessLibrary.Repositories;
+namespace DataAccessLibrary.Repository;
 
 public interface IAccessControlRepository
 {
@@ -9,27 +10,27 @@ public interface IAccessControlRepository
     Task<RoleModel> ChangeRoleName(RoleModel role, CancellationToken cts);
     Task<RoleModel> DeleteRole(int roleId, CancellationToken cts);
     Task<bool> DoesRoleExist(int roleId, CancellationToken cts);
-    Task<IEnumerable<PermissionModel>> GetAllPermissions(CancellationToken cts);
+    Task<IEnumerable<Permission>> GetAllPermissions(CancellationToken cts);
 
-    Task<PermissionModel> AddPermission(
+    Task<Permission> AddPermission(
         PermissionModel permission,
         CancellationToken cts
     );
 
-    Task<PermissionModel> DeletePermission(int permissionId, CancellationToken cts);
+    Task<Permission> DeletePermission(int permissionId, CancellationToken cts);
     Task<int> ClearPermissions(CancellationToken cts);
     Task<bool> DoesPermissionExist(int permissionId, CancellationToken cts);
     Task<bool> DoesPermissionExist(string permissionName, CancellationToken cts);
-    Task<IEnumerable<RolePermissionModel>> GetAllRolePermissions(CancellationToken cts);
-    Task<RolePermissionModel> GetRolePermissions(int roleId, CancellationToken cts);
+    Task<IEnumerable<RolePermissionRecord>> GetAllRolePermissions(CancellationToken cts);
+    Task<RolePermissionRecord> GetRolePermissions(int roleId, CancellationToken cts);
 
-    Task<RolePermissionModel> AddPermissionToRole(
+    Task<RolePermissionRecord> AddPermissionToRole(
         int roleId,
         int permissionId,
         CancellationToken cts
     );
 
-    Task<RolePermissionModel> DeletePermissionFromRole(
+    Task<RolePermissionRecord> DeletePermissionFromRole(
         int roleId,
         int permissionId,
         CancellationToken cts

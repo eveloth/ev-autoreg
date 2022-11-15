@@ -1,3 +1,4 @@
+using System.Data.Common;
 using System.Text;
 using Dapper;
 using DataAccessLibrary.SqlDataAccess;
@@ -7,10 +8,12 @@ namespace DataAccessLibrary.Repositories;
 public class GeneralPurposeRepository : IGeneralPurposeRepository
 {
     private readonly ISqlDataAccess _db;
+    private readonly DbTransaction _transaction;
 
-    public GeneralPurposeRepository(ISqlDataAccess db)
+    public GeneralPurposeRepository(ISqlDataAccess db, DbTransaction transaction)
     {
         _db = db;
+        _transaction = transaction;
     }
 
     public async Task<bool> IsTableEmpty(string tableName, CancellationToken cts)
@@ -23,6 +26,10 @@ public class GeneralPurposeRepository : IGeneralPurposeRepository
 
         Console.WriteLine(sql);
 
-        return (await _db.LoadAllData<bool>(sql, cts)).First();
+        var result = (await _db.LoadAllData<bool>(sql, cts)).First();
+
+        await _transaction.CommitAsync(cts);
+
+        return result;
     }
 }

@@ -1,4 +1,4 @@
-namespace DataAccessLibrary.Repositories;
+namespace DataAccessLibrary.Repository;
 
 public interface IGeneralPurposeRepository
 {

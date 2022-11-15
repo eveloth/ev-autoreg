@@ -1,6 +1,6 @@
 ﻿namespace DataAccessLibrary.DisplayModels;
 
-public class UserRoleDisplayModel
+public class UserRoleRecord
 {
 #pragma warning disable CS8618
 
