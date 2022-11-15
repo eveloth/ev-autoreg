@@ -1,7 +1,6 @@
-﻿using System.Data;
-using System.Data.Common;
-using DataAccessLibrary.DbModels;
-using DataAccessLibrary.Repositories;
+﻿using DataAccessLibrary.DbModels;
+using DataAccessLibrary.DisplayModels;
+using DataAccessLibrary.Repository.Interfaces;
 using Npgsql;
 
 namespace EvAutoreg.Services;
@@ -9,27 +8,18 @@ namespace EvAutoreg.Services;
 public class DatabaseSeeder
 {
     private readonly ILogger<DatabaseSeeder> _logger;
-    private readonly DbTransaction _transaction;
-    private readonly IGeneralPurposeRepository _gpRepository;
-    private readonly IUserRepository _userRepository;
-    private readonly IAccessControlRepository _acRepository;
     private readonly IPasswordHasher _hasher;
+    private readonly IUnitofWork _unitofWork;
 
     public DatabaseSeeder(
         ILogger<DatabaseSeeder> logger,
-        IUserRepository userRepository,
-        IAccessControlRepository acRepository,
         IPasswordHasher hasher,
-        IGeneralPurposeRepository gpRepository,
-        DbTransaction transaction
+        IUnitofWork unitofWork
     )
     {
         _logger = logger;
-        _userRepository = userRepository;
-        _acRepository = acRepository;
         _hasher = hasher;
-        _gpRepository = gpRepository;
-        _transaction = transaction;
+        _unitofWork = unitofWork;
     }
 
     public async Task SeedData()
@@ -43,18 +33,22 @@ public class DatabaseSeeder
 
         try
         {
-            var permissionTableIsNotEmply = await _gpRepository.IsTableEmpty("permission", ct);
-            /*
-            var userTableIsEmply = await _gpRepository.IsTableEmpty("app_user", ct);
-            var roleTableIsEmply = await _gpRepository.IsTableEmpty("role", ct);
-            var rolePermissionTableIsEmply = await _gpRepository.IsTableEmpty(
+            var permissionTableIsNotEmply = await _unitofWork.GpRepository.IsTableEmpty(
+                "permission",
+                ct
+            );
+            var userTableIsNotEmply = await _unitofWork.GpRepository.IsTableEmpty("app_user", ct);
+            var roleTableIsNotEmply = await _unitofWork.GpRepository.IsTableEmpty("role", ct);
+            var rolePermissionTableIsNotEmply = await _unitofWork.GpRepository.IsTableEmpty(
                 "role_permission",
                 ct
             );
-            */
 
             if (
                 permissionTableIsNotEmply
+                || userTableIsNotEmply
+                || roleTableIsNotEmply
+                || rolePermissionTableIsNotEmply
             )
             {
                 _logger.LogInformation("Tables OK, skipping seeding");
@@ -62,12 +56,11 @@ public class DatabaseSeeder
             }
 
             await SeedPermissions(ct);
-            /*
-            await SeedDefaultRole(ct);
-            await AddPermissionsToDefaultRole(ct);
-            await SeedDefaultUser(ct);
-            */
+            var role = await SeedDefaultRole(ct);
+            await AddPermissionsToDefaultRole(role.Id, ct);
+            await SeedDefaultUser(role.Id, ct);
 
+            await _unitofWork.CommitAsync(ct);
 
             _logger.LogInformation("Finished seeding permissions");
         }
@@ -86,34 +79,39 @@ public class DatabaseSeeder
             _logger.LogCritical("{Error}", e);
             throw;
         }
-
     }
 
     private async Task SeedPermissions(CancellationToken ct)
     {
-            var permissions = Permissions.GetPermissions();
-            var permission = permissions.First();
-            Console.WriteLine(permission.Id.Value + " " + permission.PermissionName + " " + permission.Description);
-            await _acRepository.AddPermission(permission, ct);
-    }
-    private async Task SeedDefaultRole(CancellationToken ct)
-    {
-        const string defaultRoleName = "superadmin";
-
-        await _acRepository.AddRole(defaultRoleName, ct);
-    }
-
-    private async Task AddPermissionsToDefaultRole(CancellationToken ct)
-    {
-        var permissions = await _acRepository.GetAllPermissions(ct);
-
+        var permissions = Permissions.GetPermissions();
         foreach (var permission in permissions)
         {
-            await _acRepository.AddPermissionToRole(1, permission.Id.Value, ct);
+            await _unitofWork.PermissionRepository.AddPermission(permission, ct);
         }
     }
 
-    private async Task SeedDefaultUser(CancellationToken ct)
+    private async Task<Role> SeedDefaultRole(CancellationToken ct)
+    {
+        const string defaultRoleName = "superadmin";
+
+        return await _unitofWork.RoleRepository.AddRole(defaultRoleName, ct);
+    }
+
+    private async Task AddPermissionsToDefaultRole(int roleId, CancellationToken ct)
+    {
+        var permissions = await _unitofWork.PermissionRepository.GetAllPermissions(ct);
+
+        foreach (var permission in permissions)
+        {
+            await _unitofWork.RolePermissionRepository.AddPermissionToRole(
+                roleId,
+                permission.Id,
+                ct
+            );
+        }
+    }
+
+    private async Task SeedDefaultUser(int roleId, CancellationToken ct)
     {
         const string password = "P@assw0rd123";
 
@@ -121,15 +119,11 @@ public class DatabaseSeeder
 
         var user = new UserModel
         {
-            Email = "admin@evautoreg.org",
-            PasswordHash = passwordHash,
-            FirstName = "Vadim",
-            LastName = "Komissarov",
-            IsBlocked = false,
-            IsDeleted = false,
-            RoleId = 1
+            Email = "eadmin@vautoreg.org",
+            PasswordHash = passwordHash
         };
 
-        await _userRepository.CreateUser(user, ct);
+        var defaultUser = await _unitofWork.UserRepository.CreateUser(user, ct);
+        await _unitofWork.RoleRepository.SetUserRole(defaultUser.Id, roleId, ct);
     }
 }

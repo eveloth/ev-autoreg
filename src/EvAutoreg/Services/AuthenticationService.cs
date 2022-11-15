@@ -2,6 +2,8 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Text.RegularExpressions;
+using DataAccessLibrary.DisplayModels;
+using DataAccessLibrary.Repository.Interfaces;
 using Microsoft.IdentityModel.Tokens;
 
 namespace EvAutoreg.Services;
@@ -22,11 +24,17 @@ public class AuthenticationService : IAuthenticationService
 
     private readonly IConfiguration _config;
     private readonly ILogger<AuthenticationService> _logger;
+    private readonly IUnitofWork _unitofWork;
 
-    public AuthenticationService(IConfiguration config, ILogger<AuthenticationService> logger)
+    public AuthenticationService(
+        IConfiguration config,
+        ILogger<AuthenticationService> logger,
+        IUnitofWork unitofWork
+    )
     {
         _config = config;
         _logger = logger;
+        _unitofWork = unitofWork;
     }
 
     public bool IsEmailValid(string email)
@@ -39,21 +47,28 @@ public class AuthenticationService : IAuthenticationService
         return password != email && _passwordRegex.IsMatch(password);
     }
 
-    public string GenerateToken(string userId, string roleName)
+    public async Task<string> GenerateToken(User user, CancellationToken cts)
     {
         var issuer = _config["Jwt:Issuer"];
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
 
-        var claims = new List<Claim>
-        {
-            new(ClaimTypes.NameIdentifier, userId),
-            new(ClaimTypes.Role, roleName),
-        };
+        var claims = new List<Claim> { new(ClaimTypes.NameIdentifier, user.Id.ToString()) };
 
-        if (userId == "8")
+        if (user.RoleId is not null)
         {
-            claims.Add(new Claim("Permission", "ReadUsersPermission"));
-            _logger.LogWarning("User ID {UserId} gets permission to do stuff!!", int.Parse(userId));
+            var rolePermissions = await _unitofWork.RolePermissionRepository.GetRolePermissions(
+                user.RoleId!.Value,
+                cts
+            );
+
+            if (rolePermissions.Permissions.Count != 0)
+            {
+                claims.AddRange(
+                    rolePermissions.Permissions.Select(
+                        permission => new Claim("Permission", permission.PermissionName!)
+                    )
+                );
+            }
         }
 
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -61,7 +76,7 @@ public class AuthenticationService : IAuthenticationService
         var tokenDescriptor = new JwtSecurityToken(
             issuer,
             claims: claims,
-            expires: DateTime.Now.AddHours(12),
+            expires: DateTime.Now.AddDays(1),
             signingCredentials: credentials
         );
 

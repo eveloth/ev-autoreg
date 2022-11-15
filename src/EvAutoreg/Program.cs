@@ -4,7 +4,8 @@ using System.Reflection;
 using System.Text;
 using Dapper;
 using DataAccessLibrary.Extensions;
-using DataAccessLibrary.Repositories;
+using DataAccessLibrary.Repository;
+using DataAccessLibrary.Repository.Interfaces;
 using DataAccessLibrary.SqlDataAccess;
 using EvAutoreg.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -14,31 +15,32 @@ using Npgsql;
 using Serilog;
 
 namespace EvAutoreg;
+
 internal static class Program
 {
-    public static async Task Main(string [] args)
+    public static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
-    
+
         // Add services to the container.
-    
+
         var logger = new LoggerConfiguration().ReadFrom
             .Configuration(builder.Configuration)
             .Enrich.FromLogContext()
             .CreateLogger();
-    
+
         builder.Logging.ClearProviders();
         builder.Logging.AddSerilog(logger);
-    
+
         builder.Services.AddControllers();
-    
+
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
-    
+
         builder.Services.AddSwaggerGen(options =>
         {
             options.SwaggerDoc("v1", new OpenApiInfo { Title = "EvAutoreg", Version = "v0.4.0" });
-    
+
             options.AddSecurityDefinition(
                 "Bearer",
                 new OpenApiSecurityScheme
@@ -51,7 +53,7 @@ internal static class Program
                     Scheme = "Bearer"
                 }
             );
-    
+
             options.AddSecurityRequirement(
                 new OpenApiSecurityRequirement
                 {
@@ -68,13 +70,13 @@ internal static class Program
                     }
                 }
             );
-    
+
             var xmlCommentsFileName = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
             options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlCommentsFileName));
         });
-    
+
         builder.Services.AddRouting(options => options.LowercaseUrls = true);
-    
+
         builder.Services
             .AddAuthentication(options =>
             {
@@ -96,21 +98,23 @@ internal static class Program
                     ValidateIssuerSigningKey = true
                 };
             });
-    
-        // builder.Services.AddAuthorization(options =>
-        // {
-        //     options.AddPolicy("CanDoStuff", policy => policy.RequireClaim("Permission", "CanDoStuff") );
-        //
-        //     var userPermissions = Permissions.GetPermissions<Permissions.UserPermission>();
-        //
-        //     foreach (var permissionName in userPermissions)
-        //     {
-        //         options.AddPolicy($"{permissionName}Permission", policy => policy.RequireClaim("Permission", $"{permissionName}Permission"));
-        //     }
-        // });
 
-        builder.Services.AddScoped<IDbConnection>(_ =>
-            new NpgsqlConnection(builder.Configuration.GetConnectionString("Default")));
+        builder.Services.AddAuthorization(options =>
+        {
+            var userPermissions = Permissions.GetPermissions();
+
+            foreach (var permission in userPermissions)
+            {
+                options.AddPolicy(
+                    $"{permission.PermissionName}",
+                    policy => policy.RequireClaim("Permission", $"{permission.PermissionName}")
+                );
+            }
+        });
+
+        builder.Services.AddScoped<IDbConnection>(
+            _ => new NpgsqlConnection(builder.Configuration.GetConnectionString("Default"))
+        );
         builder.Services.AddScoped<DbTransaction>(s =>
         {
             var connection = s.GetRequiredService<IDbConnection>();
@@ -123,13 +127,17 @@ internal static class Program
 
         builder.Services.AddScoped<IGeneralPurposeRepository, GeneralPurposeRepository>();
         builder.Services.AddScoped<IUserRepository, UserRepository>();
-        builder.Services.AddScoped<IUserRolesRepository, UserRolesRepository>();
+        builder.Services.AddScoped<IRoleRepository, RoleRepository>();
+        builder.Services.AddScoped<IRolePermissionRepository, RolePermissionRepository>();
+        builder.Services.AddScoped<IPermissionRepository, PermissionRepository>();
         builder.Services.AddScoped<IAccessControlRepository, AccessControlRepository>();
+        builder.Services.AddScoped<IUnitofWork, UnitofWork>();
+
         builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
         builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 
         builder.Services.AddTransient<DatabaseSeeder>();
-    
+
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.
@@ -138,23 +146,31 @@ internal static class Program
             app.UseSwagger();
             app.UseSwaggerUI();
         }
-    
+
         app.UseHttpsRedirection();
-    
+
         app.UseAuthentication();
         app.UseAuthorization();
-    
+
         app.MapControllers();
+
+        DefaultTypeMap.MatchNamesWithUnderscores = true;
 
         using (var scope = app.Services.CreateScope())
         {
             var seeder = scope.ServiceProvider.GetService<DatabaseSeeder>();
 
-            seeder.SeedData();
+            if (seeder is null)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("CRITICAL: No database seeder was found, exiting.");
+                Console.ResetColor();
+                throw new ArgumentNullException(nameof(seeder));
+            }
+
+            await seeder.SeedData();
         }
-    
-        DefaultTypeMap.MatchNamesWithUnderscores = true;
-    
+
         await app.RunAsync();
     }
 }
