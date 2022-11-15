@@ -1,14 +1,14 @@
 using DataAccessLibrary.DbModels;
 using DataAccessLibrary.DisplayModels;
 
-namespace DataAccessLibrary.Repository;
+namespace DataAccessLibrary.Repository.Interfaces;
 
 public interface IAccessControlRepository
 {
-    Task<IEnumerable<RoleModel?>> GetRoles(CancellationToken cts);
-    Task<RoleModel> AddRole(string roleName, CancellationToken cts);
-    Task<RoleModel> ChangeRoleName(RoleModel role, CancellationToken cts);
-    Task<RoleModel> DeleteRole(int roleId, CancellationToken cts);
+    Task<IEnumerable<Role?>> GetRoles(CancellationToken cts);
+    Task<Role> AddRole(string roleName, CancellationToken cts);
+    Task<Role> ChangeRoleName(RoleModel role, CancellationToken cts);
+    Task<Role> DeleteRole(int roleId, CancellationToken cts);
     Task<bool> DoesRoleExist(int roleId, CancellationToken cts);
     Task<IEnumerable<Permission>> GetAllPermissions(CancellationToken cts);
 
@@ -37,6 +37,6 @@ public interface IAccessControlRepository
     );
 
     Task<bool> DoesRolePermissionCorrecationExist(int roleId, int permissionId, CancellationToken cts);
-    Task<UserProfileModel> SetUserRole(int userId, int roleId, CancellationToken cts);
-    Task<UserProfileModel> RemoveUserFromRole(int userId, CancellationToken cts);
+    Task<UserProfile> SetUserRole(int userId, int roleId, CancellationToken cts);
+    Task<UserProfile> RemoveUserFromRole(int userId, CancellationToken cts);
 }

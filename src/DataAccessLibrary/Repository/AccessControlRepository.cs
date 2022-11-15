@@ -1,85 +1,63 @@
-using System.Data.Common;
 using Dapper;
 using DataAccessLibrary.DbModels;
 using DataAccessLibrary.DisplayModels;
+using DataAccessLibrary.Repository.Interfaces;
 using DataAccessLibrary.SqlDataAccess;
 using PermissionModel = DataAccessLibrary.DbModels.PermissionModel;
 
-namespace DataAccessLibrary.Repositories;
+namespace DataAccessLibrary.Repository;
 
 public class AccessControlRepository : IAccessControlRepository
 {
     private readonly ISqlDataAccess _db;
-    private readonly DbTransaction _transaction;
 
-    public AccessControlRepository(ISqlDataAccess db, DbTransaction transaction)
+    public AccessControlRepository(ISqlDataAccess db)
     {
         _db = db;
-        _transaction = transaction;
     }
 
-    public async Task<IEnumerable<RoleModel?>> GetRoles(CancellationToken cts)
+    public async Task<IEnumerable<Role?>> GetRoles(CancellationToken cts)
     {
         const string sql = @"SELECT * FROM role";
-
-        var result = await _db.LoadAllData<RoleModel?>(sql, cts);
-
-        await _transaction.CommitAsync(cts);
-
-        return result;
+        
+        return await _db.LoadAllData<Role?>(sql, cts);
     }
 
-    public async Task<RoleModel> AddRole(string roleName, CancellationToken cts)
+    public async Task<Role> AddRole(string roleName, CancellationToken cts)
     {
         const string sql = @"INSERT INTO role (role_name) VALUES (@RoleName) RETURNING *";
-
-        var result = await _db.SaveData<object, RoleModel>(sql, new { RoleName = roleName }, cts);
-
-        await _transaction.CommitAsync(cts);
-
-        return result;
+        
+        return await _db.SaveData<object, Role>(sql, new { RoleName = roleName }, cts);
     }
 
-    public async Task<RoleModel> ChangeRoleName(RoleModel role, CancellationToken cts)
+    public async Task<Role> ChangeRoleName(RoleModel role, CancellationToken cts)
     {
         const string sql = @"UPDATE role SET role_name = @RoleName WHERE id = @Id RETURNING *";
 
         var parameters = new DynamicParameters(role);
 
-        var result = await _db.SaveData<object, RoleModel>(sql, parameters, cts);
-
-        await _transaction.CommitAsync(cts);
-
-        return result;
+        return await _db.SaveData<object, Role>(sql, parameters, cts);
     }
 
-    public async Task<RoleModel> DeleteRole(int roleId, CancellationToken cts)
+    public async Task<Role> DeleteRole(int roleId, CancellationToken cts)
     {
         const string sql = @"DELETE FROM role WHERE id = @Id RETURNING *";
 
-        return await _db.SaveData<object, RoleModel>(sql, new { Id = roleId }, cts);
+        return await _db.SaveData<object, Role>(sql, new { Id = roleId }, cts);
     }
 
     public async Task<bool> DoesRoleExist(int roleId, CancellationToken cts)
     {
         const string sql = @"SELECT EXISTS (SELECT true FROM role WHERE id = @RoleId)";
 
-        var result = await _db.LoadFirst<bool, object>(sql, new { RoleId = roleId }, cts);
-
-        await _transaction.CommitAsync(cts);
-
-        return result;
+        return await _db.LoadFirst<bool, object>(sql, new { RoleId = roleId }, cts);
     }
 
     public async Task<IEnumerable<Permission>> GetAllPermissions(CancellationToken cts)
     {
         const string sql = @"SELECT * FROM permission";
 
-        var result = await _db.LoadAllData<Permission>(sql, cts);
-
-        await _transaction.CommitAsync(cts);
-
-        return result;
+        return await _db.LoadAllData<Permission>(sql, cts);
     }
     
     public async Task<Permission> AddPermission(
@@ -94,15 +72,11 @@ public class AccessControlRepository : IAccessControlRepository
 
         var parameters = new DynamicParameters(permission);
 
-        var result = await _db.SaveData<object, Permission>(
+        return await _db.SaveData<object, Permission>(
             sql,
             parameters,
             cts
         );
-
-        await _transaction.CommitAsync(cts);
-
-        return result;
     }
 
     public async Task<Permission> DeletePermission(int permissionId, CancellationToken cts)
@@ -136,7 +110,7 @@ public class AccessControlRepository : IAccessControlRepository
         return await _db.LoadFirst<bool, object>(sql, new { PermissionName = permissionName }, cts);
     }
 
-    public async Task<IEnumerable<RolePermissionModel>> GetAllRolePermissions(CancellationToken cts)
+    public async Task<IEnumerable<RolePermissionRecord>> GetAllRolePermissions(CancellationToken cts)
     {
         const string sql =
             @"SELECT role.id AS role_id, 
@@ -159,7 +133,7 @@ public class AccessControlRepository : IAccessControlRepository
             .ToList();
     }
 
-    public async Task<RolePermissionModel> GetRolePermissions(int roleId, CancellationToken cts)
+    public async Task<RolePermissionRecord> GetRolePermissions(int roleId, CancellationToken cts)
     {
         const string sql =
             @"SELECT role.id AS role_id, 
@@ -184,7 +158,7 @@ public class AccessControlRepository : IAccessControlRepository
         return result;
     }
 
-    public async Task<RolePermissionModel> AddPermissionToRole(
+    public async Task<RolePermissionRecord> AddPermissionToRole(
         int roleId,
         int permissionId,
         CancellationToken cts
@@ -199,10 +173,12 @@ public class AccessControlRepository : IAccessControlRepository
 
         roleId = await _db.SaveData<object, int>(sql, parameters, cts);
 
-        return await GetRolePermissions(roleId, cts);
+        var result = await GetRolePermissions(roleId, cts);
+
+        return result;
     }
 
-    public async Task<RolePermissionModel> DeletePermissionFromRole(
+    public async Task<RolePermissionRecord> DeletePermissionFromRole(
         int roleId,
         int permissionId,
         CancellationToken cts
@@ -217,7 +193,7 @@ public class AccessControlRepository : IAccessControlRepository
         );
 
         roleId = await _db.SaveData<object, int>(sql, parameters, cts);
-
+        
         return await GetRolePermissions(roleId, cts);
     }
 
@@ -228,7 +204,7 @@ public class AccessControlRepository : IAccessControlRepository
         return await _db.LoadFirst<bool, object>(sql, new { RoleId = roleId, Permissionid = permissionId }, cts);
     }
 
-    public async Task<UserProfileModel> SetUserRole(int userId, int roleId, CancellationToken cts)
+    public async Task<UserProfile> SetUserRole(int userId, int roleId, CancellationToken cts)
     {
         const string sql =
             @"WITH updated AS
@@ -241,10 +217,10 @@ public class AccessControlRepository : IAccessControlRepository
 
         var parameters = new DynamicParameters(new { UserId = userId, RoleId = roleId });
 
-        return await _db.SaveData<object, UserProfileModel, RoleModel>(sql, parameters, cts);
+        return await _db.SaveData<object, UserProfile, Role>(sql, parameters, cts);
     }
 
-    public async Task<UserProfileModel> RemoveUserFromRole(int userId, CancellationToken cts)
+    public async Task<UserProfile> RemoveUserFromRole(int userId, CancellationToken cts)
     {
         const string sql =
             @"WITH updated AS
@@ -255,20 +231,20 @@ public class AccessControlRepository : IAccessControlRepository
                              LEFT JOIN role
                              ON updated.role_id = role.id";
 
-        return await _db.SaveData<object, UserProfileModel, RoleModel>(
+        return await _db.SaveData<object, UserProfile, Role>(
             sql,
             new { UserId = userId },
             cts
         );
     }
 
-    private static RolePermissionModel ConvertToRolePermissionModel(
+    private static RolePermissionRecord ConvertToRolePermissionModel(
         List<RolePermissionRecordModel> rolePermissionList
     )
     {
-        var result = new RolePermissionModel
+        var result = new RolePermissionRecord
         {
-            Role = new RoleModel
+            Role = new Role
             {
                 Id = rolePermissionList.First().RoleId,
                 RoleName = rolePermissionList.First().RoleName
@@ -283,7 +259,7 @@ public class AccessControlRepository : IAccessControlRepository
             result.Permissions.Add(
                 new Permission
                 {
-                    Id = record.PermissionId,
+                    Id = record.PermissionId!.Value,
                     PermissionName = record.PermissionName,
                     Description = record.Description
                 }

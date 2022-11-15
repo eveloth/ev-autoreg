@@ -1,20 +1,22 @@
-﻿using Dapper;
+﻿using System.Data.Common;
+using Dapper;
 using DataAccessLibrary.DbModels;
 using DataAccessLibrary.DisplayModels;
+using DataAccessLibrary.Repository.Interfaces;
 using DataAccessLibrary.SqlDataAccess;
 
-namespace DataAccessLibrary.Repositories;
+namespace DataAccessLibrary.Repository;
 
 public class UserRepository : IUserRepository
 {
     private readonly ISqlDataAccess _db;
 
-    public UserRepository(ISqlDataAccess db)
+    public UserRepository(ISqlDataAccess db, DbTransaction transaction)
     {
         _db = db;
     }
 
-    public async Task<UserModel?> GetUserById(
+    public async Task<User?> GetUserById(
         int userId,
         CancellationToken cts,
         bool includeDeleted = false
@@ -36,10 +38,10 @@ public class UserRepository : IUserRepository
                      AND is_deleted = false",
         };
 
-        return await _db.LoadFirst<UserModel, RoleModel, object>(sql, new { UserId = userId }, cts);
+        return await _db.LoadFirst<User, Role, object>(sql, new { UserId = userId }, cts);
     }
 
-    public async Task<UserModel?> GetUserByEmail(
+    public async Task<User?> GetUserByEmail(
         string email,
         CancellationToken cts,
         bool includeDeleted = false
@@ -61,10 +63,10 @@ public class UserRepository : IUserRepository
                        AND is_deleted = false"
         };
 
-        return await _db.LoadFirst<UserModel, RoleModel, object>(sql, new { Email = email }, cts);
+        return await _db.LoadFirst<User, Role, object>(sql, new { Email = email }, cts);
     }
 
-    public async Task<IEnumerable<UserProfileModel>> GetAllUserProfiles(
+    public async Task<IEnumerable<UserProfile>> GetAllUserProfiles(
         CancellationToken cts,
         bool includeDeleted = false
     )
@@ -84,10 +86,10 @@ public class UserRepository : IUserRepository
                      WHERE is_deleted = false"
         };
 
-        return await _db.LoadAllData<UserProfileModel, RoleModel>(sql, cts);
+        return await _db.LoadAllData<UserProfile, Role>(sql, cts);
     }
 
-    public async Task<UserProfileModel?> GetUserProfle(
+    public async Task<UserProfile?> GetUserProfle(
         int userId,
         CancellationToken cts,
         bool includeDeleted = false
@@ -110,14 +112,14 @@ public class UserRepository : IUserRepository
                      AND is_deleted = false"
         };
 
-        return await _db.LoadFirst<UserProfileModel?, RoleModel, object>(
+        return await _db.LoadFirst<UserProfile?, Role, object>(
             sql,
             new { UserId = userId },
             cts
         );
     }
 
-    public async Task<UserProfileModel> CreateUser(UserModel user, CancellationToken cts)
+    public async Task<UserProfile> CreateUser(UserModel user, CancellationToken cts)
     {
         const string sql =
             @"WITH inserted AS
@@ -132,7 +134,11 @@ public class UserRepository : IUserRepository
 
         var parameters = new DynamicParameters(user);
 
-        return await _db.SaveData<object, UserProfileModel, RoleModel>(sql, parameters, cts);
+        var result = await _db.SaveData<object, UserProfile, Role>(sql, parameters, cts);
+
+        //await _transaction.CommitAsync(cts);
+
+        return result;
     }
 
     public async Task<int> UpdateUserPassword(
@@ -151,7 +157,7 @@ public class UserRepository : IUserRepository
         return await _db.SaveData<object, int>(sql, parameters, cts);
     }
 
-    public async Task<UserProfileModel> UpdateUserEmail(
+    public async Task<UserProfile> UpdateUserEmail(
         int userId,
         string newEmail,
         CancellationToken cts
@@ -169,10 +175,10 @@ public class UserRepository : IUserRepository
 
         var parameters = new DynamicParameters(new { UserId = userId, Email = newEmail });
 
-        return await _db.SaveData<object, UserProfileModel, RoleModel>(sql, parameters, cts);
+        return await _db.SaveData<object, UserProfile, Role>(sql, parameters, cts);
     }
 
-    public async Task<UserProfileModel> UpdateUserProfile(
+    public async Task<UserProfile> UpdateUserProfile(
         int userId,
         string firstName,
         string lastName,
@@ -193,10 +199,10 @@ public class UserRepository : IUserRepository
             new { UserId = userId, FirstName = firstName, LastName = lastName }
         );
 
-        return await _db.SaveData<object, UserProfileModel, RoleModel>(sql, parameters, cts);
+        return await _db.SaveData<object, UserProfile, Role>(sql, parameters, cts);
     }
 
-    public async Task<UserProfileModel> BlockUser(int userId, CancellationToken cts)
+    public async Task<UserProfile> BlockUser(int userId, CancellationToken cts)
     {
         const string sql =
             @"WITH updated as 
@@ -208,14 +214,14 @@ public class UserRepository : IUserRepository
                             LEFT JOIN role
                             ON updated.role_id = role.id";
 
-        return await _db.SaveData<object, UserProfileModel, RoleModel>(
+        return await _db.SaveData<object, UserProfile, Role>(
             sql,
             new { UserId = userId },
             cts
         );
     }
 
-    public async Task<UserProfileModel> UnblockUser(int userId, CancellationToken cts)
+    public async Task<UserProfile> UnblockUser(int userId, CancellationToken cts)
     {
         const string sql =
             @"WITH updated as 
@@ -227,14 +233,14 @@ public class UserRepository : IUserRepository
                             LEFT JOIN role
                             ON updated.role_id = role.id";
 
-        return await _db.SaveData<object, UserProfileModel, RoleModel>(
+        return await _db.SaveData<object, UserProfile, Role>(
             sql,
             new { UserId = userId },
             cts
         );
     }
 
-    public async Task<UserProfileModel> DeleteUser(int userId, CancellationToken cts)
+    public async Task<UserProfile> DeleteUser(int userId, CancellationToken cts)
     {
         const string sql =
             @"WITH updated as 
@@ -246,14 +252,14 @@ public class UserRepository : IUserRepository
                             LEFT JOIN role
                             ON updated.role_id = role.id";
 
-        return await _db.SaveData<object, UserProfileModel, RoleModel>(
+        return await _db.SaveData<object, UserProfile, Role>(
             sql,
             new { UserId = userId },
             cts
         );
     }
 
-    public async Task<UserProfileModel> RestoreUser(int userId, CancellationToken cts)
+    public async Task<UserProfile> RestoreUser(int userId, CancellationToken cts)
     {
         const string sql =
             @"WITH updated as 
@@ -265,7 +271,7 @@ public class UserRepository : IUserRepository
                             LEFT JOIN role
                             ON updated.role_id = role.id";
 
-        return await _db.SaveData<object, UserProfileModel, RoleModel>(
+        return await _db.SaveData<object, UserProfile, Role>(
             sql,
             new { UserId = userId },
             cts

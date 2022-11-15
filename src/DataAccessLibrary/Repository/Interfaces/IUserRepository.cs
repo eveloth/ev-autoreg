@@ -1,17 +1,17 @@
 ﻿using DataAccessLibrary.DbModels;
 using DataAccessLibrary.DisplayModels;
 
-namespace DataAccessLibrary.Repository;
+namespace DataAccessLibrary.Repository.Interfaces;
 
 public interface IUserRepository
 {
-    Task<UserModel?> GetUserById(
+    Task<User?> GetUserById(
         int userId,
         CancellationToken cts,
         bool includeDeleted = false
     );
 
-    Task<UserModel?> GetUserByEmail(
+    Task<User?> GetUserByEmail(
         string email,
         CancellationToken cts,
         bool includeDeleted = false
