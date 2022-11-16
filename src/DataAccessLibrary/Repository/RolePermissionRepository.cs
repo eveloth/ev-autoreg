@@ -23,7 +23,8 @@ public class RolePermissionRepository : IRolePermissionRepository
             @"SELECT role.id AS role_id, 
                              role.role_name AS role_name, 
                              p.id AS permission_id, 
-                             p.permission_name AS permission_name
+                             p.permission_name AS permission_name,
+                             p.description
                              FROM role 
                              LEFT JOIN role_permission rp ON role.id = rp.role_id 
                              LEFT JOIN permission p ON rp.permission_id = p.id";
