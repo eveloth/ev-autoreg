@@ -210,11 +210,11 @@ public class UsersController : ControllerBase
 
         try
         {
-            var user = await _unitofWork.UserRepository.DeleteUser(id, cts);
+            var user = await _unitofWork.UserRepository.RestoreUser(id, cts);
 
             await _unitofWork.CommitAsync(cts);
 
-            _logger.LogInformation("User ID {UserId} was deleted", user.Id);
+            _logger.LogInformation("User ID {UserId} was restored", user.Id);
 
             return Ok(user);
         }
