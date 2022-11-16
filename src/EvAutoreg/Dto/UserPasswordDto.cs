@@ -1,6 +1,6 @@
 namespace EvAutoreg.Dto;
 
-public class UserPasswordDto
+public readonly record struct UserPasswordDto
 {
-    public string NewPassword { get; set; }
+    public string NewPassword { get; init; }
 }

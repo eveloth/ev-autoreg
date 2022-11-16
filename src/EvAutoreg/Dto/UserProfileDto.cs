@@ -1,7 +1,7 @@
 namespace EvAutoreg.Dto;
 
-public class UserProfileDto
+public readonly record struct UserProfileDto
 {
-    public string FisrtName { get; set; }
-    public string LastName { get; set; }
+    public string FisrtName { get; init; }
+    public string LastName { get; init; }
 }

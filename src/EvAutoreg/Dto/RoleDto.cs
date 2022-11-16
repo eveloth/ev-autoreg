@@ -1,6 +1,6 @@
 ﻿namespace EvAutoreg.Dto;
 
-public class RoleDto
+public readonly record struct RoleDto
 {
-    public string RoleName { get; set; }
+    public string RoleName { get; init; }
 }

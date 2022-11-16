@@ -1,7 +1,7 @@
 ﻿namespace EvAutoreg.Dto;
 
-public record struct PermissionDto
+public readonly record struct PermissionDto
 {
-    public string PermissionName { get; set; }
-    public string Description { get; set; }
+    public string PermissionName { get; init; }
+    public string Description { get; init; }
 }

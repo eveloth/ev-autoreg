@@ -1,9 +1,7 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿namespace EvAutoreg.Dto;
 
-namespace EvAutoreg.Dto;
-
-public class UserCredentialsDto
+public readonly record struct UserCredentialsDto
 {
-    public string Email { get; set; }
-    public string Password { get; set; }
+    public string Email { get; init; }
+    public string Password { get; init; }
 }

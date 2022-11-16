@@ -1,6 +1,6 @@
 namespace EvAutoreg.Dto;
 
-public class UserEmailDto
+public readonly record struct UserEmailDto
 {
-    public string NewEmail { get; set; }
+    public string NewEmail { get; init; }
 }
