@@ -3,7 +3,6 @@ using DataAccessLibrary.Repository.Interfaces;
 using EvAutoreg.Dto;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Npgsql;
 using static EvAutoreg.Errors.ErrorCodes;
 
 namespace EvAutoreg.Controllers;
@@ -26,19 +25,11 @@ public class AccessControlController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAllRoles(CancellationToken cts)
     {
-        try
-        {
-            var roles = await _unitofWork.RoleRepository.GetRoles(cts);
+        var roles = await _unitofWork.RoleRepository.GetRoles(cts);
 
-            await _unitofWork.CommitAsync(cts);
+        await _unitofWork.CommitAsync(cts);
 
-            return Ok(roles);
-        }
-        catch (NpgsqlException e)
-        {
-            _logger.LogError("{ErrorMessage}", e.Message);
-            return StatusCode(500, ErrorCode[9001]);
-        }
+        return Ok(roles);
     }
 
     [Authorize(Policy = "CreateRoles")]
@@ -48,24 +39,16 @@ public class AccessControlController : ControllerBase
     {
         var newRoleName = roleName.RoleName.ToLower();
 
-        try
-        {
-            var newRole = await _unitofWork.RoleRepository.AddRole(newRoleName, cts);
+        var newRole = await _unitofWork.RoleRepository.AddRole(newRoleName, cts);
 
-            await _unitofWork.CommitAsync(cts);
+        await _unitofWork.CommitAsync(cts);
 
-            _logger.LogInformation(
-                "Role ID {RoleId} was added with name {RoleName}",
-                newRole.Id,
-                newRole.RoleName
-            );
-            return Ok(newRole);
-        }
-        catch (NpgsqlException e)
-        {
-            _logger.LogError("{ErrorMessage}", e.Message);
-            return StatusCode(500, ErrorCode[9001]);
-        }
+        _logger.LogInformation(
+            "Role ID {RoleId} was added with name {RoleName}",
+            newRole.Id,
+            newRole.RoleName
+        );
+        return Ok(newRole);
     }
 
     [Authorize(Policy = "UpdateRoles")]
@@ -82,24 +65,17 @@ public class AccessControlController : ControllerBase
 
         var role = new RoleModel { Id = id, RoleName = roleName.RoleName.ToLower() };
 
-        try
-        {
-            var updatedRole = await _unitofWork.RoleRepository.ChangeRoleName(role, cts);
+        var updatedRole = await _unitofWork.RoleRepository.ChangeRoleName(role, cts);
 
-            await _unitofWork.CommitAsync(cts);
+        await _unitofWork.CommitAsync(cts);
 
-            _logger.LogInformation(
-                "Role ID {RoleId} name was changed to {RoleName}",
-                updatedRole.Id,
-                updatedRole.RoleName
-            );
-            return Ok(updatedRole);
-        }
-        catch (NpgsqlException e)
-        {
-            _logger.LogError("{ErrorMessage}", e.Message);
-            return StatusCode(500, ErrorCode[9001]);
-        }
+        _logger.LogInformation(
+            "Role ID {RoleId} name was changed to {RoleName}",
+            updatedRole.Id,
+            updatedRole.RoleName
+        );
+        
+        return Ok(updatedRole);
     }
 
     [Authorize(Policy = "DeleteRoles")]
@@ -114,24 +90,17 @@ public class AccessControlController : ControllerBase
             return BadRequest(ErrorCode[3001]);
         }
 
-        try
-        {
-            var deletedRole = await _unitofWork.RoleRepository.DeleteRole(id, cts);
+        var deletedRole = await _unitofWork.RoleRepository.DeleteRole(id, cts);
 
-            await _unitofWork.CommitAsync(cts);
+        await _unitofWork.CommitAsync(cts);
 
-            _logger.LogInformation(
-                "Role ID {RoleId} with name {RoleName} was deleted",
-                deletedRole.Id,
-                deletedRole.RoleName
-            );
-            return Ok(deletedRole);
-        }
-        catch (NpgsqlException e)
-        {
-            _logger.LogError("{ErrorMessage}", e.Message);
-            return StatusCode(500, ErrorCode[9001]);
-        }
+        _logger.LogInformation(
+            "Role ID {RoleId} with name {RoleName} was deleted",
+            deletedRole.Id,
+            deletedRole.RoleName
+        );
+        
+        return Ok(deletedRole);
     }
 
     [Authorize(Policy = "ReadPermissions")]
@@ -139,19 +108,11 @@ public class AccessControlController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAllPermissions(CancellationToken cts)
     {
-        try
-        {
-            var permissions = await _unitofWork.PermissionRepository.GetAllPermissions(cts);
+        var permissions = await _unitofWork.PermissionRepository.GetAllPermissions(cts);
 
-            await _unitofWork.CommitAsync(cts);
+        await _unitofWork.CommitAsync(cts);
 
-            return Ok(permissions);
-        }
-        catch (NpgsqlException e)
-        {
-            _logger.LogError("{ErrorMessage}", e.Message);
-            return StatusCode(500, ErrorCode[9001]);
-        }
+        return Ok(permissions);
     }
 
     [Authorize(Policy = "CreatePermissions")]
@@ -175,27 +136,20 @@ public class AccessControlController : ControllerBase
             Description = permission.Description
         };
 
-        try
-        {
-            var addedPermission = await _unitofWork.PermissionRepository.AddPermission(
-                newPermission,
-                cts
-            );
+        var addedPermission = await _unitofWork.PermissionRepository.AddPermission(
+            newPermission,
+            cts
+        );
 
-            await _unitofWork.CommitAsync(cts);
+        await _unitofWork.CommitAsync(cts);
 
-            _logger.LogInformation(
-                "Permission ID {PermissionId} was added with name {PermissionName}",
-                addedPermission.Id,
-                addedPermission.PermissionName
-            );
-            return Ok(addedPermission);
-        }
-        catch (NpgsqlException e)
-        {
-            _logger.LogError("{ErrorMessage}", e.Message);
-            return StatusCode(500, ErrorCode[9001]);
-        }
+        _logger.LogInformation(
+            "Permission ID {PermissionId} was added with name {PermissionName}",
+            addedPermission.Id,
+            addedPermission.PermissionName
+        );
+        
+        return Ok(addedPermission);
     }
 
     [Authorize(Policy = "DeletePermissions")]
@@ -210,27 +164,20 @@ public class AccessControlController : ControllerBase
             return BadRequest(ErrorCode[4002]);
         }
 
-        try
-        {
-            var deletedPermission = await _unitofWork.PermissionRepository.DeletePermission(
-                id,
-                cts
-            );
+        var deletedPermission = await _unitofWork.PermissionRepository.DeletePermission(
+            id,
+            cts
+        );
 
-            await _unitofWork.CommitAsync(cts);
+        await _unitofWork.CommitAsync(cts);
 
-            _logger.LogInformation(
-                "Permission ID {PermissionId} with name {PermissionName} was deleted",
-                deletedPermission.Id,
-                deletedPermission.PermissionName
-            );
-            return Ok(deletedPermission);
-        }
-        catch (NpgsqlException e)
-        {
-            _logger.LogError("{ErrorMessage}", e.Message);
-            return StatusCode(500, ErrorCode[9001]);
-        }
+        _logger.LogInformation(
+            "Permission ID {PermissionId} with name {PermissionName} was deleted",
+            deletedPermission.Id,
+            deletedPermission.PermissionName
+        );
+        
+        return Ok(deletedPermission);
     }
 
     [Authorize(Policy = "ReadRoles")]
@@ -238,21 +185,13 @@ public class AccessControlController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAllRolePermissions(CancellationToken cts)
     {
-        try
-        {
-            var rolePermissions = await _unitofWork.RolePermissionRepository.GetAllRolePermissions(
-                cts
-            );
+        var rolePermissions = await _unitofWork.RolePermissionRepository.GetAllRolePermissions(
+            cts
+        );
 
-            await _unitofWork.CommitAsync(cts);
+        await _unitofWork.CommitAsync(cts);
 
-            return Ok(rolePermissions);
-        }
-        catch (NpgsqlException e)
-        {
-            _logger.LogError("{ErrorMessage}", e.Message);
-            return StatusCode(500, ErrorCode[9001]);
-        }
+        return Ok(rolePermissions);
     }
 
     [Authorize(Policy = "ReadRoles")]
@@ -267,22 +206,14 @@ public class AccessControlController : ControllerBase
             return BadRequest(ErrorCode[3001]);
         }
 
-        try
-        {
-            var rolePermissions = await _unitofWork.RolePermissionRepository.GetRolePermissions(
-                id,
-                cts
-            );
+        var rolePermissions = await _unitofWork.RolePermissionRepository.GetRolePermissions(
+            id,
+            cts
+        );
 
-            await _unitofWork.CommitAsync(cts);
+        await _unitofWork.CommitAsync(cts);
 
-            return Ok(rolePermissions);
-        }
-        catch (NpgsqlException e)
-        {
-            _logger.LogError("{ErrorMessage}", e.Message);
-            return StatusCode(500, ErrorCode[9001]);
-        }
+        return Ok(rolePermissions);
     }
 
     [Authorize(Policy = "UpdateRoles")]
@@ -311,28 +242,21 @@ public class AccessControlController : ControllerBase
             return BadRequest(ErrorCode[4002]);
         }
 
-        try
-        {
-            var rolePermissions = await _unitofWork.RolePermissionRepository.AddPermissionToRole(
-                roleId,
-                permissionId,
-                cts
-            );
+        var rolePermissions = await _unitofWork.RolePermissionRepository.AddPermissionToRole(
+            roleId,
+            permissionId,
+            cts
+        );
 
-            await _unitofWork.CommitAsync(cts);
+        await _unitofWork.CommitAsync(cts);
 
-            _logger.LogInformation(
-                "Permission ID {PermissionId} was added to role ID {RoleId}",
-                permissionId,
-                roleId
-            );
-            return Ok(rolePermissions);
-        }
-        catch (NpgsqlException e)
-        {
-            _logger.LogError("{ErrorMessage}", e.Message);
-            return StatusCode(500, ErrorCode[9001]);
-        }
+        _logger.LogInformation(
+            "Permission ID {PermissionId} was added to role ID {RoleId}",
+            permissionId,
+            roleId
+        );
+        
+        return Ok(rolePermissions);
     }
 
     [Authorize(Policy = "UpdateRoles")]
@@ -356,29 +280,22 @@ public class AccessControlController : ControllerBase
             return BadRequest(ErrorCode);
         }
 
-        try
-        {
-            var rolePermissions =
-                await _unitofWork.RolePermissionRepository.DeletePermissionFromRole(
-                    roleId,
-                    permissionId,
-                    cts
-                );
-
-            await _unitofWork.CommitAsync(cts);
-
-            _logger.LogInformation(
-                "Permission ID {PermissionId} was removed from ID {RoleId}",
+        var rolePermissions =
+            await _unitofWork.RolePermissionRepository.DeletePermissionFromRole(
+                roleId,
                 permissionId,
-                roleId
+                cts
             );
-            return Ok(rolePermissions);
-        }
-        catch (NpgsqlException e)
-        {
-            _logger.LogError("{ErrorMessage}", e.Message);
-            return StatusCode(500, ErrorCode[9001]);
-        }
+
+        await _unitofWork.CommitAsync(cts);
+
+        _logger.LogInformation(
+            "Permission ID {PermissionId} was removed from ID {RoleId}",
+            permissionId,
+            roleId
+        );
+        
+        return Ok(rolePermissions);
     }
 
     [Authorize(Policy = "UpdateUsers")]
@@ -400,25 +317,17 @@ public class AccessControlController : ControllerBase
             return NotFound(ErrorCode[3001]);
         }
 
-        try
-        {
-            var updatedUser = await _unitofWork.RoleRepository.SetUserRole(userId, roleId, cts);
+        var updatedUser = await _unitofWork.RoleRepository.SetUserRole(userId, roleId, cts);
 
-            await _unitofWork.CommitAsync(cts);
+        await _unitofWork.CommitAsync(cts);
 
-            _logger.LogInformation(
-                "User ID {UserId} was added to role ID {RoleId}",
-                updatedUser.Id,
-                updatedUser.Role!.Id
-            );
+        _logger.LogInformation(
+            "User ID {UserId} was added to role ID {RoleId}",
+            updatedUser.Id,
+            updatedUser.Role!.Id
+        );
 
-            return Ok(updatedUser);
-        }
-        catch (NpgsqlException e)
-        {
-            _logger.LogError("{ErrorMessage}", e.Message);
-            return StatusCode(500, ErrorCode[9001]);
-        }
+        return Ok(updatedUser);
     }
 
     [Authorize(Policy = "UpdateUsers")]
@@ -440,24 +349,16 @@ public class AccessControlController : ControllerBase
             return BadRequest(ErrorCode[3002]);
         }
 
-        try
-        {
-            var updatedUser = await _unitofWork.RoleRepository.RemoveUserFromRole(id, cts);
+        var updatedUser = await _unitofWork.RoleRepository.RemoveUserFromRole(id, cts);
 
-            await _unitofWork.CommitAsync(cts);
+        await _unitofWork.CommitAsync(cts);
 
-            _logger.LogInformation(
-                "User ID {UserId} was removed from role ID {RoleId}",
-                updatedUser.Id,
-                existingUser.Role!.Id
-            );
+        _logger.LogInformation(
+            "User ID {UserId} was removed from role ID {RoleId}",
+            updatedUser.Id,
+            existingUser.Role!.Id
+        );
 
-            return Ok(updatedUser);
-        }
-        catch (NpgsqlException e)
-        {
-            _logger.LogError("{ErrorMessage}", e.Message);
-            return StatusCode(500, ErrorCode[9001]);
-        }
+        return Ok(updatedUser);
     }
 }

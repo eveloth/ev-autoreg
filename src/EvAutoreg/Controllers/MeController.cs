@@ -4,7 +4,6 @@ using EvAutoreg.Dto;
 using EvAutoreg.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Npgsql;
 using static EvAutoreg.Errors.ErrorCodes;
 
 namespace EvAutoreg.Controllers;
@@ -61,28 +60,21 @@ public class MeController : ControllerBase
             return BadRequest(ErrorCode[1001]);
         }
 
-        try
-        {
-            var userProfile = await _unitofWork.UserRepository.UpdateUserEmail(
-                userId,
-                newEmail,
-                cts
-            );
+        var userProfile = await _unitofWork.UserRepository.UpdateUserEmail(
+            userId,
+            newEmail,
+            cts
+        );
 
-            await _unitofWork.CommitAsync(cts);
+        await _unitofWork.CommitAsync(cts);
 
-            _logger.LogInformation(
-                "Email was updated to {NewEmail} for user ID {UserId}",
-                userProfile.Email,
-                userProfile.Id
-            );
-            return Ok(userProfile);
-        }
-        catch (NpgsqlException e)
-        {
-            _logger.LogError("{ErrorMessage}", e.Message);
-            return StatusCode(500, ErrorCode[9001]);
-        }
+        _logger.LogInformation(
+            "Email was updated to {NewEmail} for user ID {UserId}",
+            userProfile.Email,
+            userProfile.Id
+        );
+        
+        return Ok(userProfile);
     }
 
     [Route("password")]
@@ -103,26 +95,18 @@ public class MeController : ControllerBase
 
         var passwordHash = _passwordHasher.HashPassword(password.NewPassword);
 
-        try
-        {
-            var userWithChangedPassword = await _unitofWork.UserRepository.UpdateUserPassword(
-                userId,
-                passwordHash,
-                cts
-            );
+        var userWithChangedPassword = await _unitofWork.UserRepository.UpdateUserPassword(
+            userId,
+            passwordHash,
+            cts
+        );
 
-            await _unitofWork.CommitAsync(cts);
+        await _unitofWork.CommitAsync(cts);
 
-            var id = new { UserId = userWithChangedPassword };
+        var id = new { UserId = userWithChangedPassword };
 
-            _logger.LogInformation("Password was changed for user ID {UserId}", id.UserId);
-            return Ok(id);
-        }
-        catch (NpgsqlException e)
-        {
-            _logger.LogError("{ErrorMessage}", e.Message);
-            return StatusCode(500, ErrorCode[9001]);
-        }
+        _logger.LogInformation("Password was changed for user ID {UserId}", id.UserId);
+        return Ok(id);
     }
 
     [HttpPatch]
@@ -135,24 +119,17 @@ public class MeController : ControllerBase
             HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
         );
 
-        try
-        {
-            var user = await _unitofWork.UserRepository.UpdateUserProfile(
-                userId,
-                profile.FisrtName,
-                profile.LastName,
-                cts
-            );
+        var user = await _unitofWork.UserRepository.UpdateUserProfile(
+            userId,
+            profile.FisrtName,
+            profile.LastName,
+            cts
+        );
 
-            await _unitofWork.CommitAsync(cts);
+        await _unitofWork.CommitAsync(cts);
 
-            _logger.LogInformation("User profile was updated for user ID {UserId}", userId);
-            return Ok(user);
-        }
-        catch (NpgsqlException e)
-        {
-            _logger.LogError("{ErrorMessage}", e.Message);
-            return StatusCode(500, ErrorCode[9001]);
-        }
+        _logger.LogInformation("User profile was updated for user ID {UserId}", userId);
+        
+        return Ok(user);
     }
 }

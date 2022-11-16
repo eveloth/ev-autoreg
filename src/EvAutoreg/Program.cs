@@ -7,6 +7,7 @@ using DataAccessLibrary.Extensions;
 using DataAccessLibrary.Repository;
 using DataAccessLibrary.Repository.Interfaces;
 using DataAccessLibrary.SqlDataAccess;
+using EvAutoreg.Middleware;
 using EvAutoreg.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -151,6 +152,8 @@ internal static class Program
 
         app.UseAuthentication();
         app.UseAuthorization();
+
+        app.UseMiddleware<ErrorHandlingMiddleware>();
 
         app.MapControllers();
 

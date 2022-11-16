@@ -3,7 +3,6 @@ using EvAutoreg.Dto;
 using EvAutoreg.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Npgsql;
 using static EvAutoreg.Errors.ErrorCodes;
 
 namespace EvAutoreg.Controllers;
@@ -34,19 +33,11 @@ public class UsersController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAllUsers(CancellationToken cts)
     {
-        try
-        {
-            var users = await _unitofWork.UserRepository.GetAllUserProfiles(cts);
+        var users = await _unitofWork.UserRepository.GetAllUserProfiles(cts);
 
-            await _unitofWork.CommitAsync(cts);
+        await _unitofWork.CommitAsync(cts);
 
-            return Ok(users);
-        }
-        catch (NpgsqlException e)
-        {
-            _logger.LogError("{ErrorMessage}", e.Message);
-            return StatusCode(500, ErrorCode[9001]);
-        }
+        return Ok(users);
     }
 
     [Authorize]
@@ -54,19 +45,11 @@ public class UsersController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetUser(int id, CancellationToken cts)
     {
-        try
-        {
-            var user = await _unitofWork.UserRepository.GetUserProfle(id, cts);
+        var user = await _unitofWork.UserRepository.GetUserProfle(id, cts);
 
-            await _unitofWork.CommitAsync(cts);
+        await _unitofWork.CommitAsync(cts);
 
-            return user is null ? NotFound(ErrorCode[2001]) : Ok(user);
-        }
-        catch (NpgsqlException e)
-        {
-            _logger.LogError("{ErrorMessage}", e.Message);
-            return StatusCode(500, ErrorCode[9001]);
-        }
+        return user is null ? NotFound(ErrorCode[2001]) : Ok(user);
     }
 
     [Authorize(Policy = "ResetUserPassword")]
@@ -94,27 +77,19 @@ public class UsersController : ControllerBase
 
         var passwordHash = _passwordHasher.HashPassword(password.NewPassword);
 
-        try
-        {
-            var userWithPassswordReset = await _unitofWork.UserRepository.UpdateUserPassword(
-                id,
-                passwordHash,
-                cts
-            );
+        var userWithPassswordReset = await _unitofWork.UserRepository.UpdateUserPassword(
+            id,
+            passwordHash,
+            cts
+        );
 
-            await _unitofWork.CommitAsync(cts);
+        await _unitofWork.CommitAsync(cts);
 
-            var userId = new { UserId = userWithPassswordReset };
+        var userId = new { UserId = userWithPassswordReset };
 
-            _logger.LogInformation("Password was reset for user ID {UserId}", userId.UserId);
+        _logger.LogInformation("Password was reset for user ID {UserId}", userId.UserId);
 
-            return Ok(userId);
-        }
-        catch (NpgsqlException e)
-        {
-            _logger.LogError("{ErrorMessage}", e.Message);
-            return StatusCode(500, ErrorCode[9001]);
-        }
+        return Ok(userId);
     }
 
     [Authorize(Policy = "BlockUsers")]
@@ -125,23 +100,17 @@ public class UsersController : ControllerBase
         var existingUser = await _unitofWork.UserRepository.GetUserProfle(id, cts);
 
         if (existingUser is null || existingUser.IsDeleted)
+        {
             return NotFound(ErrorCode[2001]);
-
-        try
-        {
-            var blockedUser = await _unitofWork.UserRepository.BlockUser(id, cts);
-
-            await _unitofWork.CommitAsync(cts);
-
-            _logger.LogInformation("User ID {UserId} was blocked", blockedUser.Id);
-
-            return Ok(blockedUser);
         }
-        catch (NpgsqlException e)
-        {
-            _logger.LogError("{ErrorMessage}", e.Message);
-            return StatusCode(500, ErrorCode[9001]);
-        }
+
+        var blockedUser = await _unitofWork.UserRepository.BlockUser(id, cts);
+
+        await _unitofWork.CommitAsync(cts);
+
+        _logger.LogInformation("User ID {UserId} was blocked", blockedUser.Id);
+
+        return Ok(blockedUser);
     }
 
     [Authorize(Policy = "BlockUsers")]
@@ -152,23 +121,17 @@ public class UsersController : ControllerBase
         var existingUser = await _unitofWork.UserRepository.GetUserProfle(id, cts);
 
         if (existingUser is null || existingUser.IsDeleted)
+        {
             return NotFound(ErrorCode[2001]);
-
-        try
-        {
-            var blockedUser = await _unitofWork.UserRepository.UnblockUser(id, cts);
-
-            await _unitofWork.CommitAsync(cts);
-
-            _logger.LogInformation("User ID {UserId} was unblocked", blockedUser.Id);
-
-            return Ok(blockedUser);
         }
-        catch (NpgsqlException e)
-        {
-            _logger.LogError("{ErrorMessage}", e.Message);
-            return StatusCode(500, ErrorCode[9001]);
-        }
+
+        var blockedUser = await _unitofWork.UserRepository.UnblockUser(id, cts);
+
+        await _unitofWork.CommitAsync(cts);
+
+        _logger.LogInformation("User ID {UserId} was unblocked", blockedUser.Id);
+
+        return Ok(blockedUser);
     }
 
     [Authorize(Policy = "DeleteUsers")]
@@ -179,23 +142,17 @@ public class UsersController : ControllerBase
         var userExists = await _unitofWork.UserRepository.DoesUserExist(id, cts);
 
         if (!userExists)
+        {
             return NotFound("User not found");
-
-        try
-        {
-            var user = await _unitofWork.UserRepository.DeleteUser(id, cts);
-
-            await _unitofWork.CommitAsync(cts);
-
-            _logger.LogInformation("User ID {UserId} was deleted", user.Id);
-
-            return Ok(user);
         }
-        catch (NpgsqlException e)
-        {
-            _logger.LogError("{ErrorMessage}", e.Message);
-            return StatusCode(500, ErrorCode[9001]);
-        }
+
+        var user = await _unitofWork.UserRepository.DeleteUser(id, cts);
+
+        await _unitofWork.CommitAsync(cts);
+
+        _logger.LogInformation("User ID {UserId} was deleted", user.Id);
+
+        return Ok(user);
     }
 
     [Authorize(Policy = "DeleteUsers")]
@@ -206,22 +163,16 @@ public class UsersController : ControllerBase
         var userExists = await _unitofWork.UserRepository.DoesUserExist(id, cts);
 
         if (!userExists)
+        {
             return NotFound("User not found");
-
-        try
-        {
-            var user = await _unitofWork.UserRepository.RestoreUser(id, cts);
-
-            await _unitofWork.CommitAsync(cts);
-
-            _logger.LogInformation("User ID {UserId} was restored", user.Id);
-
-            return Ok(user);
         }
-        catch (NpgsqlException e)
-        {
-            _logger.LogError("{ErrorMessage}", e.Message);
-            return StatusCode(500, ErrorCode[9001]);
-        }
+
+        var user = await _unitofWork.UserRepository.RestoreUser(id, cts);
+
+        await _unitofWork.CommitAsync(cts);
+
+        _logger.LogInformation("User ID {UserId} was restored", user.Id);
+
+        return Ok(user);
     }
 }

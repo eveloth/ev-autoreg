@@ -1,14 +1,11 @@
 using System.Security.Claims;
 using DataAccessLibrary.DbModels;
-using DataAccessLibrary.DisplayModels;
-using DataAccessLibrary.Repository;
 using DataAccessLibrary.Repository.Interfaces;
 using EvAutoreg.Dto;
 using EvAutoreg.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Npgsql;
 using static EvAutoreg.Errors.ErrorCodes;
 
 namespace EvAutoreg.Controllers;
@@ -112,18 +109,13 @@ public class AuthController : ControllerBase
 
         var newUser = new UserModel { Email = email, PasswordHash = passwordHash };
 
-        try
-        {
-            var createdUser = await _unitofWork.UserRepository.CreateUser(newUser, cts);
-            await _unitofWork.CommitAsync(cts);
-            _logger.LogInformation("User ID {UserId} was registered", createdUser.Id);
-            return Ok(createdUser);
-        }
-        catch (NpgsqlException e)
-        {
-            _logger.LogError("{ErrorMessage}", e.Message);
-            return StatusCode(500, ErrorCode[9001]);
-        }
+        var createdUser = await _unitofWork.UserRepository.CreateUser(newUser, cts);
+        
+        await _unitofWork.CommitAsync(cts);
+        
+        _logger.LogInformation("User ID {UserId} was registered", createdUser.Id);
+        
+        return Ok(createdUser);
     }
 
     [Authorize]
@@ -137,9 +129,9 @@ public class AuthController : ControllerBase
 
         var claims = HttpContext.User.Claims.Where(n => n.Type == "Permission");
 
-        var clst = claims.Select(claim => claim.Type + ": " + claim.Value).ToList();
+        var userPermissions = claims.Select(claim => claim.Type + ": " + claim.Value).ToList();
 
-        return Ok(clst);
+        return Ok(userPermissions);
     }
 
 }
