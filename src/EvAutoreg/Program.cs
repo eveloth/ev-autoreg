@@ -123,7 +123,7 @@ internal static class Program
             return (DbTransaction)connection.BeginTransaction();
         });
 
-        builder.Services.ConfigureSqlDataAccess().UseAffixForModelMapping2("Model");
+        builder.Services.ConfigureSqlDataAccess().UseAffixForModelMapping("Model");
         builder.Services.AddScoped<ISqlDataAccess, SqlDataAccess>();
 
         builder.Services.AddScoped<IGeneralPurposeRepository, GeneralPurposeRepository>();

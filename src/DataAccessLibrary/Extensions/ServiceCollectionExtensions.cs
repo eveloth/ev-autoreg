@@ -10,7 +10,7 @@ public static class ServiceCollectionExtensions
         return services;
     }
     
-    public static IServiceCollection UseAffixForModelMapping2(this IServiceCollection services, string affix)
+    public static IServiceCollection UseAffixForModelMapping(this IServiceCollection services, string affix)
     {
         SqlDataAccessOptions.HasAffix = true;
         SqlDataAccessOptions.Affix = affix;
@@ -18,7 +18,7 @@ public static class ServiceCollectionExtensions
         return services;
     }
     
-    public static IServiceCollection UseCustomSplitOn2(this IServiceCollection services, string splitOn)
+    public static IServiceCollection UseCustomSplitOn(this IServiceCollection services, string splitOn)
     {
         SqlDataAccessOptions.SplitOn = splitOn;
         
