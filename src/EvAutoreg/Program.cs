@@ -131,7 +131,6 @@ internal static class Program
         builder.Services.AddScoped<IRoleRepository, RoleRepository>();
         builder.Services.AddScoped<IRolePermissionRepository, RolePermissionRepository>();
         builder.Services.AddScoped<IPermissionRepository, PermissionRepository>();
-        builder.Services.AddScoped<IAccessControlRepository, AccessControlRepository>();
         builder.Services.AddScoped<IUnitofWork, UnitofWork>();
 
         builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();

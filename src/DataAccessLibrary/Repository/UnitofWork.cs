@@ -13,14 +13,12 @@ public sealed class UnitofWork : IUnitofWork
     public IRoleRepository RoleRepository { get; set; }
     public IPermissionRepository PermissionRepository { get; set; }
     public IRolePermissionRepository RolePermissionRepository { get; set; }
-    public IAccessControlRepository AcCRepository { get; set; }
     public IGeneralPurposeRepository GpRepository { get; set; }
 
     public UnitofWork(
         ILogger<UnitofWork> logger,
         DbTransaction transaction,
         IUserRepository userRepository,
-        IAccessControlRepository acCRepository,
         IGeneralPurposeRepository gpRepository,
         IRoleRepository roleRepository,
         IPermissionRepository permissionRepository,
@@ -30,7 +28,6 @@ public sealed class UnitofWork : IUnitofWork
         _logger = logger;
         _transaction = transaction;
         UserRepository = userRepository;
-        AcCRepository = acCRepository;
         GpRepository = gpRepository;
         RoleRepository = roleRepository;
         PermissionRepository = permissionRepository;

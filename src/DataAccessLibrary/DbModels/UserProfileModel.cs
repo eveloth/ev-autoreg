@@ -1,6 +1,4 @@
-﻿using DataAccessLibrary.DisplayModels;
-
-namespace DataAccessLibrary.DbModels;
+﻿namespace DataAccessLibrary.DbModels;
 
 public class UserProfileModel
 {

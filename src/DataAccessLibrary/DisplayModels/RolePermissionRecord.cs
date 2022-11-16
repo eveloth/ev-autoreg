@@ -1,5 +1,3 @@
-using DataAccessLibrary.DbModels;
-
 namespace DataAccessLibrary.DisplayModels;
 
 public class RolePermissionRecord

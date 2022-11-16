@@ -1,11 +1,9 @@
-using System.Runtime.CompilerServices;
 using DataAccessLibrary.SqlDataAccess;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DataAccessLibrary.Extensions;
 
-public static class ApplicationExtensions
+public static class ServiceCollectionExtensions
 {
     public static IServiceCollection ConfigureSqlDataAccess(this IServiceCollection services)
     {
