@@ -15,7 +15,8 @@ internal static class EVAutoreg
     public static async Task Main(string[] args)
     {
         var host = Host.CreateDefaultBuilder(args)
-            .ConfigureServices(services => { 
+            .ConfigureServices(services =>
+            {
                 services.AddSingleton<Exchange>();
                 services.AddSingleton<Rules>();
                 services.AddSingleton<IMailEventListener, MailEventListener>();
@@ -28,12 +29,13 @@ internal static class EVAutoreg
         Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
 
         var exchange = host.Services.GetRequiredService<Exchange>();
-        
+
         Console.WriteLine("Welcome to EV Autoregistrator!");
-        
+
         await exchange.StartService();
-        
-        Console.CancelKeyPress += (sender, eArgs) => {
+
+        Console.CancelKeyPress += (sender, eArgs) =>
+        {
             QuitEvent.Set();
             eArgs.Cancel = true;
         };
@@ -41,16 +43,22 @@ internal static class EVAutoreg
         var startTimeSpan = TimeSpan.Zero;
         var periodTimeSpan = TimeSpan.FromMinutes(2);
 
-        var timer = new Timer((e) =>
-        {
-            HealthCheck();
-        }, null, startTimeSpan, periodTimeSpan);
+        var timer = new Timer(
+            (e) =>
+            {
+                HealthCheck();
+            },
+            null,
+            startTimeSpan,
+            periodTimeSpan
+        );
 
         QuitEvent.WaitOne();
 
         #region Methods
 
-        void HealthCheck() => PrintNotification($"{DateTime.Now}: Application is running...", ConsoleColor.DarkGray);
+        void HealthCheck() =>
+            PrintNotification($"{DateTime.Now}: Application is running...", ConsoleColor.DarkGray);
 
         #endregion
     }

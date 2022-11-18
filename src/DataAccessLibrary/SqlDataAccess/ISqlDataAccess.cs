@@ -6,15 +6,9 @@ public interface ISqlDataAccess
     string Affix { get; set; }
     string SplitOn { get; set; }
 
-    Task<IEnumerable<TModel>> LoadAllData<TModel>(
-        string sql,
-        CancellationToken cts
-    );
+    Task<IEnumerable<TModel>> LoadAllData<TModel>(string sql, CancellationToken cts);
 
-    Task<IEnumerable<TParent>> LoadAllData<TParent, TChild>(
-        string sql,
-        CancellationToken cts
-    );
+    Task<IEnumerable<TParent>> LoadAllData<TParent, TChild>(string sql, CancellationToken cts);
 
     Task<IEnumerable<TModel>> LoadData<TModel, TParameters>(
         string sql,
@@ -40,10 +34,7 @@ public interface ISqlDataAccess
         CancellationToken cts
     );
 
-    Task<TResult> SaveData<TResult>(
-        string sql,
-        CancellationToken cts
-    );
+    Task<TResult> SaveData<TResult>(string sql, CancellationToken cts);
 
     Task<TResult> SaveData<TParameters, TResult>(
         string sql,

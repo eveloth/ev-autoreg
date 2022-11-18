@@ -15,7 +15,10 @@ public static class PrettyPrinter
     {
         if (connection.IsOpen)
         {
-            PrintNotification($"{DateTime.Now}\nConnection opened, listening on events...", ConsoleColor.Green);
+            PrintNotification(
+                $"{DateTime.Now}\nConnection opened, listening on events...",
+                ConsoleColor.Green
+            );
 
             foreach (var sub in connection.CurrentSubscriptions)
             {

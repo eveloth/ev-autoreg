@@ -109,11 +109,11 @@ public class AuthController : ControllerBase
         var newUser = new UserModel { Email = email, PasswordHash = passwordHash };
 
         var createdUser = await _unitofWork.UserRepository.CreateUser(newUser, cts);
-        
+
         await _unitofWork.CommitAsync(cts);
-        
+
         _logger.LogInformation("User ID {UserId} was registered", createdUser.Id);
-        
+
         return Ok(createdUser);
     }
 
@@ -128,5 +128,4 @@ public class AuthController : ControllerBase
 
         return Ok(userPermissions);
     }
-
 }

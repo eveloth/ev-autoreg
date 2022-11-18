@@ -117,11 +117,7 @@ public class DatabaseSeeder
 
         var passwordHash = _hasher.HashPassword(password);
 
-        var user = new UserModel
-        {
-            Email = "eadmin@vautoreg.org",
-            PasswordHash = passwordHash
-        };
+        var user = new UserModel { Email = "eadmin@vautoreg.org", PasswordHash = passwordHash };
 
         var defaultUser = await _unitofWork.UserRepository.CreateUser(user, ct);
         await _unitofWork.RoleRepository.SetUserRole(defaultUser.Id, roleId, ct);

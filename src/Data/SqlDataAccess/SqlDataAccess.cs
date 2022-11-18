@@ -16,27 +16,38 @@ public class SqlDataAccess : ISqlDataAccess
 
     public async Task<IEnumerable<TModel>> LoadAll<TModel>(
         string sql,
-        string connectionId = "Default")
+        string connectionId = "Default"
+    )
     {
-        using IDbConnection connection = new NpgsqlConnection(_config.GetConnectionString(connectionId));
-        
+        using IDbConnection connection = new NpgsqlConnection(
+            _config.GetConnectionString(connectionId)
+        );
+
         return await connection.QueryAsync<TModel>(sql);
     }
+
     public async Task<IEnumerable<TModel>> LoadData<TModel, TParameters>(
         string sql,
         TParameters parameters,
-        string connectionId = "Default")
+        string connectionId = "Default"
+    )
     {
-        using IDbConnection connection = new NpgsqlConnection(_config.GetConnectionString(connectionId));
+        using IDbConnection connection = new NpgsqlConnection(
+            _config.GetConnectionString(connectionId)
+        );
 
         return await connection.QueryAsync<TModel>(sql, parameters);
     }
+
     public async Task SaveData<TParameters>(
         string sql,
         TParameters parameters,
-        string connectionId = "Default")
+        string connectionId = "Default"
+    )
     {
-        using IDbConnection connection = new NpgsqlConnection(_config.GetConnectionString(connectionId));
+        using IDbConnection connection = new NpgsqlConnection(
+            _config.GetConnectionString(connectionId)
+        );
 
         await connection.ExecuteAsync(sql, parameters);
     }

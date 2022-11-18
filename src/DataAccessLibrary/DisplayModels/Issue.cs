@@ -1,6 +1,3 @@
 ﻿namespace DataAccessLibrary.DisplayModels;
 
-public class Issue
-{
-    
-}
+public class Issue { }

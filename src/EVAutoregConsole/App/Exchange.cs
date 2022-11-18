@@ -36,15 +36,15 @@ public class Exchange
     {
         foreach (var e in args.Events)
         {
-            var notification = (ItemEvent) e;
+            var notification = (ItemEvent)e;
             var email = await EmailMessage.Bind(_exchangeService, notification.ItemId);
-            
+
             if (!Regex.IsMatch(email.Subject, _rules.RegexNewIssue))
             {
                 Console.WriteLine("Received an email that we won't process.");
                 continue;
             }
-            
+
             PrintNotification($"\n{DateTime.Now}\n------New Mail:------", ConsoleColor.Blue);
             Console.WriteLine(email.Subject);
             await _listener.ProcessEvent(email);
@@ -53,7 +53,10 @@ public class Exchange
 
     private async void OnSubscriptionError(object sender, SubscriptionErrorEventArgs args)
     {
-        PrintNotification("Subscription error occurred. Trying to resubscribe...", ConsoleColor.DarkYellow);
+        PrintNotification(
+            "Subscription error occurred. Trying to resubscribe...",
+            ConsoleColor.DarkYellow
+        );
 
         if (Connection is null)
         {
@@ -63,7 +66,8 @@ public class Exchange
         {
             try
             {
-                if (Connection.IsOpen) Connection.Close();
+                if (Connection.IsOpen)
+                    Connection.Close();
 
                 var subscription = await NewMailSubscription();
 
@@ -76,7 +80,7 @@ public class Exchange
             {
                 PrintNotification("Could not restore subscription, exiting.", ConsoleColor.Red);
                 throw;
-            } 
+            }
         }
     }
 
@@ -100,15 +104,18 @@ public class Exchange
                 }
                 catch (Exception e)
                 {
-                    PrintNotification($"Could not reestablish a connection:\n{e.Message}\nTrying again in 3s...", ConsoleColor.Red);
+                    PrintNotification(
+                        $"Could not reestablish a connection:\n{e.Message}\nTrying again in 3s...",
+                        ConsoleColor.Red
+                    );
                     await Task.Delay(3000);
                 }
-            } 
+            }
         }
     }
 
     private ExchangeService CreateService()
-    {       
+    {
         return new ExchangeService
         {
             Url = new Uri($"https://{_url}/ews/exchange.asmx"),
@@ -123,13 +130,18 @@ public class Exchange
         try
         {
             subscription = await _exchangeService.SubscribeToStreamingNotifications(
-                new FolderId[] { WellKnownFolderName.Inbox }, EventType.NewMail);
+                new FolderId[] { WellKnownFolderName.Inbox },
+                EventType.NewMail
+            );
         }
         catch (Exception e)
         {
-            PrintNotification("\nCouldn't authenticate against the Exchange Server.\n" +
-            "Possible reasons are: invalid username and/or password, or domain was specified incorrectly.\n" +
-            e.Message, ConsoleColor.Red);
+            PrintNotification(
+                "\nCouldn't authenticate against the Exchange Server.\n"
+                    + "Possible reasons are: invalid username and/or password, or domain was specified incorrectly.\n"
+                    + e.Message,
+                ConsoleColor.Red
+            );
             throw;
         }
 

@@ -5,17 +5,9 @@ namespace DataAccessLibrary.Repository.Interfaces;
 
 public interface IUserRepository
 {
-    Task<User?> GetUserById(
-        int userId,
-        CancellationToken cts,
-        bool includeDeleted = false
-    );
+    Task<User?> GetUserById(int userId, CancellationToken cts, bool includeDeleted = false);
 
-    Task<User?> GetUserByEmail(
-        string email,
-        CancellationToken cts,
-        bool includeDeleted = false
-    );
+    Task<User?> GetUserByEmail(string email, CancellationToken cts, bool includeDeleted = false);
 
     Task<IEnumerable<UserProfile>> GetAllUserProfiles(
         CancellationToken cts,
@@ -30,17 +22,9 @@ public interface IUserRepository
 
     Task<UserProfile> CreateUser(UserModel user, CancellationToken cts);
 
-    Task<int> UpdateUserPassword(
-        int userId,
-        string passwordHash,
-        CancellationToken cts
-    );
+    Task<int> UpdateUserPassword(int userId, string passwordHash, CancellationToken cts);
 
-    Task<UserProfile> UpdateUserEmail(
-        int userId,
-        string newEmail,
-        CancellationToken cts
-    );
+    Task<UserProfile> UpdateUserEmail(int userId, string newEmail, CancellationToken cts);
 
     Task<UserProfile> UpdateUserProfile(
         int userId,

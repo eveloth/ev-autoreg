@@ -25,10 +25,7 @@ public class AuthenticationService : IAuthenticationService
     private readonly IConfiguration _config;
     private readonly IUnitofWork _unitofWork;
 
-    public AuthenticationService(
-        IConfiguration config,
-        IUnitofWork unitofWork
-    )
+    public AuthenticationService(IConfiguration config, IUnitofWork unitofWork)
     {
         _config = config;
         _unitofWork = unitofWork;

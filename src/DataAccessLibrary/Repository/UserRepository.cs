@@ -112,11 +112,7 @@ public class UserRepository : IUserRepository
                      AND is_deleted = false"
         };
 
-        return await _db.LoadFirst<UserProfile?, Role, object>(
-            sql,
-            new { UserId = userId },
-            cts
-        );
+        return await _db.LoadFirst<UserProfile?, Role, object>(sql, new { UserId = userId }, cts);
     }
 
     public async Task<UserProfile> CreateUser(UserModel user, CancellationToken cts)
@@ -214,11 +210,7 @@ public class UserRepository : IUserRepository
                             LEFT JOIN role
                             ON updated.role_id = role.id";
 
-        return await _db.SaveData<object, UserProfile, Role>(
-            sql,
-            new { UserId = userId },
-            cts
-        );
+        return await _db.SaveData<object, UserProfile, Role>(sql, new { UserId = userId }, cts);
     }
 
     public async Task<UserProfile> UnblockUser(int userId, CancellationToken cts)
@@ -233,11 +225,7 @@ public class UserRepository : IUserRepository
                             LEFT JOIN role
                             ON updated.role_id = role.id";
 
-        return await _db.SaveData<object, UserProfile, Role>(
-            sql,
-            new { UserId = userId },
-            cts
-        );
+        return await _db.SaveData<object, UserProfile, Role>(sql, new { UserId = userId }, cts);
     }
 
     public async Task<UserProfile> DeleteUser(int userId, CancellationToken cts)
@@ -252,11 +240,7 @@ public class UserRepository : IUserRepository
                             LEFT JOIN role
                             ON updated.role_id = role.id";
 
-        return await _db.SaveData<object, UserProfile, Role>(
-            sql,
-            new { UserId = userId },
-            cts
-        );
+        return await _db.SaveData<object, UserProfile, Role>(sql, new { UserId = userId }, cts);
     }
 
     public async Task<UserProfile> RestoreUser(int userId, CancellationToken cts)
@@ -271,11 +255,7 @@ public class UserRepository : IUserRepository
                             LEFT JOIN role
                             ON updated.role_id = role.id";
 
-        return await _db.SaveData<object, UserProfile, Role>(
-            sql,
-            new { UserId = userId },
-            cts
-        );
+        return await _db.SaveData<object, UserProfile, Role>(sql, new { UserId = userId }, cts);
     }
 
     public async Task<bool> DoesUserExist(int userId, CancellationToken cts)

@@ -60,11 +60,7 @@ public class MeController : ControllerBase
             return BadRequest(ErrorCode[1001]);
         }
 
-        var userProfile = await _unitofWork.UserRepository.UpdateUserEmail(
-            userId,
-            newEmail,
-            cts
-        );
+        var userProfile = await _unitofWork.UserRepository.UpdateUserEmail(userId, newEmail, cts);
 
         await _unitofWork.CommitAsync(cts);
 
@@ -73,7 +69,7 @@ public class MeController : ControllerBase
             userProfile.Email,
             userProfile.Id
         );
-        
+
         return Ok(userProfile);
     }
 
@@ -129,7 +125,7 @@ public class MeController : ControllerBase
         await _unitofWork.CommitAsync(cts);
 
         _logger.LogInformation("User profile was updated for user ID {UserId}", userId);
-        
+
         return Ok(user);
     }
 }

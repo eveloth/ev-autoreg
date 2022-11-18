@@ -14,18 +14,18 @@ public class RoleRepository : IRoleRepository
     {
         _db = db;
     }
-    
+
     public async Task<IEnumerable<Role?>> GetRoles(CancellationToken cts)
     {
         const string sql = @"SELECT * FROM role";
-        
+
         return await _db.LoadAllData<Role?>(sql, cts);
     }
 
     public async Task<Role> AddRole(string roleName, CancellationToken cts)
     {
         const string sql = @"INSERT INTO role (role_name) VALUES (@RoleName) RETURNING *";
-        
+
         return await _db.SaveData<object, Role>(sql, new { RoleName = roleName }, cts);
     }
 
@@ -51,7 +51,7 @@ public class RoleRepository : IRoleRepository
 
         return await _db.LoadFirst<bool, object>(sql, new { RoleId = roleId }, cts);
     }
-    
+
     public async Task<UserProfile> SetUserRole(int userId, int roleId, CancellationToken cts)
     {
         const string sql =
@@ -79,10 +79,6 @@ public class RoleRepository : IRoleRepository
                              LEFT JOIN role
                              ON updated.role_id = role.id";
 
-        return await _db.SaveData<object, UserProfile, Role>(
-            sql,
-            new { UserId = userId },
-            cts
-        );
+        return await _db.SaveData<object, UserProfile, Role>(sql, new { UserId = userId }, cts);
     }
 }

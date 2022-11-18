@@ -20,10 +20,7 @@ public class SqlDataAccess : ISqlDataAccess
         _transaction = transaction;
     }
 
-    public async Task<IEnumerable<TModel>> LoadAllData<TModel>(
-        string sql,
-        CancellationToken cts
-    )
+    public async Task<IEnumerable<TModel>> LoadAllData<TModel>(string sql, CancellationToken cts)
     {
         return await _connection.QueryAsync<TModel>(
                 new CommandDefinition(sql, cancellationToken: cts, transaction: _transaction)
@@ -37,7 +34,7 @@ public class SqlDataAccess : ISqlDataAccess
     {
         var result = await _connection.QueryAsync<TParent, TChild, TParent>(
             new CommandDefinition(sql, cancellationToken: cts, transaction: _transaction),
-            MapNestedObjects, 
+            MapNestedObjects,
             SplitOn
         );
 
@@ -95,17 +92,14 @@ public class SqlDataAccess : ISqlDataAccess
 
         return result.FirstOrDefault();
     }
-    
-    public async Task<TResult> SaveData<TResult>(
-        string sql,
-        CancellationToken cts
-    )
+
+    public async Task<TResult> SaveData<TResult>(string sql, CancellationToken cts)
     {
         return await _connection.QueryFirstAsync<TResult>(
             new CommandDefinition(sql, cancellationToken: cts)
         );
     }
-    
+
     public async Task<TResult> SaveData<TParameters, TResult>(
         string sql,
         TParameters parameters,

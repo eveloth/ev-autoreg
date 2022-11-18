@@ -7,6 +7,7 @@ using Microsoft.Exchange.WebServices.Data;
 using Microsoft.Extensions.Configuration;
 using static EVAutoregConsole.Auxiliary.PrettyPrinter;
 using Task = System.Threading.Tasks.Task;
+
 // ReSharper disable InconsistentNaming
 
 namespace EVAutoregConsole.App;
@@ -26,7 +27,12 @@ public class MailEventListener : IMailEventListener
         None
     }
 
-    public MailEventListener(IConfiguration config, IEVApiWrapper evapi, Rules rules, IIssueData issueData)
+    public MailEventListener(
+        IConfiguration config,
+        IEVApiWrapper evapi,
+        Rules rules,
+        IIssueData issueData
+    )
     {
         _config = config;
         _evapi = evapi;
@@ -42,11 +48,17 @@ public class MailEventListener : IMailEventListener
 
         var action = IdentifyIssueType(subject, body, _rules) switch
         {
-            IssueType.Spam       => RegisterAsSpam(issueNo),
+            IssueType.Spam => RegisterAsSpam(issueNo),
             IssueType.Monitoring => RegisterAsMonitoring(issueNo),
             IssueType.ExternalIT => RegisterAsExternalIT(issueNo),
-            _                    => Task.Run(() => PrintNotification
-                ("The issue does not match any rules, skipping", ConsoleColor.Blue))
+            _
+                => Task.Run(
+                    () =>
+                        PrintNotification(
+                            "The issue does not match any rules, skipping",
+                            ConsoleColor.Blue
+                        )
+                )
         };
 
         await action;
@@ -56,30 +68,31 @@ public class MailEventListener : IMailEventListener
     {
         return (subject, body) switch
         {
-            _ when IsSpam(subject, body)       => IssueType.Spam,
+            _ when IsSpam(subject, body) => IssueType.Spam,
             _ when IsMonitoring(subject, body) => IssueType.Monitoring,
             _ when IsExternalIT(subject, body) => IssueType.ExternalIT,
             _ => IssueType.None
-
         };
 
         bool IsSpam(string subj, string bdy)
         {
-            return rules.SpamSubjectRules.Any(subj.Contains) || rules.SpamBodyRules.Any(bdy.Contains);
+            return rules.SpamSubjectRules.Any(subj.Contains)
+                || rules.SpamBodyRules.Any(bdy.Contains);
         }
 
         bool IsMonitoring(string subj, string bdy)
         {
-            return rules.SubjectRules.Any(subj.Contains) && !rules.SubjectNegativeRules.Any(subj.Contains) ||
-                   rules.BodyRules.Any(bdy.Contains) && !rules.BodyNegativeRules.Any(bdy.Contains) ||
-                   Regex.IsMatch(subj, _rules.RegexMonitoring);
+            return rules.SubjectRules.Any(subj.Contains)
+                    && !rules.SubjectNegativeRules.Any(subj.Contains)
+                || rules.BodyRules.Any(bdy.Contains) && !rules.BodyNegativeRules.Any(bdy.Contains)
+                || Regex.IsMatch(subj, _rules.RegexMonitoring);
         }
 
         bool IsExternalIT(string subj, string bdy)
         {
-            return rules.ExternalITSubjectRules.Any(subj.Contains) ||
-                   rules.ExternalITBodyRules.Any(bdy.Contains) ||
-                   Regex.IsMatch(subj, _rules.RegexExternalIT);
+            return rules.ExternalITSubjectRules.Any(subj.Contains)
+                || rules.ExternalITBodyRules.Any(bdy.Contains)
+                || Regex.IsMatch(subj, _rules.RegexExternalIT);
         }
     }
 
@@ -102,14 +115,22 @@ public class MailEventListener : IMailEventListener
         }
         catch (Exception e)
         {
-            PrintNotification($"Failed to commit transaction, reason: {e.Message}", ConsoleColor.Red);
+            PrintNotification(
+                $"Failed to commit transaction, reason: {e.Message}",
+                ConsoleColor.Red
+            );
         }
 
-        var registeringParameters = _config.GetSection("QueryParameters:QuerySpamParameters").Get<string[]>();
+        var registeringParameters = _config
+            .GetSection("QueryParameters:QuerySpamParameters")
+            .Get<string[]>();
 
         if (await _evapi.UpdateIssue(issueNo, registeringParameters) == HttpStatusCode.OK)
         {
-            PrintNotification($"Successfully registered issue no. {issueNo} as SPAM issue.\n", ConsoleColor.DarkGreen);
+            PrintNotification(
+                $"Successfully registered issue no. {issueNo} as SPAM issue.\n",
+                ConsoleColor.DarkGreen
+            );
         }
     }
 
@@ -120,8 +141,12 @@ public class MailEventListener : IMailEventListener
         PrintNotification(issueNo, ConsoleColor.Magenta);
         Console.WriteLine();
 
-        var registeringParameters = _config.GetSection("QueryParameters:QueryRegisterParameters").Get<string[]>();
-        var assigningParameters = _config.GetSection("QueryParameters:QueryInWorkParameters").Get<string[]>();
+        var registeringParameters = _config
+            .GetSection("QueryParameters:QueryRegisterParameters")
+            .Get<string[]>();
+        var assigningParameters = _config
+            .GetSection("QueryParameters:QueryInWorkParameters")
+            .Get<string[]>();
 
         var isOkRegistered = await _evapi.UpdateIssue(issueNo, registeringParameters);
 
@@ -130,7 +155,10 @@ public class MailEventListener : IMailEventListener
             var isOkInWork = await _evapi.UpdateIssue(issueNo, assigningParameters);
             if (isOkInWork == HttpStatusCode.OK)
             {
-                PrintNotification($"Successfully assigned issue no. {issueNo} to first line operators.", ConsoleColor.DarkGreen);
+                PrintNotification(
+                    $"Successfully assigned issue no. {issueNo} to first line operators.",
+                    ConsoleColor.DarkGreen
+                );
 
                 var xmlIssue = await _evapi.GetIssue(issueNo);
                 var issue = xmlIssue!.ConvertToSqlModel();
@@ -139,11 +167,17 @@ public class MailEventListener : IMailEventListener
                 {
                     PrintNotification("Initiating database transaction...", ConsoleColor.Yellow);
                     await _issueData.UpsertIssue(issue);
-                    PrintNotification($"Issue no. {issueNo} id added to the database.\n", ConsoleColor.DarkCyan);
+                    PrintNotification(
+                        $"Issue no. {issueNo} id added to the database.\n",
+                        ConsoleColor.DarkCyan
+                    );
                 }
                 catch (Exception e)
                 {
-                    PrintNotification($"Failed to commit transaction, reason: {e.Message}", ConsoleColor.Red);
+                    PrintNotification(
+                        $"Failed to commit transaction, reason: {e.Message}",
+                        ConsoleColor.Red
+                    );
                 }
             }
         }
@@ -156,11 +190,16 @@ public class MailEventListener : IMailEventListener
         PrintNotification(issueNo, ConsoleColor.Magenta);
         Console.WriteLine();
 
-        var registeringParameters = _config.GetSection("QueryParameters:QueryExternalITParameters").Get<string[]>();
+        var registeringParameters = _config
+            .GetSection("QueryParameters:QueryExternalITParameters")
+            .Get<string[]>();
 
         if (await _evapi.UpdateIssue(issueNo, registeringParameters) == HttpStatusCode.OK)
         {
-            PrintNotification($"Successfully registered issue no. {issueNo} as an External IT issue.\n", ConsoleColor.DarkGreen);
+            PrintNotification(
+                $"Successfully registered issue no. {issueNo} as an External IT issue.\n",
+                ConsoleColor.DarkGreen
+            );
         }
     }
 }

@@ -26,7 +26,8 @@ public class EVApiWrapper : IEVApiWrapper
         PrintNotification("Retrieveing the issue from EV server...", ConsoleColor.Yellow);
         _client.DefaultRequestHeaders.Add("User-agent", "OperatorsAPI");
 
-        var query = $"https://{_domain}/evj/ExtraView/ev_api.action?user_id={_username}&password={_password}&statevar=get&id={issueNo}";
+        var query =
+            $"https://{_domain}/evj/ExtraView/ev_api.action?user_id={_username}&password={_password}&statevar=get&id={issueNo}";
 
         var res = await _client.GetAsync(query);
         var xmlIssueString = await res.Content.ReadAsStringAsync();
@@ -38,7 +39,7 @@ public class EVApiWrapper : IEVApiWrapper
             return XmlParser.Deserialize<XmlIssueModel>(xmlIssueString);
         }
 
-        if(xmlIssueString.Contains("AREA TITLE"))
+        if (xmlIssueString.Contains("AREA TITLE"))
         {
             PrintNotification("Issue was marked as SPAM.", ConsoleColor.Green);
             return null;
@@ -49,18 +50,25 @@ public class EVApiWrapper : IEVApiWrapper
         return null;
     }
 
-    public async Task<HttpStatusCode> UpdateIssue(string issueNo, params string[] queryUpdateParameters)
+    public async Task<HttpStatusCode> UpdateIssue(
+        string issueNo,
+        params string[] queryUpdateParameters
+    )
     {
         _client.DefaultRequestHeaders.Add("User-agent", "OperatorsAPI");
 
-        var query = $"https://{_domain}/evj/ExtraView/ev_api.action?user_id={_username}&password={_password}&statevar=update&id={issueNo}";
+        var query =
+            $"https://{_domain}/evj/ExtraView/ev_api.action?user_id={_username}&password={_password}&statevar=update&id={issueNo}";
 
         query = queryUpdateParameters.Aggregate(query, (current, param) => current + $"&{param}");
 
         var res = await _client.GetAsync(query);
         var content = await res.Content.ReadAsStringAsync();
 
-        if (res.IsSuccessStatusCode && content.Contains("updated", StringComparison.InvariantCultureIgnoreCase))
+        if (
+            res.IsSuccessStatusCode
+            && content.Contains("updated", StringComparison.InvariantCultureIgnoreCase)
+        )
         {
             PrintNotification("EV server: " + content, ConsoleColor.Green);
         }
@@ -68,7 +76,7 @@ public class EVApiWrapper : IEVApiWrapper
         {
             PrintNotification("Failed updating an issue. Reason: ", ConsoleColor.Red);
             Console.WriteLine(content);
-            
+
             return HttpStatusCode.BadRequest;
         }
 

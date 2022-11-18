@@ -14,18 +14,15 @@ public class PermissionRepository : IPermissionRepository
     {
         _db = db;
     }
-    
+
     public async Task<IEnumerable<Permission>> GetAllPermissions(CancellationToken cts)
     {
         const string sql = @"SELECT * FROM permission";
 
         return await _db.LoadAllData<Permission>(sql, cts);
     }
-    
-    public async Task<Permission> AddPermission(
-        PermissionModel permission,
-        CancellationToken cts
-    )
+
+    public async Task<Permission> AddPermission(PermissionModel permission, CancellationToken cts)
     {
         const string sql =
             @"INSERT INTO permission (permission_name, description) 
@@ -34,11 +31,7 @@ public class PermissionRepository : IPermissionRepository
 
         var parameters = new DynamicParameters(permission);
 
-        return await _db.SaveData<object, Permission>(
-            sql,
-            parameters,
-            cts
-        );
+        return await _db.SaveData<object, Permission>(sql, parameters, cts);
     }
 
     public async Task<Permission> DeletePermission(int permissionId, CancellationToken cts)
@@ -50,7 +43,8 @@ public class PermissionRepository : IPermissionRepository
 
     public async Task<int> ClearPermissions(CancellationToken cts)
     {
-        const string sql = @"WITH deleted AS
+        const string sql =
+            @"WITH deleted AS
                              (DELETE FROM permission
                              RETURNING 1)
                              SELECT COUNT(*) FROM deleted";
@@ -67,9 +61,9 @@ public class PermissionRepository : IPermissionRepository
 
     public async Task<bool> DoesPermissionExist(string permissionName, CancellationToken cts)
     {
-        const string sql = @"SELECT EXISTS (SELECT true FROM permission WHERE permission_name = @PermissionName)";
+        const string sql =
+            @"SELECT EXISTS (SELECT true FROM permission WHERE permission_name = @PermissionName)";
 
         return await _db.LoadFirst<bool, object>(sql, new { PermissionName = permissionName }, cts);
     }
-    
 }

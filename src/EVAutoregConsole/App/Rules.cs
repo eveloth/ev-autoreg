@@ -19,27 +19,34 @@ public class Rules
 
     public Rules(IConfiguration config)
     {
-        SubjectRules = config.GetSection("MailAnalysisRules:SubjectRules").Get<string[]>()
-                       ?? Array.Empty<string>().ToArray();
-        BodyRules = config.GetSection("MailAnalysisRules:BodyRules").Get<string[]>()
-                    ?? Array.Empty<string>().ToArray();
-        SubjectNegativeRules = config.GetSection("MailAnalysisRules:SubjectNegativeRules").Get<string[]>()
-                               ?? Array.Empty<string>().ToArray();
-        BodyNegativeRules = config.GetSection("MailAnalysisRules:BodyNegativeRules").Get<string[]>()
-                            ?? Array.Empty<string>().ToArray();
-        ExternalITSubjectRules = config.GetSection("MailAnalysisRules:ExternalITSubjectRules").Get<string[]>()
-                                 ?? Array.Empty<string>().ToArray();
-        ExternalITBodyRules = config.GetSection("MailAnalysisRules:ExternalITBodyRules").Get<string[]>()
-                              ?? Array.Empty<string>().ToArray();
-        SpamSubjectRules = config.GetSection("MailAnalysisRules:SpamSubjectRules").Get<string[]>() 
-                           ?? Array.Empty<string>().ToArray();
-        SpamBodyRules = config.GetSection("MailAnalysisRules:SpamBodyRules").Get<string[]>()
-                        ?? Array.Empty<string>().ToArray();
+        SubjectRules =
+            config.GetSection("MailAnalysisRules:SubjectRules").Get<string[]>()
+            ?? Array.Empty<string>().ToArray();
+        BodyRules =
+            config.GetSection("MailAnalysisRules:BodyRules").Get<string[]>()
+            ?? Array.Empty<string>().ToArray();
+        SubjectNegativeRules =
+            config.GetSection("MailAnalysisRules:SubjectNegativeRules").Get<string[]>()
+            ?? Array.Empty<string>().ToArray();
+        BodyNegativeRules =
+            config.GetSection("MailAnalysisRules:BodyNegativeRules").Get<string[]>()
+            ?? Array.Empty<string>().ToArray();
+        ExternalITSubjectRules =
+            config.GetSection("MailAnalysisRules:ExternalITSubjectRules").Get<string[]>()
+            ?? Array.Empty<string>().ToArray();
+        ExternalITBodyRules =
+            config.GetSection("MailAnalysisRules:ExternalITBodyRules").Get<string[]>()
+            ?? Array.Empty<string>().ToArray();
+        SpamSubjectRules =
+            config.GetSection("MailAnalysisRules:SpamSubjectRules").Get<string[]>()
+            ?? Array.Empty<string>().ToArray();
+        SpamBodyRules =
+            config.GetSection("MailAnalysisRules:SpamBodyRules").Get<string[]>()
+            ?? Array.Empty<string>().ToArray();
 
-        RegexNewIssue = config.GetValue<string>("RegexRules:NewIssue")?? string.Empty;
+        RegexNewIssue = config.GetValue<string>("RegexRules:NewIssue") ?? string.Empty;
         RegexIssueNo = config.GetValue<string>("RegexRules:IssueNo") ?? string.Empty;
         RegexMonitoring = config.GetValue<string>("RegexRules:Monitoring") ?? string.Empty;
         RegexExternalIT = config.GetValue<string>("RegexRules:ExternalIT") ?? string.Empty;
     }
-
 }

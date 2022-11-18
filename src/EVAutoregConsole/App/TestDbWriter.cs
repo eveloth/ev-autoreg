@@ -15,7 +15,12 @@ public class TestDbWriter : IMailEventListener
     private readonly Rules _rules;
     private readonly IIssueData _issueData;
 
-    public TestDbWriter(Rules rules, IEVApiWrapper evapi, IIssueData issueData, IConfiguration config)
+    public TestDbWriter(
+        Rules rules,
+        IEVApiWrapper evapi,
+        IIssueData issueData,
+        IConfiguration config
+    )
     {
         _rules = rules;
         _evapi = evapi;
@@ -36,13 +41,18 @@ public class TestDbWriter : IMailEventListener
 
             try
             {
-            	await _issueData.UpsertIssue(issue);
-                PrettyPrinter.PrintNotification($"Added issue no {issueNo} to database", ConsoleColor.DarkCyan);
-
+                await _issueData.UpsertIssue(issue);
+                PrettyPrinter.PrintNotification(
+                    $"Added issue no {issueNo} to database",
+                    ConsoleColor.DarkCyan
+                );
             }
             catch (Exception e)
             {
-                PrettyPrinter.PrintNotification($"Failed to commit transaction, reason: {e.Message}", ConsoleColor.Red);
+                PrettyPrinter.PrintNotification(
+                    $"Failed to commit transaction, reason: {e.Message}",
+                    ConsoleColor.Red
+                );
             }
         }
     }

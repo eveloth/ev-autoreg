@@ -74,7 +74,7 @@ public class AccessControlController : ControllerBase
             updatedRole.Id,
             updatedRole.RoleName
         );
-        
+
         return Ok(updatedRole);
     }
 
@@ -99,7 +99,7 @@ public class AccessControlController : ControllerBase
             deletedRole.Id,
             deletedRole.RoleName
         );
-        
+
         return Ok(deletedRole);
     }
 
@@ -148,7 +148,7 @@ public class AccessControlController : ControllerBase
             addedPermission.Id,
             addedPermission.PermissionName
         );
-        
+
         return Ok(addedPermission);
     }
 
@@ -164,10 +164,7 @@ public class AccessControlController : ControllerBase
             return BadRequest(ErrorCode[4002]);
         }
 
-        var deletedPermission = await _unitofWork.PermissionRepository.DeletePermission(
-            id,
-            cts
-        );
+        var deletedPermission = await _unitofWork.PermissionRepository.DeletePermission(id, cts);
 
         await _unitofWork.CommitAsync(cts);
 
@@ -176,7 +173,7 @@ public class AccessControlController : ControllerBase
             deletedPermission.Id,
             deletedPermission.PermissionName
         );
-        
+
         return Ok(deletedPermission);
     }
 
@@ -185,9 +182,7 @@ public class AccessControlController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAllRolePermissions(CancellationToken cts)
     {
-        var rolePermissions = await _unitofWork.RolePermissionRepository.GetAllRolePermissions(
-            cts
-        );
+        var rolePermissions = await _unitofWork.RolePermissionRepository.GetAllRolePermissions(cts);
 
         await _unitofWork.CommitAsync(cts);
 
@@ -255,7 +250,7 @@ public class AccessControlController : ControllerBase
             permissionId,
             roleId
         );
-        
+
         return Ok(rolePermissions);
     }
 
@@ -280,12 +275,11 @@ public class AccessControlController : ControllerBase
             return BadRequest(ErrorCode);
         }
 
-        var rolePermissions =
-            await _unitofWork.RolePermissionRepository.DeletePermissionFromRole(
-                roleId,
-                permissionId,
-                cts
-            );
+        var rolePermissions = await _unitofWork.RolePermissionRepository.DeletePermissionFromRole(
+            roleId,
+            permissionId,
+            cts
+        );
 
         await _unitofWork.CommitAsync(cts);
 
@@ -294,7 +288,7 @@ public class AccessControlController : ControllerBase
             permissionId,
             roleId
         );
-        
+
         return Ok(rolePermissions);
     }
 
