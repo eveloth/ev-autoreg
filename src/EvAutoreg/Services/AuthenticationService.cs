@@ -19,21 +19,18 @@ public class AuthenticationService : IAuthenticationService
     private const string _passwordValidationRegex =
         @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&\(\)])[A-Za-z\d@$!%*?&\(\)]{8,}$";
 
-    private readonly Regex _emailRegex = new Regex(_emailValidationRegex);
-    private readonly Regex _passwordRegex = new Regex(_passwordValidationRegex);
+    private readonly Regex _emailRegex = new(_emailValidationRegex);
+    private readonly Regex _passwordRegex = new(_passwordValidationRegex);
 
     private readonly IConfiguration _config;
-    private readonly ILogger<AuthenticationService> _logger;
     private readonly IUnitofWork _unitofWork;
 
     public AuthenticationService(
         IConfiguration config,
-        ILogger<AuthenticationService> logger,
         IUnitofWork unitofWork
     )
     {
         _config = config;
-        _logger = logger;
         _unitofWork = unitofWork;
     }
 

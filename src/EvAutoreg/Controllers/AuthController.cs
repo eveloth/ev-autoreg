@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using DataAccessLibrary.DbModels;
 using DataAccessLibrary.Repository.Interfaces;
 using EvAutoreg.Dto;
@@ -123,10 +122,6 @@ public class AuthController : ControllerBase
     [HttpGet]
     public IActionResult GetMe()
     {
-        var userId = int.Parse(
-            HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
-        );
-
         var claims = HttpContext.User.Claims.Where(n => n.Type == "Permission");
 
         var userPermissions = claims.Select(claim => claim.Type + ": " + claim.Value).ToList();
