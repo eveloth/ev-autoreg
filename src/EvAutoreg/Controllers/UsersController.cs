@@ -43,7 +43,7 @@ public class UsersController : ControllerBase
     [Authorize]
     [Route("{id:int}")]
     [HttpGet]
-    public async Task<IActionResult> GetUser(int id, CancellationToken cts)
+    public async Task<IActionResult> GetUser([FromQuery] int id, CancellationToken cts)
     {
         var user = await _unitofWork.UserRepository.GetUserProfle(id, cts);
 
@@ -56,8 +56,8 @@ public class UsersController : ControllerBase
     [Route("{id:int}/password/reset")]
     [HttpPost]
     public async Task<IActionResult> ResetPassword(
-        int id,
-        UserPasswordDto password,
+        [FromQuery] int id,
+        [FromBody] UserPasswordDto password,
         CancellationToken cts
     )
     {
@@ -95,7 +95,7 @@ public class UsersController : ControllerBase
     [Authorize(Policy = "BlockUsers")]
     [Route("{id:int}/block")]
     [HttpPost]
-    public async Task<IActionResult> BlockUser(int id, CancellationToken cts)
+    public async Task<IActionResult> BlockUser([FromQuery] int id, CancellationToken cts)
     {
         var existingUser = await _unitofWork.UserRepository.GetUserProfle(id, cts);
 
@@ -116,7 +116,7 @@ public class UsersController : ControllerBase
     [Authorize(Policy = "BlockUsers")]
     [Route("{id:int}/unblock")]
     [HttpPost]
-    public async Task<IActionResult> UnblockUser(int id, CancellationToken cts)
+    public async Task<IActionResult> UnblockUser([FromQuery] int id, CancellationToken cts)
     {
         var existingUser = await _unitofWork.UserRepository.GetUserProfle(id, cts);
 
@@ -137,7 +137,7 @@ public class UsersController : ControllerBase
     [Authorize(Policy = "DeleteUsers")]
     [Route("{id:int}")]
     [HttpDelete]
-    public async Task<IActionResult> DeleteUser(int id, CancellationToken cts)
+    public async Task<IActionResult> DeleteUser([FromQuery] int id, CancellationToken cts)
     {
         var userExists = await _unitofWork.UserRepository.DoesUserExist(id, cts);
 
@@ -158,7 +158,7 @@ public class UsersController : ControllerBase
     [Authorize(Policy = "DeleteUsers")]
     [Route("{id:int}/restore")]
     [HttpPost]
-    public async Task<IActionResult> RestoreUser(int id, CancellationToken cts)
+    public async Task<IActionResult> RestoreUser([FromQuery] int id, CancellationToken cts)
     {
         var userExists = await _unitofWork.UserRepository.DoesUserExist(id, cts);
 

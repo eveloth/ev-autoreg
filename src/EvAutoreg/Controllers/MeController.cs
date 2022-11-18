@@ -47,7 +47,10 @@ public class MeController : ControllerBase
 
     [Route("email")]
     [HttpPost]
-    public async Task<IActionResult> UpdateEmail(UserEmailDto email, CancellationToken cts)
+    public async Task<IActionResult> UpdateEmail(
+        [FromBody] UserEmailDto email,
+        CancellationToken cts
+    )
     {
         var userId = int.Parse(
             HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
@@ -75,7 +78,10 @@ public class MeController : ControllerBase
 
     [Route("password")]
     [HttpPost]
-    public async Task<IActionResult> UpdatePassword(UserPasswordDto password, CancellationToken cts)
+    public async Task<IActionResult> UpdatePassword(
+        [FromBody] UserPasswordDto password,
+        CancellationToken cts
+    )
     {
         var userId = int.Parse(
             HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
@@ -107,7 +113,7 @@ public class MeController : ControllerBase
 
     [HttpPatch]
     public async Task<IActionResult> UpdateUserProfile(
-        UserProfileDto profile,
+        [FromBody] UserProfileDto profile,
         CancellationToken cts
     )
     {

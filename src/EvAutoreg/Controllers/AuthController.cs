@@ -47,7 +47,10 @@ public class AuthController : ControllerBase
     [AllowAnonymous]
     [Route("token")]
     [HttpPost]
-    public async Task<IActionResult> Login(UserCredentialsDto request, CancellationToken cts)
+    public async Task<IActionResult> Login(
+        [FromBody] UserCredentialsDto request,
+        CancellationToken cts
+    )
     {
         var email = request.Email.ToLower();
 
@@ -83,7 +86,10 @@ public class AuthController : ControllerBase
     [AllowAnonymous]
     [Route("register")]
     [HttpPost]
-    public async Task<IActionResult> RegisterUser(UserCredentialsDto request, CancellationToken cts)
+    public async Task<IActionResult> RegisterUser(
+        [FromBody] UserCredentialsDto request,
+        CancellationToken cts
+    )
     {
         var email = request.Email.ToLower();
 

@@ -35,7 +35,7 @@ public class AccessControlController : ControllerBase
     [Authorize(Policy = "CreateRoles")]
     [Route("roles")]
     [HttpPost]
-    public async Task<IActionResult> AddRole(RoleDto roleName, CancellationToken cts)
+    public async Task<IActionResult> AddRole([FromBody] RoleDto roleName, CancellationToken cts)
     {
         var newRoleName = roleName.RoleName.ToLower();
 
@@ -54,7 +54,11 @@ public class AccessControlController : ControllerBase
     [Authorize(Policy = "UpdateRoles")]
     [Route("roles/{id:int}")]
     [HttpPut]
-    public async Task<IActionResult> ChangeRoleName(int id, RoleDto roleName, CancellationToken cts)
+    public async Task<IActionResult> ChangeRoleName(
+        [FromQuery] int id,
+        [FromBody] RoleDto roleName,
+        CancellationToken cts
+    )
     {
         var roleExists = await _unitofWork.RoleRepository.DoesRoleExist(id, cts);
 
@@ -81,7 +85,7 @@ public class AccessControlController : ControllerBase
     [Authorize(Policy = "DeleteRoles")]
     [Route("roles/{id:int}")]
     [HttpDelete]
-    public async Task<IActionResult> DeleteRole(int id, CancellationToken cts)
+    public async Task<IActionResult> DeleteRole([FromQuery] int id, CancellationToken cts)
     {
         var roleExists = await _unitofWork.RoleRepository.DoesRoleExist(id, cts);
 
@@ -118,7 +122,10 @@ public class AccessControlController : ControllerBase
     [Authorize(Policy = "CreatePermissions")]
     [Route("permissions")]
     [HttpPost]
-    public async Task<IActionResult> AddPermission(PermissionDto permission, CancellationToken cts)
+    public async Task<IActionResult> AddPermission(
+        [FromBody] PermissionDto permission,
+        CancellationToken cts
+    )
     {
         var permissionExists = await _unitofWork.PermissionRepository.DoesPermissionExist(
             permission.PermissionName,
@@ -155,7 +162,7 @@ public class AccessControlController : ControllerBase
     [Authorize(Policy = "DeletePermissions")]
     [Route("permission/{id:int}")]
     [HttpDelete]
-    public async Task<IActionResult> DeletePermission(int id, CancellationToken cts)
+    public async Task<IActionResult> DeletePermission([FromQuery] int id, CancellationToken cts)
     {
         var permissionExists = await _unitofWork.PermissionRepository.DoesPermissionExist(id, cts);
 
@@ -192,7 +199,7 @@ public class AccessControlController : ControllerBase
     [Authorize(Policy = "ReadRoles")]
     [Route("roles/{id:int}/permissions")]
     [HttpGet]
-    public async Task<IActionResult> GetRolePermissions(int id, CancellationToken cts)
+    public async Task<IActionResult> GetRolePermissions([FromQuery] int id, CancellationToken cts)
     {
         var roleExists = await _unitofWork.RoleRepository.DoesRoleExist(id, cts);
 
@@ -215,8 +222,8 @@ public class AccessControlController : ControllerBase
     [Route("roles/{roleId:int}/permissions/{permissionId:int}")]
     [HttpPost]
     public async Task<IActionResult> AddPermissionToRole(
-        int roleId,
-        int permissionId,
+        [FromQuery] int roleId,
+        [FromQuery] int permissionId,
         CancellationToken cts
     )
     {
@@ -258,8 +265,8 @@ public class AccessControlController : ControllerBase
     [Route("roles/{roleId:int}/permissions/{permissionId:int}")]
     [HttpDelete]
     public async Task<IActionResult> RemovePermissionFromRole(
-        int roleId,
-        int permissionId,
+        [FromQuery] int roleId,
+        [FromQuery] int permissionId,
         CancellationToken cts
     )
     {
@@ -295,7 +302,11 @@ public class AccessControlController : ControllerBase
     [Authorize(Policy = "UpdateUsers")]
     [Route("users/{userId:int}/roles/{roleId:int}")]
     [HttpPost]
-    public async Task<IActionResult> AddUserToRole(int userId, int roleId, CancellationToken cts)
+    public async Task<IActionResult> AddUserToRole(
+        [FromQuery] int userId,
+        [FromQuery] int roleId,
+        CancellationToken cts
+    )
     {
         var userExists = await _unitofWork.UserRepository.DoesUserExist(userId, cts);
 
@@ -327,7 +338,7 @@ public class AccessControlController : ControllerBase
     [Authorize(Policy = "UpdateUsers")]
     [Route("users/{id:int}/roles")]
     [HttpDelete]
-    public async Task<IActionResult> RemoveUserFromRole(int id, CancellationToken cts)
+    public async Task<IActionResult> RemoveUserFromRole([FromQuery] int id, CancellationToken cts)
     {
         var existingUser = await _unitofWork.UserRepository.GetUserProfle(id, cts);
 
