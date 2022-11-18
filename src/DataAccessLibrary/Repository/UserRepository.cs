@@ -1,7 +1,8 @@
-﻿using System.Data.Common;
+﻿using System.Text;
 using Dapper;
 using DataAccessLibrary.DbModels;
 using DataAccessLibrary.DisplayModels;
+using DataAccessLibrary.Filters;
 using DataAccessLibrary.Repository.Interfaces;
 using DataAccessLibrary.SqlDataAccess;
 
@@ -11,7 +12,7 @@ public class UserRepository : IUserRepository
 {
     private readonly ISqlDataAccess _db;
 
-    public UserRepository(ISqlDataAccess db, DbTransaction transaction)
+    public UserRepository(ISqlDataAccess db)
     {
         _db = db;
     }
@@ -67,17 +68,44 @@ public class UserRepository : IUserRepository
     }
 
     public async Task<IEnumerable<UserProfile>> GetAllUserProfiles(
+        PaginationFilter filter,
         CancellationToken cts,
         bool includeDeleted = false
     )
     {
+        var skip = (filter.PageNumber - 1) * filter.Pagesize;
+        var take = filter.Pagesize;
+
+        var sqlTemplateBuilder = new StringBuilder(
+            @"SELECT * FROM app_user
+                                  LEFT JOIN role ON app_user.role_id = role.id"
+        );
+        var includeDeletedSql = "WHERE is_deleted = false";
+        var paginator =
+            $@"ORDER BY app_user.id
+                                   LIMIT {take} OFFSET {skip}";
+
+        var resultingSql = includeDeleted switch
+        {
+            true
+                => sqlTemplateBuilder
+                    .Append(" ")
+                    .Append(includeDeletedSql)
+                    .Append(" ")
+                    .Append(paginator)
+                    .ToString(),
+            false => sqlTemplateBuilder.Append(" ").Append(paginator).ToString()
+        };
+
         var sql = includeDeleted switch
         {
             true
-                => @"SELECT *
+                => $@"SELECT *
                      FROM app_user
                      LEFT JOIN role
-                     ON app_user.role_id = role.id",
+                     ON app_user.role_id = role.id
+                     ORDER BY app_user.id
+                     LIMIT {filter.Pagesize}",
             false
                 => @"SELECT * 
                      FROM app_user
@@ -86,7 +114,7 @@ public class UserRepository : IUserRepository
                      WHERE is_deleted = false"
         };
 
-        return await _db.LoadAllData<UserProfile, Role>(sql, cts);
+        return await _db.LoadAllData<UserProfile, Role>(resultingSql, cts);
     }
 
     public async Task<UserProfile?> GetUserProfle(

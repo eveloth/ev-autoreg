@@ -1,5 +1,6 @@
 ﻿using DataAccessLibrary.DbModels;
 using DataAccessLibrary.DisplayModels;
+using DataAccessLibrary.Filters;
 
 namespace DataAccessLibrary.Repository.Interfaces;
 
@@ -10,6 +11,7 @@ public interface IUserRepository
     Task<User?> GetUserByEmail(string email, CancellationToken cts, bool includeDeleted = false);
 
     Task<IEnumerable<UserProfile>> GetAllUserProfiles(
+        PaginationFilter filter,
         CancellationToken cts,
         bool includeDeleted = false
     );
