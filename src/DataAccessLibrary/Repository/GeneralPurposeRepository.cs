@@ -22,8 +22,6 @@ public class GeneralPurposeRepository : IGeneralPurposeRepository
             .Append("LIMIT 1)")
             .ToString();
 
-        Console.WriteLine(sql);
-
         var result = (await _db.LoadAllData<bool>(sql, cts)).First();
 
         return result;
