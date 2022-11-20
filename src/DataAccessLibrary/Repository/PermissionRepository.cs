@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using DataAccessLibrary.DbModels;
 using DataAccessLibrary.DisplayModels;
+using DataAccessLibrary.Filters;
 using DataAccessLibrary.Repository.Interfaces;
 using DataAccessLibrary.SqlDataAccess;
 
@@ -15,9 +16,12 @@ public class PermissionRepository : IPermissionRepository
         _db = db;
     }
 
-    public async Task<IEnumerable<Permission>> GetAllPermissions(CancellationToken cts)
+    public async Task<IEnumerable<Permission>> GetAllPermissions(PaginationFilter filter, CancellationToken cts)
     {
-        const string sql = @"SELECT * FROM permission";
+        var take = filter.Pagesize;
+        var skip = (filter.PageNumber - 1) * filter.Pagesize;
+        
+        var sql = @$"SELECT * FROM permission ORDER BY id LIMIT {take} OFFSET {skip}";
 
         return await _db.LoadAllData<Permission>(sql, cts);
     }

@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using DataAccessLibrary.DbModels;
 using DataAccessLibrary.DisplayModels;
+using DataAccessLibrary.Filters;
 using DataAccessLibrary.Repository.Interfaces;
 using DataAccessLibrary.SqlDataAccess;
 
@@ -15,9 +16,12 @@ public class RoleRepository : IRoleRepository
         _db = db;
     }
 
-    public async Task<IEnumerable<Role?>> GetRoles(CancellationToken cts)
+    public async Task<IEnumerable<Role?>> GetRoles(PaginationFilter filter, CancellationToken cts)
     {
-        const string sql = @"SELECT * FROM role";
+        var take = filter.Pagesize;
+        var skip = (filter.PageNumber - 1) * filter.Pagesize;
+        
+        var sql = @$"SELECT * FROM role ORDER BY id LIMIT {take} OFFSET {skip}";
 
         return await _db.LoadAllData<Role?>(sql, cts);
     }

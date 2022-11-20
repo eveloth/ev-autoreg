@@ -1,5 +1,6 @@
 ﻿using DataAccessLibrary.DbModels;
 using DataAccessLibrary.DisplayModels;
+using DataAccessLibrary.Filters;
 using DataAccessLibrary.Repository.Interfaces;
 using Npgsql;
 
@@ -99,7 +100,8 @@ public class DatabaseSeeder
 
     private async Task AddPermissionsToDefaultRole(int roleId, CancellationToken ct)
     {
-        var permissions = await _unitofWork.PermissionRepository.GetAllPermissions(ct);
+        var paginationDummy = new PaginationFilter(1, 100000);
+        var permissions = await _unitofWork.PermissionRepository.GetAllPermissions(paginationDummy, ct);
 
         foreach (var permission in permissions)
         {

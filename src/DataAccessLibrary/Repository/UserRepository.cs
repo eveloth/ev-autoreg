@@ -12,6 +12,8 @@ public class UserRepository : IUserRepository
 {
     private readonly ISqlDataAccess _db;
 
+    private const string IncludeDeletedSql = " is_deleted = false";
+
     public UserRepository(ISqlDataAccess db)
     {
         _db = db;
@@ -23,23 +25,18 @@ public class UserRepository : IUserRepository
         bool includeDeleted = false
     )
     {
-        var sql = includeDeleted switch
+        const string sql = @"SELECT * FROM app_user
+                    LEFT JOIN role
+                    ON app_user.id = role.id
+                    WHERE app_user.id = @UserId";
+        
+        var resultingSql = includeDeleted switch
         {
-            true
-                => @"SELECT * FROM app_user 
-                     LEFT JOIN role 
-                     ON app_user.role_id = role.id
-                     WHERE app_user.id = @UserId",
-
-            false
-                => @"SELECT * FROM app_user
-                     LEFT JOIN role 
-                     ON app_user.role_id = role.id
-                     WHERE app_user.id = @UserId
-                     AND is_deleted = false",
+            true => sql,
+            false => sql + "AND" + IncludeDeletedSql
         };
 
-        return await _db.LoadFirst<User, Role, object>(sql, new { UserId = userId }, cts);
+        return await _db.LoadFirst<User, Role, object>(resultingSql, new { UserId = userId }, cts);
     }
 
     public async Task<User?> GetUserByEmail(
@@ -47,24 +44,19 @@ public class UserRepository : IUserRepository
         CancellationToken cts,
         bool includeDeleted = false
     )
-    {
-        var sql = includeDeleted switch
-        {
-            true
-                => @"SELECT * FROM app_user 
-                      LEFT JOIN role
-                      ON app_user.role_id = role.id
-                      WHERE email = @Email",
+    {   
+        const string sql = @"SELECT * FROM app_user
+                    LEFT JOIN role
+                    ON app_user.id = role.id
+                    WHERE email = @Email";
 
-            false
-                => @"SELECT * FROM app_user 
-                       LEFT JOIN role
-                       ON app_user.role_id = role.id
-                       WHERE email = @Email 
-                       AND is_deleted = false"
+        var resultingSql = includeDeleted switch
+        {
+            true => sql,
+            false => sql + " AND" + IncludeDeletedSql
         };
 
-        return await _db.LoadFirst<User, Role, object>(sql, new { Email = email }, cts);
+        return await _db.LoadFirst<User, Role, object>(resultingSql, new { Email = email }, cts);
     }
 
     public async Task<IEnumerable<UserProfile>> GetAllUserProfiles(
@@ -78,40 +70,21 @@ public class UserRepository : IUserRepository
 
         var sqlTemplateBuilder = new StringBuilder(
             @"SELECT * FROM app_user
-                                  LEFT JOIN role ON app_user.role_id = role.id"
+              LEFT JOIN role ON app_user.role_id = role.id"
         );
-        var includeDeletedSql = "WHERE is_deleted = false";
-        var paginator =
-            $@"ORDER BY app_user.id
-                                   LIMIT {take} OFFSET {skip}";
+        
+        var paginator = $@"ORDER BY app_user.id LIMIT {take} OFFSET {skip}";
 
         var resultingSql = includeDeleted switch
         {
             true
                 => sqlTemplateBuilder
-                    .Append(" ")
-                    .Append(includeDeletedSql)
-                    .Append(" ")
+                    .Append(" WHERE")
+                    .Append(IncludeDeletedSql)
+                    .Append(' ')
                     .Append(paginator)
                     .ToString(),
             false => sqlTemplateBuilder.Append(" ").Append(paginator).ToString()
-        };
-
-        var sql = includeDeleted switch
-        {
-            true
-                => $@"SELECT *
-                     FROM app_user
-                     LEFT JOIN role
-                     ON app_user.role_id = role.id
-                     ORDER BY app_user.id
-                     LIMIT {filter.Pagesize}",
-            false
-                => @"SELECT * 
-                     FROM app_user
-                     LEFT JOIN role
-                     ON app_user.role_id = role.id
-                     WHERE is_deleted = false"
         };
 
         return await _db.LoadAllData<UserProfile, Role>(resultingSql, cts);
@@ -123,24 +96,19 @@ public class UserRepository : IUserRepository
         bool includeDeleted = false
     )
     {
-        var sql = includeDeleted switch
+        const string sql = @"SELECT * FROM app_user
+                         LEFT JOIN role
+                         ON app_user.id = role.id
+                         WHERE app_user.id = @UserId";
+             
+        var resultingSql = includeDeleted switch
         {
-            true
-                => @"SELECT *
-                     FROM app_user
-                     LEFT JOIN role
-                     ON app_user.role_id = role.id
-                     WHERE app_user.id = @UserId",
-            false
-                => @"SELECT *
-                     FROM app_user
-                     LEFT JOIN role
-                     ON app_user.role_id = role.id
-                     WHERE app_user.id = @UserId
-                     AND is_deleted = false"
+            true => sql,
+            false => sql + " AND" + IncludeDeletedSql
         };
+        
 
-        return await _db.LoadFirst<UserProfile?, Role, object>(sql, new { UserId = userId }, cts);
+        return await _db.LoadFirst<UserProfile?, Role, object>(resultingSql, new { UserId = userId }, cts);
     }
 
     public async Task<UserProfile> CreateUser(UserModel user, CancellationToken cts)
@@ -159,8 +127,6 @@ public class UserRepository : IUserRepository
         var parameters = new DynamicParameters(user);
 
         var result = await _db.SaveData<object, UserProfile, Role>(sql, parameters, cts);
-
-        //await _transaction.CommitAsync(cts);
 
         return result;
     }

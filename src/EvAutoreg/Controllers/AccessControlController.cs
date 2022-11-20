@@ -1,5 +1,8 @@
 using DataAccessLibrary.DbModels;
+using DataAccessLibrary.DisplayModels;
 using DataAccessLibrary.Repository.Interfaces;
+using EvAutoreg.Contracts;
+using EvAutoreg.Contracts.Extensions;
 using EvAutoreg.Dto;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -23,13 +26,16 @@ public class AccessControlController : ControllerBase
     [Authorize(Policy = "ReadRoles")]
     [Route("roles")]
     [HttpGet]
-    public async Task<IActionResult> GetAllRoles(CancellationToken cts)
+    public async Task<IActionResult> GetAllRoles([FromQuery] PaginationQuery pagination, CancellationToken cts)
     {
-        var roles = await _unitofWork.RoleRepository.GetRoles(cts);
+        var paginationFilter = pagination.ToFilter();
+        var roles = await _unitofWork.RoleRepository.GetRoles(paginationFilter, cts);
 
         await _unitofWork.CommitAsync(cts);
 
-        return Ok(roles);
+        var response = new PagedResponse<Role?>(roles, pagination);
+
+        return Ok(response);
     }
 
     [Authorize(Policy = "CreateRoles")]
@@ -110,13 +116,17 @@ public class AccessControlController : ControllerBase
     [Authorize(Policy = "ReadPermissions")]
     [Route("permissions")]
     [HttpGet]
-    public async Task<IActionResult> GetAllPermissions(CancellationToken cts)
+    public async Task<IActionResult> GetAllPermissions([FromQuery] PaginationQuery pagination, CancellationToken cts)
     {
-        var permissions = await _unitofWork.PermissionRepository.GetAllPermissions(cts);
+        var paginationFilter = pagination.ToFilter();
+        
+        var permissions = await _unitofWork.PermissionRepository.GetAllPermissions(paginationFilter, cts);
 
         await _unitofWork.CommitAsync(cts);
 
-        return Ok(permissions);
+        var response = new PagedResponse<Permission>(permissions, pagination);
+
+        return Ok(response);
     }
 
     [Authorize(Policy = "CreatePermissions")]
@@ -187,13 +197,17 @@ public class AccessControlController : ControllerBase
     [Authorize(Policy = "ReadRoles")]
     [Route("roles/permissions")]
     [HttpGet]
-    public async Task<IActionResult> GetAllRolePermissions(CancellationToken cts)
+    public async Task<IActionResult> GetAllRolePermissions([FromQuery] PaginationQuery pagination, CancellationToken cts)
     {
-        var rolePermissions = await _unitofWork.RolePermissionRepository.GetAllRolePermissions(cts);
+        var paginationFilter = pagination.ToFilter();
+        
+        var rolePermissions = await _unitofWork.RolePermissionRepository.GetAllRolePermissions(paginationFilter, cts);
 
         await _unitofWork.CommitAsync(cts);
 
-        return Ok(rolePermissions);
+        var response = new PagedResponse<RolePermissionRecord>(rolePermissions, pagination);
+
+        return Ok(response);
     }
 
     [Authorize(Policy = "ReadRoles")]

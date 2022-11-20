@@ -35,16 +35,16 @@ public class UsersController : ControllerBase
     [Authorize(Policy = "ReadUsers")]
     [HttpGet]
     public async Task<IActionResult> GetAllUsers(
-        [FromQuery] PaginationQuery paginationQuery,
+        [FromQuery] PaginationQuery pagination,
         CancellationToken cts
     )
     {
-        var paginationFilter = paginationQuery.ToFilter();
+        var paginationFilter = pagination.ToFilter();
         var users = await _unitofWork.UserRepository.GetAllUserProfiles(paginationFilter, cts);
 
         await _unitofWork.CommitAsync(cts);
 
-        var response = (object)new PagedResponse<UserProfile>(users);
+        var response = new PagedResponse<UserProfile>(users, pagination);
 
         return Ok(response);
     }

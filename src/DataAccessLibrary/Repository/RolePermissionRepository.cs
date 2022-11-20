@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using DataAccessLibrary.DbModels;
 using DataAccessLibrary.DisplayModels;
+using DataAccessLibrary.Filters;
 using DataAccessLibrary.Repository.Interfaces;
 using DataAccessLibrary.SqlDataAccess;
 
@@ -16,18 +17,25 @@ public class RolePermissionRepository : IRolePermissionRepository
     }
 
     public async Task<IEnumerable<RolePermissionRecord>> GetAllRolePermissions(
+        PaginationFilter filter,
         CancellationToken cts
     )
     {
-        const string sql =
-            @"SELECT role.id AS role_id, 
-                             role.role_name AS role_name, 
-                             p.id AS permission_id, 
-                             p.permission_name AS permission_name,
-                             p.description
-                             FROM role 
-                             LEFT JOIN role_permission rp ON role.id = rp.role_id 
-                             LEFT JOIN permission p ON rp.permission_id = p.id";
+        var take = filter.Pagesize;
+        var skip = (filter.PageNumber - 1) * filter.Pagesize;
+
+        var sql = $@"SELECT r.role_id, r.role_name,
+                        p.id AS permission_id, 
+                        p.permission_name AS permission_name,
+                        p.description
+                        FROM
+                        (SELECT id AS role_id,
+                        role_name AS role_name
+                        FROM role
+                        ORDER BY id
+                        LIMIT {take} OFFSET {skip}) AS r
+                        LEFT JOIN role_permission rp ON r.role_id = rp.role_id
+                        LEFT JOIN permission p ON rp.permission_id = p.id ORDER BY p.id";
 
         var rolePermissionSet = await _db.LoadAllData<RolePermissionRecordModel>(sql, cts);
 
@@ -47,7 +55,8 @@ public class RolePermissionRepository : IRolePermissionRepository
             @"SELECT role.id AS role_id, 
                              role.role_name AS role_name, 
                              p.id AS permission_id, 
-                             p.permission_name AS permission_name
+                             p.permission_name AS permission_name,
+                             p.description
                              FROM role 
                              LEFT JOIN role_permission rp ON role.id = rp.role_id
                              LEFT JOIN permission p ON rp.permission_id = p.id
