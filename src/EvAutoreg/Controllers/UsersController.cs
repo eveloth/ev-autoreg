@@ -61,7 +61,7 @@ public class UsersController : ControllerBase
         return user is null ? NotFound(ErrorCode[2001]) : Ok(user);
     }
 
-    [Authorize(Policy = "ResetUserPassword")]
+    [Authorize(Policy = "ResetUserPasswords")]
     [Route("{id:int}/password/reset")]
     [HttpPost]
     public async Task<IActionResult> ResetPassword(
