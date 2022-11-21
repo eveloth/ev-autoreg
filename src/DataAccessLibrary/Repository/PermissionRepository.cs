@@ -35,14 +35,16 @@ public class PermissionRepository : IPermissionRepository
 
         var parameters = new DynamicParameters(permission);
 
-        return await _db.SaveData<object, Permission>(sql, parameters, cts);
+        return await _db.SaveData<Permission>(sql, parameters, cts);
     }
 
     public async Task<Permission> DeletePermission(int permissionId, CancellationToken cts)
     {
-        const string sql = @"DELETE FROM permission WHERE id = @Id RETURNING *";
+        const string sql = @"DELETE FROM permission WHERE id = @PermissionId RETURNING *";
 
-        return await _db.SaveData<object, Permission>(sql, new { Id = permissionId }, cts);
+        var parameters = new DynamicParameters(new {PermissionId = permissionId});
+        
+        return await _db.SaveData<Permission>(sql, parameters, cts);
     }
 
     public async Task<int> ClearPermissions(CancellationToken cts)
@@ -60,7 +62,9 @@ public class PermissionRepository : IPermissionRepository
     {
         const string sql = @"SELECT EXISTS (SELECT true FROM permission WHERE id = @PermissionId)";
 
-        return await _db.LoadFirst<bool, object>(sql, new { PermissionId = permissionId }, cts);
+        var parameters = new DynamicParameters(new {PermissionId = permissionId});
+        
+        return await _db.LoadFirst<bool>(sql, parameters, cts);
     }
 
     public async Task<bool> DoesPermissionExist(string permissionName, CancellationToken cts)
@@ -68,6 +72,8 @@ public class PermissionRepository : IPermissionRepository
         const string sql =
             @"SELECT EXISTS (SELECT true FROM permission WHERE permission_name = @PermissionName)";
 
-        return await _db.LoadFirst<bool, object>(sql, new { PermissionName = permissionName }, cts);
+        var parameters = new DynamicParameters(new {PermissionName = permissionName});
+        
+        return await _db.LoadFirst<bool>(sql, parameters, cts);
     }
 }

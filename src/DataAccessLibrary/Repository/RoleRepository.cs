@@ -30,30 +30,41 @@ public class RoleRepository : IRoleRepository
     {
         const string sql = @"INSERT INTO role (role_name) VALUES (@RoleName) RETURNING *";
 
-        return await _db.SaveData<object, Role>(sql, new { RoleName = roleName }, cts);
+        var parameters = new DynamicParameters(new {RoleName = roleName});
+
+        return await _db.SaveData<Role>(sql, parameters, cts);
     }
 
     public async Task<Role> ChangeRoleName(RoleModel role, CancellationToken cts)
     {
+        //There's a point that I'll address later:
+        //Here I have an @Id parameter placeholder, not @RoleId, because I'm getting it from RoleModel,
+        //and not from anonymous object. I think this should me somehow unified,
+        //otherwise we have a little bit of obscurity.
+        //If you attempt to change it for 'readability' or w/ever, it will break PUT /api/access-control/roles/{id}.
         const string sql = @"UPDATE role SET role_name = @RoleName WHERE id = @Id RETURNING *";
 
         var parameters = new DynamicParameters(role);
 
-        return await _db.SaveData<object, Role>(sql, parameters, cts);
+        return await _db.SaveData<Role>(sql, parameters, cts);
     }
 
     public async Task<Role> DeleteRole(int roleId, CancellationToken cts)
     {
-        const string sql = @"DELETE FROM role WHERE id = @Id RETURNING *";
+        const string sql = @"DELETE FROM role WHERE id = @RoleId RETURNING *";
 
-        return await _db.SaveData<object, Role>(sql, new { Id = roleId }, cts);
+        var parameters = new DynamicParameters(new {RoleId = roleId});
+        
+        return await _db.SaveData<Role>(sql, parameters, cts);
     }
 
     public async Task<bool> DoesRoleExist(int roleId, CancellationToken cts)
     {
         const string sql = @"SELECT EXISTS (SELECT true FROM role WHERE id = @RoleId)";
 
-        return await _db.LoadFirst<bool, object>(sql, new { RoleId = roleId }, cts);
+        var parameters = new DynamicParameters(new {RoleId = roleId});
+        
+        return await _db.LoadFirst<bool>(sql, parameters, cts);
     }
 
     public async Task<UserProfile> SetUserRole(int userId, int roleId, CancellationToken cts)
@@ -69,7 +80,7 @@ public class RoleRepository : IRoleRepository
 
         var parameters = new DynamicParameters(new { UserId = userId, RoleId = roleId });
 
-        return await _db.SaveData<object, UserProfile, Role>(sql, parameters, cts);
+        return await _db.SaveData<UserProfile, Role>(sql, parameters, cts);
     }
 
     public async Task<UserProfile> RemoveUserFromRole(int userId, CancellationToken cts)
@@ -83,6 +94,8 @@ public class RoleRepository : IRoleRepository
                              LEFT JOIN role
                              ON updated.role_id = role.id";
 
-        return await _db.SaveData<object, UserProfile, Role>(sql, new { UserId = userId }, cts);
+        var parameters = new DynamicParameters(new {UserId = userId});
+        
+        return await _db.SaveData<UserProfile, Role>(sql, parameters, cts);
     }
 }

@@ -1,4 +1,6 @@
-﻿namespace DataAccessLibrary.SqlDataAccess;
+﻿using Dapper;
+
+namespace DataAccessLibrary.SqlDataAccess;
 
 public interface ISqlDataAccess
 {
@@ -10,41 +12,41 @@ public interface ISqlDataAccess
 
     Task<IEnumerable<TParent>> LoadAllData<TParent, TChild>(string sql, CancellationToken cts);
 
-    Task<IEnumerable<TModel>> LoadData<TModel, TParameters>(
+    Task<IEnumerable<TModel>> LoadData<TModel>(
         string sql,
-        TParameters parameters,
+        DynamicParameters parameters,
         CancellationToken cts
     );
 
-    Task<IEnumerable<TParent>> LoadData<TParent, TChild, TParameters>(
+    Task<IEnumerable<TParent>> LoadData<TParent, TChild>(
         string sql,
-        TParameters parameters,
+        DynamicParameters parameters,
         CancellationToken cts
     );
 
-    Task<TModel?> LoadFirst<TModel, TParameters>(
+    Task<TModel?> LoadFirst<TModel>(
         string sql,
-        TParameters parameters,
+        DynamicParameters parameters,
         CancellationToken cts
     );
 
-    Task<TParent?> LoadFirst<TParent, TChild, TParameters>(
+    Task<TParent?> LoadFirst<TParent, TChild>(
         string sql,
-        TParameters parameters,
+        DynamicParameters parameters,
         CancellationToken cts
     );
 
     Task<TResult> SaveData<TResult>(string sql, CancellationToken cts);
 
-    Task<TResult> SaveData<TParameters, TResult>(
+    Task<TResult> SaveData<TResult>(
         string sql,
-        TParameters parameters,
+        DynamicParameters parameters,
         CancellationToken cts
     );
 
-    Task<TResultParent> SaveData<TParameters, TResultParent, TResultChild>(
+    Task<TResultParent> SaveData<TResultParent, TResultChild>(
         string sql,
-        TParameters parameters,
+        DynamicParameters parameters,
         CancellationToken cts
     );
 }

@@ -34,8 +34,10 @@ public class RolePermissionRepository : IRolePermissionRepository
                         FROM role
                         ORDER BY id
                         LIMIT {take} OFFSET {skip}) AS r
-                        LEFT JOIN role_permission rp ON r.role_id = rp.role_id
-                        LEFT JOIN permission p ON rp.permission_id = p.id ORDER BY p.id";
+                        LEFT JOIN role_permission rp ON r.role_id = rp.role_id 
+                        LEFT JOIN permission p ON rp.permission_id = p.id 
+                        ORDER BY r.role_id, p.id";
+        
 
         var rolePermissionSet = await _db.LoadAllData<RolePermissionRecordModel>(sql, cts);
 
@@ -62,9 +64,11 @@ public class RolePermissionRepository : IRolePermissionRepository
                              LEFT JOIN permission p ON rp.permission_id = p.id
                              WHERE role.id = @RoleId";
 
-        var rolePermissionSet = await _db.LoadData<RolePermissionRecordModel, object>(
+        var parameters = new DynamicParameters(new {RoleId = roleId});
+        
+        var rolePermissionSet = await _db.LoadData<RolePermissionRecordModel>(
             sql,
-            new { RoleId = roleId },
+            parameters,
             cts
         );
 
@@ -88,7 +92,7 @@ public class RolePermissionRepository : IRolePermissionRepository
             new { RoleId = roleId, PermissionId = permissionId }
         );
 
-        roleId = await _db.SaveData<object, int>(sql, parameters, cts);
+        roleId = await _db.SaveData<int>(sql, parameters, cts);
 
         var result = await GetRolePermissions(roleId, cts);
 
@@ -109,7 +113,7 @@ public class RolePermissionRepository : IRolePermissionRepository
             new { RoleId = roleId, PermissionId = permissionId }
         );
 
-        roleId = await _db.SaveData<object, int>(sql, parameters, cts);
+        roleId = await _db.SaveData<int>(sql, parameters, cts);
 
         return await GetRolePermissions(roleId, cts);
     }
@@ -123,9 +127,11 @@ public class RolePermissionRepository : IRolePermissionRepository
         const string sql =
             @"SELECT EXISTS (SELECT true FROM role_permission WHERE role_id = @RoleId AND permission_id = @PermissionId)";
 
-        return await _db.LoadFirst<bool, object>(
+        var parameters = new DynamicParameters(new {RoleId = roleId, PermissionId = permissionId});
+        
+        return await _db.LoadFirst<bool>(
             sql,
-            new { RoleId = roleId, Permissionid = permissionId },
+            parameters,
             cts
         );
     }

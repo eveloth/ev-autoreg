@@ -33,10 +33,12 @@ public class UserRepository : IUserRepository
         var resultingSql = includeDeleted switch
         {
             true => sql,
-            false => sql + "AND" + IncludeDeletedSql
+            false => sql + " AND" + IncludeDeletedSql
         };
 
-        return await _db.LoadFirst<User, Role, object>(resultingSql, new { UserId = userId }, cts);
+        var parameters = new DynamicParameters(new {UserId = userId});
+
+        return await _db.LoadFirst<User, Role>(resultingSql, parameters, cts);
     }
 
     public async Task<User?> GetUserByEmail(
@@ -55,8 +57,10 @@ public class UserRepository : IUserRepository
             true => sql,
             false => sql + " AND" + IncludeDeletedSql
         };
+        
+        var parameters = new DynamicParameters(new {Email = email});
 
-        return await _db.LoadFirst<User, Role, object>(resultingSql, new { Email = email }, cts);
+        return await _db.LoadFirst<User, Role>(resultingSql, parameters, cts);
     }
 
     public async Task<IEnumerable<UserProfile>> GetAllUserProfiles(
@@ -98,7 +102,7 @@ public class UserRepository : IUserRepository
     {
         const string sql = @"SELECT * FROM app_user
                          LEFT JOIN role
-                         ON app_user.id = role.id
+                         ON app_user.role_id = role.id
                          WHERE app_user.id = @UserId";
              
         var resultingSql = includeDeleted switch
@@ -108,7 +112,9 @@ public class UserRepository : IUserRepository
         };
         
 
-        return await _db.LoadFirst<UserProfile?, Role, object>(resultingSql, new { UserId = userId }, cts);
+        var parameters = new DynamicParameters(new {UserId = userId});
+        
+        return await _db.LoadFirst<UserProfile?, Role>(resultingSql, parameters, cts);
     }
 
     public async Task<UserProfile> CreateUser(UserModel user, CancellationToken cts)
@@ -126,7 +132,7 @@ public class UserRepository : IUserRepository
 
         var parameters = new DynamicParameters(user);
 
-        var result = await _db.SaveData<object, UserProfile, Role>(sql, parameters, cts);
+        var result = await _db.SaveData<UserProfile, Role>(sql, parameters, cts);
 
         return result;
     }
@@ -144,7 +150,7 @@ public class UserRepository : IUserRepository
             new { UserId = userId, PasswordHash = passwordHash }
         );
 
-        return await _db.SaveData<object, int>(sql, parameters, cts);
+        return await _db.SaveData<int>(sql, parameters, cts);
     }
 
     public async Task<UserProfile> UpdateUserEmail(
@@ -165,7 +171,7 @@ public class UserRepository : IUserRepository
 
         var parameters = new DynamicParameters(new { UserId = userId, Email = newEmail });
 
-        return await _db.SaveData<object, UserProfile, Role>(sql, parameters, cts);
+        return await _db.SaveData<UserProfile, Role>(sql, parameters, cts);
     }
 
     public async Task<UserProfile> UpdateUserProfile(
@@ -189,7 +195,7 @@ public class UserRepository : IUserRepository
             new { UserId = userId, FirstName = firstName, LastName = lastName }
         );
 
-        return await _db.SaveData<object, UserProfile, Role>(sql, parameters, cts);
+        return await _db.SaveData<UserProfile, Role>(sql, parameters, cts);
     }
 
     public async Task<UserProfile> BlockUser(int userId, CancellationToken cts)
@@ -204,7 +210,9 @@ public class UserRepository : IUserRepository
                             LEFT JOIN role
                             ON updated.role_id = role.id";
 
-        return await _db.SaveData<object, UserProfile, Role>(sql, new { UserId = userId }, cts);
+        var parameters = new DynamicParameters(new {UserId = userId});
+        
+        return await _db.SaveData<UserProfile, Role>(sql, parameters, cts);
     }
 
     public async Task<UserProfile> UnblockUser(int userId, CancellationToken cts)
@@ -212,14 +220,15 @@ public class UserRepository : IUserRepository
         const string sql =
             @"WITH updated as 
                             (UPDATE app_user 
-                            SET is_blocked = true
+                            SET is_blocked = false
                             WHERE id = @UserId
                             RETURNING id, email, first_name, last_name, is_deleted, is_blocked, role_id)
                             SELECT * FROM updated
                             LEFT JOIN role
                             ON updated.role_id = role.id";
 
-        return await _db.SaveData<object, UserProfile, Role>(sql, new { UserId = userId }, cts);
+        var parameters = new DynamicParameters(new {UserId = userId});
+        return await _db.SaveData<UserProfile, Role>(sql, parameters, cts);
     }
 
     public async Task<UserProfile> DeleteUser(int userId, CancellationToken cts)
@@ -234,7 +243,9 @@ public class UserRepository : IUserRepository
                             LEFT JOIN role
                             ON updated.role_id = role.id";
 
-        return await _db.SaveData<object, UserProfile, Role>(sql, new { UserId = userId }, cts);
+        var parameters = new DynamicParameters(new {UserId = userId});
+        
+        return await _db.SaveData<UserProfile, Role>(sql, parameters, cts);
     }
 
     public async Task<UserProfile> RestoreUser(int userId, CancellationToken cts)
@@ -249,20 +260,26 @@ public class UserRepository : IUserRepository
                             LEFT JOIN role
                             ON updated.role_id = role.id";
 
-        return await _db.SaveData<object, UserProfile, Role>(sql, new { UserId = userId }, cts);
+        var parameters = new DynamicParameters(new {UserId = userId});
+        
+        return await _db.SaveData<UserProfile, Role>(sql, parameters, cts);
     }
 
     public async Task<bool> DoesUserExist(int userId, CancellationToken cts)
     {
         const string sql = @"SELECT EXISTS (SELECT true FROM app_user WHERE id = @UserId)";
 
-        return await _db.LoadFirst<bool, object>(sql, new { UserId = userId }, cts);
+        var parameters = new DynamicParameters(new {UserId = userId});
+        
+        return await _db.LoadFirst<bool>(sql, parameters, cts);
     }
 
     public async Task<bool> DoesUserExist(string email, CancellationToken cts)
     {
         const string sql = @"SELECT EXISTS (SELECT true FROM app_user WHERE email = @Email)";
 
-        return await _db.LoadFirst<bool, object>(sql, new { email }, cts);
+        var parameters = new DynamicParameters(new {Email = email});
+        
+        return await _db.LoadFirst<bool>(sql, parameters, cts);
     }
 }

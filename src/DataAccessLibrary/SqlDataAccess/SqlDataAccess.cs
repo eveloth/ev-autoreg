@@ -41,9 +41,9 @@ public class SqlDataAccess : ISqlDataAccess
         return result;
     }
 
-    public async Task<IEnumerable<TModel>> LoadData<TModel, TParameters>(
+    public async Task<IEnumerable<TModel>> LoadData<TModel>(
         string sql,
-        TParameters parameters,
+        DynamicParameters parameters,
         CancellationToken cts
     )
     {
@@ -52,9 +52,9 @@ public class SqlDataAccess : ISqlDataAccess
         );
     }
 
-    public async Task<IEnumerable<TParent>> LoadData<TParent, TChild, TParameters>(
+    public async Task<IEnumerable<TParent>> LoadData<TParent, TChild>(
         string sql,
-        TParameters parameters,
+        DynamicParameters parameters,
         CancellationToken cts
     )
     {
@@ -67,9 +67,9 @@ public class SqlDataAccess : ISqlDataAccess
         return result;
     }
 
-    public async Task<TModel?> LoadFirst<TModel, TParameters>(
+    public async Task<TModel?> LoadFirst<TModel>(
         string sql,
-        TParameters parameters,
+        DynamicParameters parameters,
         CancellationToken cts
     )
     {
@@ -78,9 +78,9 @@ public class SqlDataAccess : ISqlDataAccess
         );
     }
 
-    public async Task<TParent?> LoadFirst<TParent, TChild, TParameters>(
+    public async Task<TParent?> LoadFirst<TParent, TChild>(
         string sql,
-        TParameters parameters,
+        DynamicParameters parameters,
         CancellationToken cts
     )
     {
@@ -100,9 +100,9 @@ public class SqlDataAccess : ISqlDataAccess
         );
     }
 
-    public async Task<TResult> SaveData<TParameters, TResult>(
+    public async Task<TResult> SaveData<TResult>(
         string sql,
-        TParameters parameters,
+        DynamicParameters parameters,
         CancellationToken cts
     )
     {
@@ -111,9 +111,9 @@ public class SqlDataAccess : ISqlDataAccess
         );
     }
 
-    public async Task<TResultParent> SaveData<TParameters, TResultParent, TResultChild>(
+    public async Task<TResultParent> SaveData<TResultParent, TResultChild>(
         string sql,
-        TParameters parameters,
+        DynamicParameters parameters,
         CancellationToken cts
     )
     {
