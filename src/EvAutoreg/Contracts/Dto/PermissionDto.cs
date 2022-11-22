@@ -1,6 +1,6 @@
-namespace DataAccessLibrary.DbModels;
+namespace EvAutoreg.Contracts.Dto;
 
-public class PermissionModel
+public class PermissionDto
 {
     public int Id { get; set; }
     public string? PermissionName { get; set; }

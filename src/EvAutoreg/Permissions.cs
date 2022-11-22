@@ -1,4 +1,4 @@
-﻿using DataAccessLibrary.DbModels;
+﻿using DataAccessLibrary.Models;
 
 namespace EvAutoreg;
 

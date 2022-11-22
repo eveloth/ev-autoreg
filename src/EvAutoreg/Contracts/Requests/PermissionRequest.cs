@@ -1,6 +1,6 @@
-﻿namespace EvAutoreg.Dto;
+﻿namespace EvAutoreg.Contracts.Requests;
 
-public readonly record struct PermissionDto
+public readonly record struct PermissionRequest
 {
     public string PermissionName { get; init; }
     public string Description { get; init; }

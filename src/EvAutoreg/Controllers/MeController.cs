@@ -1,6 +1,9 @@
 using System.Security.Claims;
 using DataAccessLibrary.Repository.Interfaces;
-using EvAutoreg.Dto;
+using EvAutoreg.Contracts.Dto;
+using EvAutoreg.Contracts.Extensions;
+using EvAutoreg.Contracts.Requests;
+using EvAutoreg.Contracts.Responses;
 using EvAutoreg.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -42,13 +45,15 @@ public class MeController : ControllerBase
 
         await _unitofWork.CommitAsync(cts);
 
-        return Ok(me);
+        var response = new Response<UserProfileDto>(me!.ToUserProfileDto());
+
+        return Ok(response);
     }
 
     [Route("email")]
     [HttpPost]
     public async Task<IActionResult> UpdateEmail(
-        [FromBody] UserEmailDto email,
+        [FromBody] UserEmailRequest email,
         CancellationToken cts
     )
     {
@@ -73,13 +78,15 @@ public class MeController : ControllerBase
             userProfile.Id
         );
 
-        return Ok(userProfile);
+        var response = new Response<UserProfileDto>(userProfile.ToUserProfileDto());
+
+        return Ok(response);
     }
 
     [Route("password")]
     [HttpPost]
     public async Task<IActionResult> UpdatePassword(
-        [FromBody] UserPasswordDto password,
+        [FromBody] UserPasswordRequest password,
         CancellationToken cts
     )
     {
@@ -104,16 +111,16 @@ public class MeController : ControllerBase
         );
 
         await _unitofWork.CommitAsync(cts);
+        _logger.LogInformation("Password was changed for user ID {UserId}", userWithChangedPassword);
 
-        var id = new { UserId = userWithChangedPassword };
+        var response = new Response<int>(userWithChangedPassword);
 
-        _logger.LogInformation("Password was changed for user ID {UserId}", id.UserId);
-        return Ok(id);
+        return Ok(response);
     }
 
     [HttpPatch]
     public async Task<IActionResult> UpdateUserProfile(
-        [FromBody] UserProfileDto profile,
+        [FromBody] UserProfileRequest profile,
         CancellationToken cts
     )
     {
@@ -132,6 +139,8 @@ public class MeController : ControllerBase
 
         _logger.LogInformation("User profile was updated for user ID {UserId}", userId);
 
-        return Ok(user);
+        var response = new Response<UserProfileDto>(user.ToUserProfileDto());
+
+        return Ok(response);
     }
 }

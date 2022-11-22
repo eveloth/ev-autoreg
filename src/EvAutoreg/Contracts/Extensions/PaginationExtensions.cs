@@ -2,7 +2,7 @@ using DataAccessLibrary.Filters;
 
 namespace EvAutoreg.Contracts.Extensions;
 
-public static class ContractExtensions
+public static class PaginationExtensions
 {
     public static PaginationFilter ToFilter(this PaginationQuery query)
     {

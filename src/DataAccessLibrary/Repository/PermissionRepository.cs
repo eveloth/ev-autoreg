@@ -1,7 +1,6 @@
 ﻿using Dapper;
-using DataAccessLibrary.DbModels;
-using DataAccessLibrary.DisplayModels;
 using DataAccessLibrary.Filters;
+using DataAccessLibrary.Models;
 using DataAccessLibrary.Repository.Interfaces;
 using DataAccessLibrary.SqlDataAccess;
 
@@ -16,17 +15,17 @@ public class PermissionRepository : IPermissionRepository
         _db = db;
     }
 
-    public async Task<IEnumerable<Permission>> GetAllPermissions(PaginationFilter filter, CancellationToken cts)
+    public async Task<IEnumerable<PermissionModel>> GetAllPermissions(PaginationFilter filter, CancellationToken cts)
     {
         var take = filter.Pagesize;
         var skip = (filter.PageNumber - 1) * filter.Pagesize;
         
         var sql = @$"SELECT * FROM permission ORDER BY id LIMIT {take} OFFSET {skip}";
 
-        return await _db.LoadAllData<Permission>(sql, cts);
+        return await _db.LoadAllData<PermissionModel>(sql, cts);
     }
 
-    public async Task<Permission> AddPermission(PermissionModel permission, CancellationToken cts)
+    public async Task<PermissionModel> AddPermission(PermissionModel permission, CancellationToken cts)
     {
         const string sql =
             @"INSERT INTO permission (permission_name, description) 
@@ -35,16 +34,16 @@ public class PermissionRepository : IPermissionRepository
 
         var parameters = new DynamicParameters(permission);
 
-        return await _db.SaveData<Permission>(sql, parameters, cts);
+        return await _db.SaveData<PermissionModel>(sql, parameters, cts);
     }
 
-    public async Task<Permission> DeletePermission(int permissionId, CancellationToken cts)
+    public async Task<PermissionModel> DeletePermission(int permissionId, CancellationToken cts)
     {
         const string sql = @"DELETE FROM permission WHERE id = @PermissionId RETURNING *";
 
         var parameters = new DynamicParameters(new {PermissionId = permissionId});
         
-        return await _db.SaveData<Permission>(sql, parameters, cts);
+        return await _db.SaveData<PermissionModel>(sql, parameters, cts);
     }
 
     public async Task<int> ClearPermissions(CancellationToken cts)

@@ -1,9 +1,10 @@
-using DataAccessLibrary.DbModels;
-using DataAccessLibrary.DisplayModels;
+using DataAccessLibrary.Models;
 using DataAccessLibrary.Repository.Interfaces;
 using EvAutoreg.Contracts;
+using EvAutoreg.Contracts.Dto;
 using EvAutoreg.Contracts.Extensions;
-using EvAutoreg.Dto;
+using EvAutoreg.Contracts.Requests;
+using EvAutoreg.Contracts.Responses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using static EvAutoreg.Errors.ErrorCodes;
@@ -33,7 +34,7 @@ public class AccessControlController : ControllerBase
 
         await _unitofWork.CommitAsync(cts);
 
-        var response = new PagedResponse<Role?>(roles, pagination);
+        var response = new PagedResponse<RoleDto>(roles.ToRoleCollection(), pagination);
 
         return Ok(response);
     }
@@ -41,20 +42,23 @@ public class AccessControlController : ControllerBase
     [Authorize(Policy = "CreateRoles")]
     [Route("roles")]
     [HttpPost]
-    public async Task<IActionResult> AddRole([FromBody] RoleDto roleName, CancellationToken cts)
+    public async Task<IActionResult> AddRole([FromBody] RoleRequest roleName, CancellationToken cts)
     {
         var newRoleName = roleName.RoleName.ToLower();
 
         var newRole = await _unitofWork.RoleRepository.AddRole(newRoleName, cts);
 
         await _unitofWork.CommitAsync(cts);
-
+        
         _logger.LogInformation(
             "Role ID {RoleId} was added with name {RoleName}",
             newRole.Id,
             newRole.RoleName
         );
-        return Ok(newRole);
+
+        var response = new Response<RoleDto>(newRole.ToRoleDto());
+        
+        return Ok(response);
     }
 
     [Authorize(Policy = "UpdateRoles")]
@@ -62,7 +66,7 @@ public class AccessControlController : ControllerBase
     [HttpPut]
     public async Task<IActionResult> ChangeRoleName(
         [FromRoute] int id,
-        [FromBody] RoleDto roleName,
+        [FromBody] RoleRequest roleName,
         CancellationToken cts
     )
     {
@@ -85,7 +89,9 @@ public class AccessControlController : ControllerBase
             updatedRole.RoleName
         );
 
-        return Ok(updatedRole);
+        var response = new Response<RoleDto>(updatedRole.ToRoleDto());
+
+        return Ok(response);
     }
 
     [Authorize(Policy = "DeleteRoles")]
@@ -109,8 +115,10 @@ public class AccessControlController : ControllerBase
             deletedRole.Id,
             deletedRole.RoleName
         );
+        
+        var response = new Response<RoleDto>(deletedRole.ToRoleDto());
 
-        return Ok(deletedRole);
+        return Ok(response);
     }
 
     [Authorize(Policy = "ReadPermissions")]
@@ -124,7 +132,7 @@ public class AccessControlController : ControllerBase
 
         await _unitofWork.CommitAsync(cts);
 
-        var response = new PagedResponse<Permission>(permissions, pagination);
+        var response = new PagedResponse<PermissionDto>(permissions.ToPermissionCollection(), pagination);
 
         return Ok(response);
     }
@@ -133,7 +141,7 @@ public class AccessControlController : ControllerBase
     [Route("permissions")]
     [HttpPost]
     public async Task<IActionResult> AddPermission(
-        [FromBody] PermissionDto permission,
+        [FromBody] PermissionRequest permission,
         CancellationToken cts
     )
     {
@@ -166,7 +174,9 @@ public class AccessControlController : ControllerBase
             addedPermission.PermissionName
         );
 
-        return Ok(addedPermission);
+        var response = new Response<PermissionDto>(addedPermission.ToPermissionDto());
+
+        return Ok(response);
     }
 
     [Authorize(Policy = "DeletePermissions")]
@@ -190,8 +200,10 @@ public class AccessControlController : ControllerBase
             deletedPermission.Id,
             deletedPermission.PermissionName
         );
+        
+        var response = new Response<PermissionDto>(deletedPermission.ToPermissionDto());
 
-        return Ok(deletedPermission);
+        return Ok(response);
     }
 
     [Authorize(Policy = "ReadRoles")]
@@ -205,7 +217,7 @@ public class AccessControlController : ControllerBase
 
         await _unitofWork.CommitAsync(cts);
 
-        var response = new PagedResponse<RolePermissionRecord>(rolePermissions, pagination);
+        var response = new PagedResponse<RolePermissionDto>(rolePermissions.ToRolePermissionCollection(), pagination);
 
         return Ok(response);
     }
@@ -228,8 +240,10 @@ public class AccessControlController : ControllerBase
         );
 
         await _unitofWork.CommitAsync(cts);
+        
+        var response = new Response<RolePermissionDto>(rolePermissions.ToRolePermissionDto());
 
-        return Ok(rolePermissions);
+        return Ok(response);
     }
 
     [Authorize(Policy = "UpdateRoles")]
@@ -271,8 +285,10 @@ public class AccessControlController : ControllerBase
             permissionId,
             roleId
         );
+        
+        var response = new Response<RolePermissionDto>(rolePermissions.ToRolePermissionDto());
 
-        return Ok(rolePermissions);
+        return Ok(response);
     }
 
     [Authorize(Policy = "UpdateRoles")]
@@ -310,7 +326,9 @@ public class AccessControlController : ControllerBase
             roleId
         );
 
-        return Ok(rolePermissions);
+        var response = new Response<RolePermissionDto>(rolePermissions.ToRolePermissionDto());
+
+        return Ok(response);
     }
 
     [Authorize(Policy = "UpdateUsers")]
@@ -345,8 +363,10 @@ public class AccessControlController : ControllerBase
             updatedUser.Id,
             updatedUser.Role!.Id
         );
+        
+        var response = new Response<UserProfileDto>(updatedUser.ToUserProfileDto());
 
-        return Ok(updatedUser);
+        return Ok(response);
     }
 
     [Authorize(Policy = "UpdateUsers")]
@@ -378,6 +398,8 @@ public class AccessControlController : ControllerBase
             existingUser.Role!.Id
         );
 
-        return Ok(updatedUser);
+        var response = new Response<UserProfileDto>(updatedUser.ToUserProfileDto());
+        
+        return Ok(response);
     }
 }

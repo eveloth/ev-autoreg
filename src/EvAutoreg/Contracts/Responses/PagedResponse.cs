@@ -1,4 +1,4 @@
-namespace EvAutoreg.Contracts;
+namespace EvAutoreg.Contracts.Responses;
 
 public class PagedResponse<T>
 {

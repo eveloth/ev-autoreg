@@ -1,6 +1,6 @@
-﻿namespace DataAccessLibrary.DisplayModels;
+﻿namespace EvAutoreg.Contracts.Dto;
 
-public class Role
+public class RoleDto
 {
     public int Id { get; set; }
     public string? RoleName { get; set; }

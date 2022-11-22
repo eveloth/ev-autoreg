@@ -1,6 +1,9 @@
-using DataAccessLibrary.DbModels;
+using DataAccessLibrary.Models;
 using DataAccessLibrary.Repository.Interfaces;
-using EvAutoreg.Dto;
+using EvAutoreg.Contracts.Dto;
+using EvAutoreg.Contracts.Extensions;
+using EvAutoreg.Contracts.Requests;
+using EvAutoreg.Contracts.Responses;
 using EvAutoreg.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -48,7 +51,7 @@ public class AuthController : ControllerBase
     [Route("token")]
     [HttpPost]
     public async Task<IActionResult> Login(
-        [FromBody] UserCredentialsDto request,
+        [FromBody] UserCredentialsRequest request,
         CancellationToken cts
     )
     {
@@ -80,14 +83,16 @@ public class AuthController : ControllerBase
 
         _logger.LogInformation("User ID {UserId} was logged in", existingUser.Id);
 
-        return Ok(token);
+        var response = new Response<string>(token);
+
+        return Ok(response);
     }
 
     [AllowAnonymous]
     [Route("register")]
     [HttpPost]
     public async Task<IActionResult> RegisterUser(
-        [FromBody] UserCredentialsDto request,
+        [FromBody] UserCredentialsRequest request,
         CancellationToken cts
     )
     {
@@ -111,16 +116,16 @@ public class AuthController : ControllerBase
         }
 
         var passwordHash = _passwordHasher.HashPassword(request.Password);
-
         var newUser = new UserModel { Email = email, PasswordHash = passwordHash };
 
         var createdUser = await _unitofWork.UserRepository.CreateUser(newUser, cts);
 
         await _unitofWork.CommitAsync(cts);
-
         _logger.LogInformation("User ID {UserId} was registered", createdUser.Id);
 
-        return Ok(createdUser);
+        var response = new Response<UserProfileDto>(createdUser.ToUserProfileDto());
+
+        return Ok(response);
     }
 
     [Authorize]
@@ -132,6 +137,8 @@ public class AuthController : ControllerBase
 
         var userPermissions = claims.Select(claim => claim.Type + ": " + claim.Value).ToList();
 
-        return Ok(userPermissions);
+        var response = new Response<IEnumerable<string>>(userPermissions);
+
+        return Ok(response);
     }
 }

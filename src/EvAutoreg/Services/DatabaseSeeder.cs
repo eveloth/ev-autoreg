@@ -1,8 +1,9 @@
-﻿using DataAccessLibrary.DbModels;
-using DataAccessLibrary.DisplayModels;
-using DataAccessLibrary.Filters;
+﻿using DataAccessLibrary.Filters;
 using DataAccessLibrary.Repository.Interfaces;
+using EvAutoreg.Contracts.Dto;
+using EvAutoreg.Contracts.Extensions;
 using Npgsql;
+using UserModel = DataAccessLibrary.Models.UserModel;
 
 namespace EvAutoreg.Services;
 
@@ -91,11 +92,11 @@ public class DatabaseSeeder
         }
     }
 
-    private async Task<Role> SeedDefaultRole(CancellationToken ct)
+    private async Task<RoleDto> SeedDefaultRole(CancellationToken ct)
     {
         const string defaultRoleName = "superadmin";
 
-        return await _unitofWork.RoleRepository.AddRole(defaultRoleName, ct);
+        return (await _unitofWork.RoleRepository.AddRole(defaultRoleName, ct)).ToRoleDto();
     }
 
     private async Task AddPermissionsToDefaultRole(int roleId, CancellationToken ct)

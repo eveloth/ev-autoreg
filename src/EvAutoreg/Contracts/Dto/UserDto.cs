@@ -1,7 +1,9 @@
-﻿namespace DataAccessLibrary.DisplayModels;
+﻿namespace EvAutoreg.Contracts.Dto;
 
-public class User
+public class UserDto
 {
+#pragma warning disable CS8618
+    
     public int Id { get; set; }
     public string Email { get; set; }
     public string PasswordHash { get; set; }

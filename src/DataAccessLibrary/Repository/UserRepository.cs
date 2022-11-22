@@ -1,8 +1,7 @@
 ﻿using System.Text;
 using Dapper;
-using DataAccessLibrary.DbModels;
-using DataAccessLibrary.DisplayModels;
 using DataAccessLibrary.Filters;
+using DataAccessLibrary.Models;
 using DataAccessLibrary.Repository.Interfaces;
 using DataAccessLibrary.SqlDataAccess;
 
@@ -19,7 +18,7 @@ public class UserRepository : IUserRepository
         _db = db;
     }
 
-    public async Task<User?> GetUserById(
+    public async Task<UserModel?> GetUserById(
         int userId,
         CancellationToken cts,
         bool includeDeleted = false
@@ -38,10 +37,10 @@ public class UserRepository : IUserRepository
 
         var parameters = new DynamicParameters(new {UserId = userId});
 
-        return await _db.LoadFirst<User, Role>(resultingSql, parameters, cts);
+        return await _db.LoadFirst<UserModel>(resultingSql, parameters, cts);
     }
 
-    public async Task<User?> GetUserByEmail(
+    public async Task<UserModel?> GetUserByEmail(
         string email,
         CancellationToken cts,
         bool includeDeleted = false
@@ -60,10 +59,10 @@ public class UserRepository : IUserRepository
         
         var parameters = new DynamicParameters(new {Email = email});
 
-        return await _db.LoadFirst<User, Role>(resultingSql, parameters, cts);
+        return await _db.LoadFirst<UserModel, RoleModel>(resultingSql, parameters, cts);
     }
 
-    public async Task<IEnumerable<UserProfile>> GetAllUserProfiles(
+    public async Task<IEnumerable<UserProfileModel>> GetAllUserProfiles(
         PaginationFilter filter,
         CancellationToken cts,
         bool includeDeleted = false
@@ -91,10 +90,10 @@ public class UserRepository : IUserRepository
             false => sqlTemplateBuilder.Append(" ").Append(paginator).ToString()
         };
 
-        return await _db.LoadAllData<UserProfile, Role>(resultingSql, cts);
+        return await _db.LoadAllData<UserProfileModel, RoleModel>(resultingSql, cts);
     }
 
-    public async Task<UserProfile?> GetUserProfle(
+    public async Task<UserProfileModel?> GetUserProfle(
         int userId,
         CancellationToken cts,
         bool includeDeleted = false
@@ -114,10 +113,10 @@ public class UserRepository : IUserRepository
 
         var parameters = new DynamicParameters(new {UserId = userId});
         
-        return await _db.LoadFirst<UserProfile?, Role>(resultingSql, parameters, cts);
+        return await _db.LoadFirst<UserProfileModel?, RoleModel>(resultingSql, parameters, cts);
     }
 
-    public async Task<UserProfile> CreateUser(UserModel user, CancellationToken cts)
+    public async Task<UserProfileModel> CreateUser(UserModel user, CancellationToken cts)
     {
         const string sql =
             @"WITH inserted AS
@@ -132,7 +131,7 @@ public class UserRepository : IUserRepository
 
         var parameters = new DynamicParameters(user);
 
-        var result = await _db.SaveData<UserProfile, Role>(sql, parameters, cts);
+        var result = await _db.SaveData<UserProfileModel, RoleModel>(sql, parameters, cts);
 
         return result;
     }
@@ -153,7 +152,7 @@ public class UserRepository : IUserRepository
         return await _db.SaveData<int>(sql, parameters, cts);
     }
 
-    public async Task<UserProfile> UpdateUserEmail(
+    public async Task<UserProfileModel> UpdateUserEmail(
         int userId,
         string newEmail,
         CancellationToken cts
@@ -171,10 +170,10 @@ public class UserRepository : IUserRepository
 
         var parameters = new DynamicParameters(new { UserId = userId, Email = newEmail });
 
-        return await _db.SaveData<UserProfile, Role>(sql, parameters, cts);
+        return await _db.SaveData<UserProfileModel, RoleModel>(sql, parameters, cts);
     }
 
-    public async Task<UserProfile> UpdateUserProfile(
+    public async Task<UserProfileModel> UpdateUserProfile(
         int userId,
         string firstName,
         string lastName,
@@ -195,10 +194,10 @@ public class UserRepository : IUserRepository
             new { UserId = userId, FirstName = firstName, LastName = lastName }
         );
 
-        return await _db.SaveData<UserProfile, Role>(sql, parameters, cts);
+        return await _db.SaveData<UserProfileModel, RoleModel>(sql, parameters, cts);
     }
 
-    public async Task<UserProfile> BlockUser(int userId, CancellationToken cts)
+    public async Task<UserProfileModel> BlockUser(int userId, CancellationToken cts)
     {
         const string sql =
             @"WITH updated as 
@@ -212,10 +211,10 @@ public class UserRepository : IUserRepository
 
         var parameters = new DynamicParameters(new {UserId = userId});
         
-        return await _db.SaveData<UserProfile, Role>(sql, parameters, cts);
+        return await _db.SaveData<UserProfileModel, RoleModel>(sql, parameters, cts);
     }
 
-    public async Task<UserProfile> UnblockUser(int userId, CancellationToken cts)
+    public async Task<UserProfileModel> UnblockUser(int userId, CancellationToken cts)
     {
         const string sql =
             @"WITH updated as 
@@ -228,10 +227,10 @@ public class UserRepository : IUserRepository
                             ON updated.role_id = role.id";
 
         var parameters = new DynamicParameters(new {UserId = userId});
-        return await _db.SaveData<UserProfile, Role>(sql, parameters, cts);
+        return await _db.SaveData<UserProfileModel, RoleModel>(sql, parameters, cts);
     }
 
-    public async Task<UserProfile> DeleteUser(int userId, CancellationToken cts)
+    public async Task<UserProfileModel> DeleteUser(int userId, CancellationToken cts)
     {
         const string sql =
             @"WITH updated as 
@@ -245,10 +244,10 @@ public class UserRepository : IUserRepository
 
         var parameters = new DynamicParameters(new {UserId = userId});
         
-        return await _db.SaveData<UserProfile, Role>(sql, parameters, cts);
+        return await _db.SaveData<UserProfileModel, RoleModel>(sql, parameters, cts);
     }
 
-    public async Task<UserProfile> RestoreUser(int userId, CancellationToken cts)
+    public async Task<UserProfileModel> RestoreUser(int userId, CancellationToken cts)
     {
         const string sql =
             @"WITH updated as 
@@ -262,7 +261,7 @@ public class UserRepository : IUserRepository
 
         var parameters = new DynamicParameters(new {UserId = userId});
         
-        return await _db.SaveData<UserProfile, Role>(sql, parameters, cts);
+        return await _db.SaveData<UserProfileModel, RoleModel>(sql, parameters, cts);
     }
 
     public async Task<bool> DoesUserExist(int userId, CancellationToken cts)

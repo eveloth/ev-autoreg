@@ -1,8 +1,9 @@
-using DataAccessLibrary.DisplayModels;
 using DataAccessLibrary.Repository.Interfaces;
 using EvAutoreg.Contracts;
+using EvAutoreg.Contracts.Dto;
 using EvAutoreg.Contracts.Extensions;
-using EvAutoreg.Dto;
+using EvAutoreg.Contracts.Requests;
+using EvAutoreg.Contracts.Responses;
 using EvAutoreg.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -44,7 +45,7 @@ public class UsersController : ControllerBase
 
         await _unitofWork.CommitAsync(cts);
 
-        var response = new PagedResponse<UserProfile>(users, pagination);
+        var response = new PagedResponse<UserProfileDto>(users.ToUserProfileCollection(), pagination);
 
         return Ok(response);
     }
@@ -58,7 +59,7 @@ public class UsersController : ControllerBase
 
         await _unitofWork.CommitAsync(cts);
 
-        return user is null ? NotFound(ErrorCode[2001]) : Ok(user);
+        return user is null ? NotFound(ErrorCode[2001]) : Ok(new Response<UserProfileDto>(user.ToUserProfileDto()));
     }
 
     [Authorize(Policy = "ResetUserPasswords")]
@@ -66,7 +67,7 @@ public class UsersController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> ResetPassword(
         [FromRoute] int id,
-        [FromBody] UserPasswordDto password,
+        [FromBody] UserPasswordRequest password,
         CancellationToken cts
     )
     {
@@ -93,12 +94,11 @@ public class UsersController : ControllerBase
         );
 
         await _unitofWork.CommitAsync(cts);
+        _logger.LogInformation("Password was reset for user ID {UserId}", userWithPassswordReset);
 
-        var userId = new { UserId = userWithPassswordReset };
+        var response = new Response<int>(userWithPassswordReset);
 
-        _logger.LogInformation("Password was reset for user ID {UserId}", userId.UserId);
-
-        return Ok(userId);
+        return Ok(response);
     }
 
     [Authorize(Policy = "BlockUsers")]
@@ -118,8 +118,9 @@ public class UsersController : ControllerBase
         await _unitofWork.CommitAsync(cts);
 
         _logger.LogInformation("User ID {UserId} was blocked", blockedUser.Id);
+        var response = new Response<UserProfileDto>(blockedUser.ToUserProfileDto());
 
-        return Ok(blockedUser);
+        return Ok(response);
     }
 
     [Authorize(Policy = "BlockUsers")]
@@ -134,13 +135,14 @@ public class UsersController : ControllerBase
             return NotFound(ErrorCode[2001]);
         }
 
-        var blockedUser = await _unitofWork.UserRepository.UnblockUser(id, cts);
+        var unblockedUser = await _unitofWork.UserRepository.UnblockUser(id, cts);
 
         await _unitofWork.CommitAsync(cts);
 
-        _logger.LogInformation("User ID {UserId} was unblocked", blockedUser.Id);
+        _logger.LogInformation("User ID {UserId} was unblocked", unblockedUser.Id);
+        var response = new Response<UserProfileDto>(unblockedUser.ToUserProfileDto());
 
-        return Ok(blockedUser);
+        return Ok(response);
     }
 
     [Authorize(Policy = "DeleteUsers")]
@@ -155,13 +157,14 @@ public class UsersController : ControllerBase
             return NotFound("User not found");
         }
 
-        var user = await _unitofWork.UserRepository.DeleteUser(id, cts);
+        var deletedUser = await _unitofWork.UserRepository.DeleteUser(id, cts);
 
         await _unitofWork.CommitAsync(cts);
+        _logger.LogInformation("User ID {UserId} was deleted", deletedUser.Id);
+        
+        var response = new Response<UserProfileDto>(deletedUser.ToUserProfileDto());
 
-        _logger.LogInformation("User ID {UserId} was deleted", user.Id);
-
-        return Ok(user);
+        return Ok(response);
     }
 
     [Authorize(Policy = "DeleteUsers")]
@@ -176,12 +179,13 @@ public class UsersController : ControllerBase
             return NotFound("User not found");
         }
 
-        var user = await _unitofWork.UserRepository.RestoreUser(id, cts);
+        var restoredUser = await _unitofWork.UserRepository.RestoreUser(id, cts);
 
         await _unitofWork.CommitAsync(cts);
+        _logger.LogInformation("User ID {UserId} was restored", restoredUser.Id);
+        
+        var response = new Response<UserProfileDto>(restoredUser.ToUserProfileDto());
 
-        _logger.LogInformation("User ID {UserId} was restored", user.Id);
-
-        return Ok(user);
+        return Ok(response);
     }
 }

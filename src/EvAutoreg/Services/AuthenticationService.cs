@@ -2,8 +2,9 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Text.RegularExpressions;
-using DataAccessLibrary.DisplayModels;
+using DataAccessLibrary.Models;
 using DataAccessLibrary.Repository.Interfaces;
+using EvAutoreg.Contracts.Extensions;
 using Microsoft.IdentityModel.Tokens;
 
 namespace EvAutoreg.Services;
@@ -12,15 +13,15 @@ public class AuthenticationService : IAuthenticationService
 {
     // This is, of course, not quite comprehensive check, but we don't send confirmation emails either,
     // so we accept any string that matches the most common email pattern as an email
-    private const string _emailValidationRegex = @"[\w\d\-\.\+]+@[\w\d]+\.\w+";
+    private const string EmailValidationRegex = @"[\w\d\-\.\+]+@[\w\d]+\.\w+";
 
     // Matches a password with minimum 8 characters, at least one uppercase letter, lowercase letter,
     // a number and a special character. Our security standards are highhh....
-    private const string _passwordValidationRegex =
+    private const string PasswordValidationRegex =
         @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&\(\)])[A-Za-z\d@$!%*?&\(\)]{8,}$";
 
-    private readonly Regex _emailRegex = new(_emailValidationRegex);
-    private readonly Regex _passwordRegex = new(_passwordValidationRegex);
+    private readonly Regex _emailRegex = new(EmailValidationRegex);
+    private readonly Regex _passwordRegex = new(PasswordValidationRegex);
 
     private readonly IConfiguration _config;
     private readonly IUnitofWork _unitofWork;
@@ -41,7 +42,7 @@ public class AuthenticationService : IAuthenticationService
         return password != email && _passwordRegex.IsMatch(password);
     }
 
-    public async Task<string> GenerateToken(User user, CancellationToken cts)
+    public async Task<string> GenerateToken(UserModel user, CancellationToken cts)
     {
         var issuer = _config["Jwt:Issuer"];
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
@@ -50,10 +51,12 @@ public class AuthenticationService : IAuthenticationService
 
         if (user.RoleId is not null)
         {
-            var rolePermissions = await _unitofWork.RolePermissionRepository.GetRolePermissions(
+            var rolePermissionModels = await _unitofWork.RolePermissionRepository.GetRolePermissions(
                 user.RoleId!.Value,
                 cts
             );
+
+            var rolePermissions = rolePermissionModels.ToRolePermissionDto();
 
             if (rolePermissions.Permissions.Count != 0)
             {

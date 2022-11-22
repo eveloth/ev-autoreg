@@ -1,7 +1,6 @@
 ﻿using Dapper;
-using DataAccessLibrary.DbModels;
-using DataAccessLibrary.DisplayModels;
 using DataAccessLibrary.Filters;
+using DataAccessLibrary.Models;
 using DataAccessLibrary.Repository.Interfaces;
 using DataAccessLibrary.SqlDataAccess;
 
@@ -16,7 +15,7 @@ public class RolePermissionRepository : IRolePermissionRepository
         _db = db;
     }
 
-    public async Task<IEnumerable<RolePermissionRecord>> GetAllRolePermissions(
+    public async Task<IEnumerable<RolePermissionModel>> GetAllRolePermissions(
         PaginationFilter filter,
         CancellationToken cts
     )
@@ -39,19 +38,10 @@ public class RolePermissionRepository : IRolePermissionRepository
                         ORDER BY r.role_id, p.id";
         
 
-        var rolePermissionSet = await _db.LoadAllData<RolePermissionRecordModel>(sql, cts);
-
-        var rolePermissionList = rolePermissionSet.ToList();
-
-        var permissionGroups = rolePermissionList.GroupBy(x => new { x.RoleId, x.RoleName });
-
-        return permissionGroups
-            .Select(group => group.Select(x => x).ToList())
-            .Select(ConvertToRolePermissionModel)
-            .ToList();
+        return await _db.LoadAllData<RolePermissionModel>(sql, cts);
     }
 
-    public async Task<RolePermissionRecord> GetRolePermissions(int roleId, CancellationToken cts)
+    public async Task<IEnumerable<RolePermissionModel>> GetRolePermissions(int roleId, CancellationToken cts)
     {
         const string sql =
             @"SELECT role.id AS role_id, 
@@ -66,20 +56,14 @@ public class RolePermissionRepository : IRolePermissionRepository
 
         var parameters = new DynamicParameters(new {RoleId = roleId});
         
-        var rolePermissionSet = await _db.LoadData<RolePermissionRecordModel>(
+        return await _db.LoadData<RolePermissionModel>(
             sql,
             parameters,
             cts
         );
-
-        var rolePermissionList = rolePermissionSet.ToList();
-
-        var result = ConvertToRolePermissionModel(rolePermissionList);
-
-        return result;
     }
 
-    public async Task<RolePermissionRecord> AddPermissionToRole(
+    public async Task<IEnumerable<RolePermissionModel>> AddPermissionToRole(
         int roleId,
         int permissionId,
         CancellationToken cts
@@ -99,7 +83,7 @@ public class RolePermissionRepository : IRolePermissionRepository
         return result;
     }
 
-    public async Task<RolePermissionRecord> DeletePermissionFromRole(
+    public async Task<IEnumerable<RolePermissionModel>> DeletePermissionFromRole(
         int roleId,
         int permissionId,
         CancellationToken cts
@@ -134,36 +118,5 @@ public class RolePermissionRepository : IRolePermissionRepository
             parameters,
             cts
         );
-    }
-
-    private static RolePermissionRecord ConvertToRolePermissionModel(
-        List<RolePermissionRecordModel> rolePermissionList
-    )
-    {
-        var result = new RolePermissionRecord
-        {
-            Role = new Role
-            {
-                Id = rolePermissionList.First().RoleId,
-                RoleName = rolePermissionList.First().RoleName
-            }
-        };
-
-        if (rolePermissionList.First().PermissionId is null)
-            return result;
-
-        foreach (var record in rolePermissionList)
-        {
-            result.Permissions.Add(
-                new Permission
-                {
-                    Id = record.PermissionId!.Value,
-                    PermissionName = record.PermissionName,
-                    Description = record.Description
-                }
-            );
-        }
-
-        return result;
     }
 }
