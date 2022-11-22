@@ -14,7 +14,7 @@ public sealed class UnitofWork : IUnitofWork
     public IPermissionRepository PermissionRepository { get; set; }
     public IRolePermissionRepository RolePermissionRepository { get; set; }
     public IGeneralPurposeRepository GpRepository { get; set; }
-
+    public IExtCredentialsRepository ExtCredentialsRepository { get; set; }
     public UnitofWork(
         ILogger<UnitofWork> logger,
         DbTransaction transaction,
@@ -22,8 +22,8 @@ public sealed class UnitofWork : IUnitofWork
         IGeneralPurposeRepository gpRepository,
         IRoleRepository roleRepository,
         IPermissionRepository permissionRepository,
-        IRolePermissionRepository rolePermissionRepository
-    )
+        IRolePermissionRepository rolePermissionRepository, 
+        IExtCredentialsRepository extCredentialsRepository)
     {
         _logger = logger;
         _transaction = transaction;
@@ -32,6 +32,7 @@ public sealed class UnitofWork : IUnitofWork
         RoleRepository = roleRepository;
         PermissionRepository = permissionRepository;
         RolePermissionRepository = rolePermissionRepository;
+        ExtCredentialsRepository = extCredentialsRepository;
     }
 
     public async Task CommitAsync(CancellationToken cts)

@@ -7,5 +7,7 @@ public interface IUnitofWork
     IPermissionRepository PermissionRepository { get; set; }
     IRolePermissionRepository RolePermissionRepository { get; set; }
     IGeneralPurposeRepository GpRepository { get; set; }
+
+    IExtCredentialsRepository ExtCredentialsRepository { get; set; }
     Task CommitAsync(CancellationToken cts);
 }
