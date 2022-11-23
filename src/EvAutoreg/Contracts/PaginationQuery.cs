@@ -8,7 +8,7 @@ public record PaginationQuery
     private PaginationQuery(int pageNumber, int pageSize)
     {
         PageNumber = pageNumber;
-        PageSize = pageSize;
+        PageSize = pageSize > 100 ? 100 : pageSize;
     }
 
     public PaginationQuery() : this(1, 50) { }

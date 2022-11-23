@@ -7,8 +7,10 @@ using DataAccessLibrary.Extensions;
 using DataAccessLibrary.Repository;
 using DataAccessLibrary.Repository.Interfaces;
 using DataAccessLibrary.SqlDataAccess;
+using EvAutoreg.Exceptions;
 using EvAutoreg.Middleware;
 using EvAutoreg.Services;
+using EvAutoreg.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -89,9 +91,18 @@ internal static class Program
             {
                 t.TokenValidationParameters = new TokenValidationParameters
                 {
-                    ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                    ValidIssuer =
+                        builder.Configuration["Jwt:Issuer"]
+                        ?? throw new NullConfigurationEntryException(
+                            "Could not read configuration for JWT"
+                        ),
                     IssuerSigningKey = new SymmetricSecurityKey(
-                        Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])
+                        Encoding.UTF8.GetBytes(
+                            builder.Configuration["Jwt:Key"]
+                            ?? throw new NullConfigurationEntryException(
+                                "Could not read configuration for JWT"
+                            )
+                        )
                     ),
                     ValidateIssuer = true,
                     ValidateAudience = false,
@@ -131,10 +142,12 @@ internal static class Program
         builder.Services.AddScoped<IRoleRepository, RoleRepository>();
         builder.Services.AddScoped<IRolePermissionRepository, RolePermissionRepository>();
         builder.Services.AddScoped<IPermissionRepository, PermissionRepository>();
+        builder.Services.AddScoped<IExtCredentialsRepository, ExtCredentialsRepository>();
         builder.Services.AddScoped<IUnitofWork, UnitofWork>();
 
         builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
         builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+        builder.Services.AddScoped<ICredentialsEncryptor, CredentialsEncryptor>();
 
         builder.Services.AddTransient<DatabaseSeeder>();
 

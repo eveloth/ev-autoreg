@@ -23,6 +23,7 @@ public static class Permissions
         new() { PermissionName = "CreatePermissions", Description = "Can create permissions" },
         new() { PermissionName = "ReadPermissions", Description = "Can view all permissions" },
         new() { PermissionName = "DeletePermissions", Description = "Can delete permissions" },
+        new() { PermissionName = "UseRegistrar", Description = "Can use registrar service" },
     };
 
     public static List<PermissionModel> GetPermissions()

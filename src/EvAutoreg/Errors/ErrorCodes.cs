@@ -4,7 +4,7 @@ namespace EvAutoreg.Errors;
 
 public static class ErrorCodes
 {
-    private static readonly Dictionary<int, ApiError> _errorCode =
+    private static readonly Dictionary<int, ApiError> ErrorCodeList =
         new()
         {
             { 1001, new ApiError(1001, "Provided email is invalid.") },
@@ -19,8 +19,10 @@ public static class ErrorCodes
             { 4001, new ApiError(4001, "Permission already exists.") },
             { 4002, new ApiError(4002, "Permission not found.") },
             { 4003, new ApiError(4003, "No such role to permission correlation found.") },
-            { 9001, new ApiError(9001, "Couldn't perform database transaction.") }
+            { 5001, new ApiError(5001, "No credentials assciated with user.") },
+            { 9001, new ApiError(9001, "Couldn't perform database transaction.") },
+            { 9001, new ApiError(10001, "Service configuration is not valid.") }
         };
 
-    public static ReadOnlyDictionary<int, ApiError> ErrorCode { get; } = new(_errorCode);
+    public static ReadOnlyDictionary<int, ApiError> ErrorCode { get; } = new(ErrorCodeList);
 }

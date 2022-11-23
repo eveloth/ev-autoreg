@@ -1,9 +1,10 @@
 ﻿using DataAccessLibrary.Filters;
+using DataAccessLibrary.Models;
 using DataAccessLibrary.Repository.Interfaces;
 using EvAutoreg.Contracts.Dto;
 using EvAutoreg.Contracts.Extensions;
+using EvAutoreg.Services.Interfaces;
 using Npgsql;
-using UserModel = DataAccessLibrary.Models.UserModel;
 
 namespace EvAutoreg.Services;
 

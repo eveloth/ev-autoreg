@@ -1,6 +1,6 @@
 using DataAccessLibrary.Models;
 
-namespace EvAutoreg.Services;
+namespace EvAutoreg.Services.Interfaces;
 
 public interface IAuthenticationService
 {

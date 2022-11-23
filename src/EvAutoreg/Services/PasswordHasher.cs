@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using EvAutoreg.Services.Interfaces;
+using Microsoft.AspNetCore.Identity;
 
 namespace EvAutoreg.Services;
 

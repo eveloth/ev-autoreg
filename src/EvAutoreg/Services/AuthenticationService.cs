@@ -5,6 +5,8 @@ using System.Text.RegularExpressions;
 using DataAccessLibrary.Models;
 using DataAccessLibrary.Repository.Interfaces;
 using EvAutoreg.Contracts.Extensions;
+using EvAutoreg.Exceptions;
+using EvAutoreg.Services.Interfaces;
 using Microsoft.IdentityModel.Tokens;
 
 namespace EvAutoreg.Services;
@@ -44,8 +46,10 @@ public class AuthenticationService : IAuthenticationService
 
     public async Task<string> GenerateToken(UserModel user, CancellationToken cts)
     {
-        var issuer = _config["Jwt:Issuer"];
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
+        var issuer = _config["Jwt:Issuer"] ?? throw new NullConfigurationEntryException();
+        var keyString = _config["Jwt:Key"] ?? throw new NullConfigurationEntryException();
+        
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyString));
 
         var claims = new List<Claim> { new(ClaimTypes.NameIdentifier, user.Id.ToString()) };
 

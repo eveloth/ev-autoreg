@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 
-namespace EvAutoreg.Services;
+namespace EvAutoreg.Services.Interfaces;
 
 public interface IPasswordHasher
 {

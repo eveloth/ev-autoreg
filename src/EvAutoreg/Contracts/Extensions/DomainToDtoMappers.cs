@@ -1,6 +1,5 @@
 using DataAccessLibrary.Models;
 using EvAutoreg.Contracts.Dto;
-using EvAutoreg.Contracts.Dto.Abstractions;
 
 namespace EvAutoreg.Contracts.Extensions;
 
@@ -101,28 +100,6 @@ public static class DomainToDtoMappers
             .Select(group => group.Select(x => x).ToList())
             .Select(ConvertToRolePermissionModel)
             .ToList();
-    }
-
-    public static ExtCredentialsDto ToExtCredentialsDto(this EvCredentialsModel credentials)
-    {
-        return new EvCredentialsDto
-        {
-            UserId = credentials.UserId,
-            EncryptedEmail = credentials.EncryptedEmail,
-            EncryptedPassword = credentials.EncryptedPassword,
-            IV = credentials.IV
-        };
-    }
-
-    public static ExtCredentialsDto ToExtCredentialsDto(this ExchangeCredentialsModel credentials)
-    {
-        return new ExchangeCredentialsDto
-        {
-            UserId = credentials.UserId,
-            EncryptedEmail = credentials.EncryptedEmail,
-            EncryptedPassword = credentials.EncryptedPassword,
-            IV = credentials.IV
-        };
     }
     
     private static RolePermissionDto ConvertToRolePermissionModel(

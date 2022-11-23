@@ -5,6 +5,7 @@ using EvAutoreg.Contracts.Extensions;
 using EvAutoreg.Contracts.Requests;
 using EvAutoreg.Contracts.Responses;
 using EvAutoreg.Services;
+using EvAutoreg.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
