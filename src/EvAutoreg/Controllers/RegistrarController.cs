@@ -142,5 +142,15 @@ public class RegistrarController : ControllerBase
         var response = new Response<ExchangeCredentialsDto>(decryptedCredentials);
     
         return Ok(response);
+        
+        
+    }
+
+    [AllowAnonymous]
+    [Route("time")]
+    [HttpGet]
+    public IActionResult GetTime(CancellationToken cts)
+    {
+        return Ok(new {Local = DateTime.Now, Universal = DateTime.UtcNow});
     }
 }

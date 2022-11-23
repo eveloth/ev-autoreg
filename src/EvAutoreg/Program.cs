@@ -99,9 +99,9 @@ internal static class Program
                     IssuerSigningKey = new SymmetricSecurityKey(
                         Encoding.UTF8.GetBytes(
                             builder.Configuration["Jwt:Key"]
-                            ?? throw new NullConfigurationEntryException(
-                                "Could not read configuration for JWT"
-                            )
+                                ?? throw new NullConfigurationEntryException(
+                                    "Could not read configuration for JWT"
+                                )
                         )
                     ),
                     ValidateIssuer = true,
@@ -143,6 +143,9 @@ internal static class Program
         builder.Services.AddScoped<IRolePermissionRepository, RolePermissionRepository>();
         builder.Services.AddScoped<IPermissionRepository, PermissionRepository>();
         builder.Services.AddScoped<IExtCredentialsRepository, ExtCredentialsRepository>();
+        builder.Services.AddScoped<IIssueTypeRepository, IssueTypeRepository>();
+        builder.Services.AddScoped<IIssueRepository, IssueRepository>();
+        builder.Services.AddScoped<IRuleRepository, RuleRepository>();
         builder.Services.AddScoped<IUnitofWork, UnitofWork>();
 
         builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
