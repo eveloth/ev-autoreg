@@ -65,7 +65,16 @@ public class RoleRepository : IRoleRepository
         
         return await _db.LoadFirst<bool>(sql, parameters, cts);
     }
+    
+    public async Task<bool> DoesRoleExist(string roleName, CancellationToken cts)
+    {
+        const string sql = @"SELECT EXISTS (SELECT true FROM role WHERE role_name = @RoleName)";
 
+        var parameters = new DynamicParameters(new {RoleName = roleName});
+        
+        return await _db.LoadFirst<bool>(sql, parameters, cts);
+    }
+    
     public async Task<UserProfileModel> SetUserRole(int userId, int roleId, CancellationToken cts)
     {
         const string sql =

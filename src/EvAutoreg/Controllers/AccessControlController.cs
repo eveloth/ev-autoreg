@@ -46,6 +46,12 @@ public class AccessControlController : ControllerBase
     {
         var newRoleName = roleName.RoleName.ToLower();
 
+        var roleExists = await _unitofWork.RoleRepository.DoesRoleExist(newRoleName, cts);
+
+        if (roleExists)
+        {
+            return BadRequest(ErrorCode[3003]);
+        }
         var newRole = await _unitofWork.RoleRepository.AddRole(newRoleName, cts);
 
         await _unitofWork.CommitAsync(cts);
