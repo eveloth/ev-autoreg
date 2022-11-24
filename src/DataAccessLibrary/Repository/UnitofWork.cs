@@ -18,6 +18,8 @@ public sealed class UnitofWork : IUnitofWork
     public IIssueTypeRepository IssueTypeRepository { get; set; }
     public IIssueRepository IssueRepository { get; set; }
     public IRuleRepository RuleRepository { get; set; }
+    public IEvApiQueryParametersRepository EvApiQueryParametersRepository { get; set; }
+    public IMailAnalysisRulesRepository MailAnalysisRulesRepository { get; set; }
 
     public UnitofWork(
         ILogger<UnitofWork> logger,
@@ -30,7 +32,9 @@ public sealed class UnitofWork : IUnitofWork
         IExtCredentialsRepository extCredentialsRepository,
         IIssueTypeRepository issueTypeRepository,
         IIssueRepository issueRepository,
-        IRuleRepository ruleRepository
+        IRuleRepository ruleRepository,
+        IEvApiQueryParametersRepository evApiQueryParametersRepository,
+        IMailAnalysisRulesRepository mailAnalysisRulesRepository
     )
     {
         _logger = logger;
@@ -44,6 +48,8 @@ public sealed class UnitofWork : IUnitofWork
         IssueTypeRepository = issueTypeRepository;
         IssueRepository = issueRepository;
         RuleRepository = ruleRepository;
+        EvApiQueryParametersRepository = evApiQueryParametersRepository;
+        MailAnalysisRulesRepository = mailAnalysisRulesRepository;
     }
 
     public async Task CommitAsync(CancellationToken cts)
@@ -59,7 +65,7 @@ public sealed class UnitofWork : IUnitofWork
         }
         catch (Exception e)
         {
-            _logger.LogWarning("An error occured commiting transaction: {ErrorMesage}", e.Message);
+            _logger.LogWarning("An error occured commiting transaction: {ErrorMesage}", e);
             await _transaction.RollbackAsync(cts);
             throw;
         }
