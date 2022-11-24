@@ -15,17 +15,23 @@ public class PermissionRepository : IPermissionRepository
         _db = db;
     }
 
-    public async Task<IEnumerable<PermissionModel>> GetAllPermissions(PaginationFilter filter, CancellationToken cts)
+    public async Task<IEnumerable<PermissionModel>> GetAllPermissions(
+        PaginationFilter filter,
+        CancellationToken cts
+    )
     {
         var take = filter.Pagesize;
         var skip = (filter.PageNumber - 1) * filter.Pagesize;
-        
+
         var sql = @$"SELECT * FROM permission ORDER BY id LIMIT {take} OFFSET {skip}";
 
         return await _db.LoadAllData<PermissionModel>(sql, cts);
     }
 
-    public async Task<PermissionModel> AddPermission(PermissionModel permission, CancellationToken cts)
+    public async Task<PermissionModel> AddPermission(
+        PermissionModel permission,
+        CancellationToken cts
+    )
     {
         const string sql =
             @"INSERT INTO permission (permission_name, description) 
@@ -41,8 +47,8 @@ public class PermissionRepository : IPermissionRepository
     {
         const string sql = @"DELETE FROM permission WHERE id = @PermissionId RETURNING *";
 
-        var parameters = new DynamicParameters(new {PermissionId = permissionId});
-        
+        var parameters = new DynamicParameters(new { PermissionId = permissionId });
+
         return await _db.SaveData<PermissionModel>(sql, parameters, cts);
     }
 
@@ -61,8 +67,8 @@ public class PermissionRepository : IPermissionRepository
     {
         const string sql = @"SELECT EXISTS (SELECT true FROM permission WHERE id = @PermissionId)";
 
-        var parameters = new DynamicParameters(new {PermissionId = permissionId});
-        
+        var parameters = new DynamicParameters(new { PermissionId = permissionId });
+
         return await _db.LoadFirst<bool>(sql, parameters, cts);
     }
 
@@ -71,8 +77,8 @@ public class PermissionRepository : IPermissionRepository
         const string sql =
             @"SELECT EXISTS (SELECT true FROM permission WHERE permission_name = @PermissionName)";
 
-        var parameters = new DynamicParameters(new {PermissionName = permissionName});
-        
+        var parameters = new DynamicParameters(new { PermissionName = permissionName });
+
         return await _db.LoadFirst<bool>(sql, parameters, cts);
     }
 }

@@ -117,7 +117,7 @@ public class RegistrarController : ControllerBase
 
         return Ok(response);
     }
-    
+
     [Obsolete("Added for testing purposes")]
     [Authorize(Policy = "UseRegistrar")]
     [Route("credentials/exchange")]
@@ -127,23 +127,21 @@ public class RegistrarController : ControllerBase
         var userId = int.Parse(
             HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
         );
-    
-        var encryptedCredentials = await _unitofWork.ExtCredentialsRepository.GetExchangeCredentials(
-            userId,
-            cts
-        );
-    
+
+        var encryptedCredentials =
+            await _unitofWork.ExtCredentialsRepository.GetExchangeCredentials(userId, cts);
+
         if (encryptedCredentials is null)
         {
             return BadRequest(ErrorCode[5001]);
         }
-    
-        var decryptedCredentials = _credentialsEncryptor.DecryptExchangeCredentials(encryptedCredentials);
+
+        var decryptedCredentials = _credentialsEncryptor.DecryptExchangeCredentials(
+            encryptedCredentials
+        );
         var response = new Response<ExchangeCredentialsDto>(decryptedCredentials);
-    
+
         return Ok(response);
-        
-        
     }
 
     [AllowAnonymous]
@@ -151,6 +149,6 @@ public class RegistrarController : ControllerBase
     [HttpGet]
     public IActionResult GetTime(CancellationToken cts)
     {
-        return Ok(new {Local = DateTime.Now, Universal = DateTime.UtcNow});
+        return Ok(new { Local = DateTime.Now, Universal = DateTime.UtcNow });
     }
 }

@@ -4,7 +4,6 @@ using EvAutoreg.Contracts.Dto;
 using EvAutoreg.Contracts.Extensions;
 using EvAutoreg.Contracts.Requests;
 using EvAutoreg.Contracts.Responses;
-using EvAutoreg.Services;
 using EvAutoreg.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -46,7 +45,10 @@ public class UsersController : ControllerBase
 
         await _unitofWork.CommitAsync(cts);
 
-        var response = new PagedResponse<UserProfileDto>(users.ToUserProfileCollection(), pagination);
+        var response = new PagedResponse<UserProfileDto>(
+            users.ToUserProfileCollection(),
+            pagination
+        );
 
         return Ok(response);
     }
@@ -60,7 +62,9 @@ public class UsersController : ControllerBase
 
         await _unitofWork.CommitAsync(cts);
 
-        return user is null ? NotFound(ErrorCode[2001]) : Ok(new Response<UserProfileDto>(user.ToUserProfileDto()));
+        return user is null
+            ? NotFound(ErrorCode[2001])
+            : Ok(new Response<UserProfileDto>(user.ToUserProfileDto()));
     }
 
     [Authorize(Policy = "ResetUserPasswords")]
@@ -162,7 +166,7 @@ public class UsersController : ControllerBase
 
         await _unitofWork.CommitAsync(cts);
         _logger.LogInformation("User ID {UserId} was deleted", deletedUser.Id);
-        
+
         var response = new Response<UserProfileDto>(deletedUser.ToUserProfileDto());
 
         return Ok(response);
@@ -184,7 +188,7 @@ public class UsersController : ControllerBase
 
         await _unitofWork.CommitAsync(cts);
         _logger.LogInformation("User ID {UserId} was restored", restoredUser.Id);
-        
+
         var response = new Response<UserProfileDto>(restoredUser.ToUserProfileDto());
 
         return Ok(response);

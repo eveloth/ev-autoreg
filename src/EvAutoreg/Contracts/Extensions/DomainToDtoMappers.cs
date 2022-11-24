@@ -30,11 +30,7 @@ public static class DomainToDtoMappers
         }
         else
         {
-            role = new RoleDto
-            {
-                Id = profile.Role.Id,
-                RoleName = profile.Role.RoleName
-            };
+            role = new RoleDto { Id = profile.Role.Id, RoleName = profile.Role.RoleName };
         }
 
         return new UserProfileDto
@@ -49,20 +45,18 @@ public static class DomainToDtoMappers
         };
     }
 
-    public static IEnumerable<UserProfileDto> ToUserProfileCollection(this IEnumerable<UserProfileModel> profiles)
+    public static IEnumerable<UserProfileDto> ToUserProfileCollection(
+        this IEnumerable<UserProfileModel> profiles
+    )
     {
         return profiles.Select(profile => profile.ToUserProfileDto());
     }
 
     public static RoleDto ToRoleDto(this RoleModel role)
     {
-        return new RoleDto
-        {
-            Id = role.Id,
-            RoleName = role.RoleName
-        };
+        return new RoleDto { Id = role.Id, RoleName = role.RoleName };
     }
-    
+
     public static IEnumerable<RoleDto> ToRoleCollection(this IEnumerable<RoleModel> roles)
     {
         return roles.Select(role => role.ToRoleDto());
@@ -78,7 +72,9 @@ public static class DomainToDtoMappers
         };
     }
 
-    public static IEnumerable<PermissionDto> ToPermissionCollection(this IEnumerable<PermissionModel> permissions)
+    public static IEnumerable<PermissionDto> ToPermissionCollection(
+        this IEnumerable<PermissionModel> permissions
+    )
     {
         return permissions.Select(permission => permission.ToPermissionDto());
     }
@@ -90,20 +86,23 @@ public static class DomainToDtoMappers
         return ConvertToRolePermissionModel(rpList);
     }
 
-    public static IEnumerable<RolePermissionDto> ToRolePermissionCollection(this IEnumerable<RolePermissionModel> rps)
+    public static IEnumerable<RolePermissionDto> ToRolePermissionCollection(
+        this IEnumerable<RolePermissionModel> rps
+    )
     {
         var rpsList = rps.ToList();
 
-        var rpsGroups = rpsList.GroupBy(x => new {x.RoleId, x.RoleName});
+        var rpsGroups = rpsList.GroupBy(x => new { x.RoleId, x.RoleName });
 
         return rpsGroups
             .Select(group => group.Select(x => x).ToList())
             .Select(ConvertToRolePermissionModel)
             .ToList();
     }
-    
+
     private static RolePermissionDto ConvertToRolePermissionModel(
-            List<RolePermissionModel> rolePermissionList)
+        List<RolePermissionModel> rolePermissionList
+    )
     {
         var result = new RolePermissionDto
         {
@@ -113,10 +112,10 @@ public static class DomainToDtoMappers
                 RoleName = rolePermissionList.First().RoleName
             }
         };
-    
+
         if (rolePermissionList.First().PermissionId is null)
             return result;
-    
+
         foreach (var record in rolePermissionList)
         {
             result.Permissions.Add(
@@ -128,7 +127,7 @@ public static class DomainToDtoMappers
                 }
             );
         }
-    
+
         return result;
     }
 }

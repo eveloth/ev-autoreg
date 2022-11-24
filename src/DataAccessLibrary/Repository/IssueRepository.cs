@@ -19,16 +19,19 @@ public class IssueRepository : IIssueRepository
     {
         const string sql = @"SELECT * FROM issue WHERE id = @IssueId";
 
-        var parameters = new DynamicParameters(new {IssueId = issueId});
+        var parameters = new DynamicParameters(new { IssueId = issueId });
 
         return await _db.LoadFirst<IssueModel?>(sql, parameters, cts);
     }
 
-    public async Task<IEnumerable<IssueModel>> GetAllIssues(PaginationFilter filter, CancellationToken cts)
+    public async Task<IEnumerable<IssueModel>> GetAllIssues(
+        PaginationFilter filter,
+        CancellationToken cts
+    )
     {
         var take = filter.Pagesize;
         var skip = (filter.PageNumber - 1) * filter.Pagesize;
-        
+
         var sql = @$"SELECT * FROM issue ORDER BY id LIMIT {take} OFFSET {skip}";
 
         return await _db.LoadAllData<IssueModel>(sql, cts);
@@ -36,7 +39,8 @@ public class IssueRepository : IIssueRepository
 
     public async Task<IssueModel> UpsertIssue(IssueModel issue, CancellationToken cts)
     {
-        const string sql = @"INSERT INTO issue
+        const string sql =
+            @"INSERT INTO issue
                              (id, time_created, author, company, status, priority, assigned_group, assignee, 
                               short_description, description, registrar_id, issue_type_id)
                              VALUES
@@ -61,7 +65,7 @@ public class IssueRepository : IIssueRepository
     {
         const string sql = @"DELETE FROM issue WHERE id = @IssueId RETURNING *";
 
-        var parameters = new DynamicParameters(new {IssueId = issueId});
+        var parameters = new DynamicParameters(new { IssueId = issueId });
 
         return await _db.SaveData<IssueModel>(sql, parameters, cts);
     }

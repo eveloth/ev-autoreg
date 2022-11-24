@@ -48,17 +48,18 @@ public class AuthenticationService : IAuthenticationService
     {
         var issuer = _config["Jwt:Issuer"] ?? throw new NullConfigurationEntryException();
         var keyString = _config["Jwt:Key"] ?? throw new NullConfigurationEntryException();
-        
+
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyString));
 
         var claims = new List<Claim> { new(ClaimTypes.NameIdentifier, user.Id.ToString()) };
 
         if (user.RoleId is not null)
         {
-            var rolePermissionModels = await _unitofWork.RolePermissionRepository.GetRolePermissions(
-                user.RoleId!.Value,
-                cts
-            );
+            var rolePermissionModels =
+                await _unitofWork.RolePermissionRepository.GetRolePermissions(
+                    user.RoleId!.Value,
+                    cts
+                );
 
             var rolePermissions = rolePermissionModels.ToRolePermissionDto();
 

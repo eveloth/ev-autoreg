@@ -4,7 +4,6 @@ using EvAutoreg.Contracts.Dto;
 using EvAutoreg.Contracts.Extensions;
 using EvAutoreg.Contracts.Requests;
 using EvAutoreg.Contracts.Responses;
-using EvAutoreg.Services;
 using EvAutoreg.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -112,7 +111,10 @@ public class MeController : ControllerBase
         );
 
         await _unitofWork.CommitAsync(cts);
-        _logger.LogInformation("Password was changed for user ID {UserId}", userWithChangedPassword);
+        _logger.LogInformation(
+            "Password was changed for user ID {UserId}",
+            userWithChangedPassword
+        );
 
         var response = new Response<int>(userWithChangedPassword);
 

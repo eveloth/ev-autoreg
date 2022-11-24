@@ -24,18 +24,19 @@ public class UserRepository : IUserRepository
         bool includeDeleted = false
     )
     {
-        const string sql = @"SELECT * FROM app_user
+        const string sql =
+            @"SELECT * FROM app_user
                     LEFT JOIN role
                     ON app_user.id = role.id
                     WHERE app_user.id = @UserId";
-        
+
         var resultingSql = includeDeleted switch
         {
             true => sql,
             false => sql + " AND" + IncludeDeletedSql
         };
 
-        var parameters = new DynamicParameters(new {UserId = userId});
+        var parameters = new DynamicParameters(new { UserId = userId });
 
         return await _db.LoadFirst<UserModel>(resultingSql, parameters, cts);
     }
@@ -45,8 +46,9 @@ public class UserRepository : IUserRepository
         CancellationToken cts,
         bool includeDeleted = false
     )
-    {   
-        const string sql = @"SELECT * FROM app_user
+    {
+        const string sql =
+            @"SELECT * FROM app_user
                     LEFT JOIN role
                     ON app_user.id = role.id
                     WHERE email = @Email";
@@ -56,8 +58,8 @@ public class UserRepository : IUserRepository
             true => sql,
             false => sql + " AND" + IncludeDeletedSql
         };
-        
-        var parameters = new DynamicParameters(new {Email = email});
+
+        var parameters = new DynamicParameters(new { Email = email });
 
         return await _db.LoadFirst<UserModel, RoleModel>(resultingSql, parameters, cts);
     }
@@ -75,7 +77,7 @@ public class UserRepository : IUserRepository
             @"SELECT * FROM app_user
               LEFT JOIN role ON app_user.role_id = role.id"
         );
-        
+
         var paginator = $@"ORDER BY app_user.id LIMIT {take} OFFSET {skip}";
 
         var resultingSql = includeDeleted switch
@@ -99,20 +101,20 @@ public class UserRepository : IUserRepository
         bool includeDeleted = false
     )
     {
-        const string sql = @"SELECT * FROM app_user
+        const string sql =
+            @"SELECT * FROM app_user
                          LEFT JOIN role
                          ON app_user.role_id = role.id
                          WHERE app_user.id = @UserId";
-             
+
         var resultingSql = includeDeleted switch
         {
             true => sql,
             false => sql + " AND" + IncludeDeletedSql
         };
-        
 
-        var parameters = new DynamicParameters(new {UserId = userId});
-        
+        var parameters = new DynamicParameters(new { UserId = userId });
+
         return await _db.LoadFirst<UserProfileModel?, RoleModel>(resultingSql, parameters, cts);
     }
 
@@ -209,8 +211,8 @@ public class UserRepository : IUserRepository
                             LEFT JOIN role
                             ON updated.role_id = role.id";
 
-        var parameters = new DynamicParameters(new {UserId = userId});
-        
+        var parameters = new DynamicParameters(new { UserId = userId });
+
         return await _db.SaveData<UserProfileModel, RoleModel>(sql, parameters, cts);
     }
 
@@ -226,7 +228,7 @@ public class UserRepository : IUserRepository
                             LEFT JOIN role
                             ON updated.role_id = role.id";
 
-        var parameters = new DynamicParameters(new {UserId = userId});
+        var parameters = new DynamicParameters(new { UserId = userId });
         return await _db.SaveData<UserProfileModel, RoleModel>(sql, parameters, cts);
     }
 
@@ -242,8 +244,8 @@ public class UserRepository : IUserRepository
                             LEFT JOIN role
                             ON updated.role_id = role.id";
 
-        var parameters = new DynamicParameters(new {UserId = userId});
-        
+        var parameters = new DynamicParameters(new { UserId = userId });
+
         return await _db.SaveData<UserProfileModel, RoleModel>(sql, parameters, cts);
     }
 
@@ -259,8 +261,8 @@ public class UserRepository : IUserRepository
                             LEFT JOIN role
                             ON updated.role_id = role.id";
 
-        var parameters = new DynamicParameters(new {UserId = userId});
-        
+        var parameters = new DynamicParameters(new { UserId = userId });
+
         return await _db.SaveData<UserProfileModel, RoleModel>(sql, parameters, cts);
     }
 
@@ -268,8 +270,8 @@ public class UserRepository : IUserRepository
     {
         const string sql = @"SELECT EXISTS (SELECT true FROM app_user WHERE id = @UserId)";
 
-        var parameters = new DynamicParameters(new {UserId = userId});
-        
+        var parameters = new DynamicParameters(new { UserId = userId });
+
         return await _db.LoadFirst<bool>(sql, parameters, cts);
     }
 
@@ -277,8 +279,8 @@ public class UserRepository : IUserRepository
     {
         const string sql = @"SELECT EXISTS (SELECT true FROM app_user WHERE email = @Email)";
 
-        var parameters = new DynamicParameters(new {Email = email});
-        
+        var parameters = new DynamicParameters(new { Email = email });
+
         return await _db.LoadFirst<bool>(sql, parameters, cts);
     }
 }

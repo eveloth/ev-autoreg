@@ -27,7 +27,10 @@ public class AccessControlController : ControllerBase
     [Authorize(Policy = "ReadRoles")]
     [Route("roles")]
     [HttpGet]
-    public async Task<IActionResult> GetAllRoles([FromQuery] PaginationQuery pagination, CancellationToken cts)
+    public async Task<IActionResult> GetAllRoles(
+        [FromQuery] PaginationQuery pagination,
+        CancellationToken cts
+    )
     {
         var paginationFilter = pagination.ToFilter();
         var roles = await _unitofWork.RoleRepository.GetRoles(paginationFilter, cts);
@@ -55,7 +58,7 @@ public class AccessControlController : ControllerBase
         var newRole = await _unitofWork.RoleRepository.AddRole(newRoleName, cts);
 
         await _unitofWork.CommitAsync(cts);
-        
+
         _logger.LogInformation(
             "Role ID {RoleId} was added with name {RoleName}",
             newRole.Id,
@@ -63,7 +66,7 @@ public class AccessControlController : ControllerBase
         );
 
         var response = new Response<RoleDto>(newRole.ToRoleDto());
-        
+
         return Ok(response);
     }
 
@@ -121,7 +124,7 @@ public class AccessControlController : ControllerBase
             deletedRole.Id,
             deletedRole.RoleName
         );
-        
+
         var response = new Response<RoleDto>(deletedRole.ToRoleDto());
 
         return Ok(response);
@@ -130,15 +133,24 @@ public class AccessControlController : ControllerBase
     [Authorize(Policy = "ReadPermissions")]
     [Route("permissions")]
     [HttpGet]
-    public async Task<IActionResult> GetAllPermissions([FromQuery] PaginationQuery pagination, CancellationToken cts)
+    public async Task<IActionResult> GetAllPermissions(
+        [FromQuery] PaginationQuery pagination,
+        CancellationToken cts
+    )
     {
         var paginationFilter = pagination.ToFilter();
-        
-        var permissions = await _unitofWork.PermissionRepository.GetAllPermissions(paginationFilter, cts);
+
+        var permissions = await _unitofWork.PermissionRepository.GetAllPermissions(
+            paginationFilter,
+            cts
+        );
 
         await _unitofWork.CommitAsync(cts);
 
-        var response = new PagedResponse<PermissionDto>(permissions.ToPermissionCollection(), pagination);
+        var response = new PagedResponse<PermissionDto>(
+            permissions.ToPermissionCollection(),
+            pagination
+        );
 
         return Ok(response);
     }
@@ -206,7 +218,7 @@ public class AccessControlController : ControllerBase
             deletedPermission.Id,
             deletedPermission.PermissionName
         );
-        
+
         var response = new Response<PermissionDto>(deletedPermission.ToPermissionDto());
 
         return Ok(response);
@@ -215,15 +227,24 @@ public class AccessControlController : ControllerBase
     [Authorize(Policy = "ReadRoles")]
     [Route("roles/permissions")]
     [HttpGet]
-    public async Task<IActionResult> GetAllRolePermissions([FromQuery] PaginationQuery pagination, CancellationToken cts)
+    public async Task<IActionResult> GetAllRolePermissions(
+        [FromQuery] PaginationQuery pagination,
+        CancellationToken cts
+    )
     {
         var paginationFilter = pagination.ToFilter();
-        
-        var rolePermissions = await _unitofWork.RolePermissionRepository.GetAllRolePermissions(paginationFilter, cts);
+
+        var rolePermissions = await _unitofWork.RolePermissionRepository.GetAllRolePermissions(
+            paginationFilter,
+            cts
+        );
 
         await _unitofWork.CommitAsync(cts);
 
-        var response = new PagedResponse<RolePermissionDto>(rolePermissions.ToRolePermissionCollection(), pagination);
+        var response = new PagedResponse<RolePermissionDto>(
+            rolePermissions.ToRolePermissionCollection(),
+            pagination
+        );
 
         return Ok(response);
     }
@@ -246,7 +267,7 @@ public class AccessControlController : ControllerBase
         );
 
         await _unitofWork.CommitAsync(cts);
-        
+
         var response = new Response<RolePermissionDto>(rolePermissions.ToRolePermissionDto());
 
         return Ok(response);
@@ -291,7 +312,7 @@ public class AccessControlController : ControllerBase
             permissionId,
             roleId
         );
-        
+
         var response = new Response<RolePermissionDto>(rolePermissions.ToRolePermissionDto());
 
         return Ok(response);
@@ -369,7 +390,7 @@ public class AccessControlController : ControllerBase
             updatedUser.Id,
             updatedUser.Role!.Id
         );
-        
+
         var response = new Response<UserProfileDto>(updatedUser.ToUserProfileDto());
 
         return Ok(response);
@@ -405,7 +426,7 @@ public class AccessControlController : ControllerBase
         );
 
         var response = new Response<UserProfileDto>(updatedUser.ToUserProfileDto());
-        
+
         return Ok(response);
     }
 }

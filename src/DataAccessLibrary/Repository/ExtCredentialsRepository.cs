@@ -16,17 +16,22 @@ public class ExtCredentialsRepository : IExtCredentialsRepository
 
     public async Task<EvCredentialsModel?> GetEvCredentials(int userId, CancellationToken cts)
     {
-        const string sql = @"SELECT * FROM ev_credentials
+        const string sql =
+            @"SELECT * FROM ev_credentials
                              WHERE user_id = @UserId";
 
-        var parameters = new DynamicParameters(new {UserId = userId});
+        var parameters = new DynamicParameters(new { UserId = userId });
 
         return await _db.LoadFirst<EvCredentialsModel?>(sql, parameters, cts);
     }
 
-    public async Task<int> SaveEvCredentials(EvCredentialsModel evCredentials, CancellationToken cts)
+    public async Task<int> SaveEvCredentials(
+        EvCredentialsModel evCredentials,
+        CancellationToken cts
+    )
     {
-        const string sql = @"INSERT INTO ev_credentials
+        const string sql =
+            @"INSERT INTO ev_credentials
                              (user_id, encrypted_email, encrypted_password, iv)
                              VALUES (@UserId, @EncryptedEmail, @EncryptedPassword, @IV)
                              ON CONFLICT (user_id)
@@ -42,19 +47,27 @@ public class ExtCredentialsRepository : IExtCredentialsRepository
         return await _db.SaveData<int>(sql, parameters, cts);
     }
 
-    public async Task<ExchangeCredentialsModel?> GetExchangeCredentials(int userId, CancellationToken cts)
+    public async Task<ExchangeCredentialsModel?> GetExchangeCredentials(
+        int userId,
+        CancellationToken cts
+    )
     {
-        const string sql = @"SELECT * FROM exchange_credentials
+        const string sql =
+            @"SELECT * FROM exchange_credentials
                              WHERE user_id = @UserId";
 
-        var parameters = new DynamicParameters(new {UserId = userId});
-        
+        var parameters = new DynamicParameters(new { UserId = userId });
+
         return await _db.LoadFirst<ExchangeCredentialsModel?>(sql, parameters, cts);
     }
 
-    public async Task<int> SaveExchangeCredentials(ExchangeCredentialsModel exchangeCredentials, CancellationToken cts)
+    public async Task<int> SaveExchangeCredentials(
+        ExchangeCredentialsModel exchangeCredentials,
+        CancellationToken cts
+    )
     {
-        const string sql = @"INSERT INTO exchange_credentials
+        const string sql =
+            @"INSERT INTO exchange_credentials
                              (user_id, encrypted_email, encrypted_password, iv)
                              VALUES (@UserId, @EncryptedEmail, @EncryptedPassword, @IV)
                              ON CONFLICT (user_id)
@@ -66,7 +79,7 @@ public class ExtCredentialsRepository : IExtCredentialsRepository
                              RETURNING user_id";
 
         var parameters = new DynamicParameters(exchangeCredentials);
-        
+
         return await _db.SaveData<int>(sql, parameters, cts);
     }
 }

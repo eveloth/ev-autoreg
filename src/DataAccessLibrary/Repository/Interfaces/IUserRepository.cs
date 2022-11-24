@@ -7,7 +7,11 @@ public interface IUserRepository
 {
     Task<UserModel?> GetUserById(int userId, CancellationToken cts, bool includeDeleted = false);
 
-    Task<UserModel?> GetUserByEmail(string email, CancellationToken cts, bool includeDeleted = false);
+    Task<UserModel?> GetUserByEmail(
+        string email,
+        CancellationToken cts,
+        bool includeDeleted = false
+    );
 
     Task<IEnumerable<UserProfileModel>> GetAllUserProfiles(
         PaginationFilter filter,

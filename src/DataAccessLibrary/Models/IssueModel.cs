@@ -3,7 +3,7 @@
 public class IssueModel
 {
 #pragma warning disable CS8618
-    
+
     public int Id { get; set; }
     public DateTime TimeCreated { get; set; }
     public string Author { get; set; }
@@ -16,6 +16,6 @@ public class IssueModel
     public string Description { get; set; }
     public int RegistrarId { get; set; }
     public int IssueTypeId { get; set; }
-    
+
 #pragma warning restore
 }

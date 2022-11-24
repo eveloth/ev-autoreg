@@ -5,7 +5,6 @@ using EvAutoreg.Contracts.Dto;
 using EvAutoreg.Contracts.Requests;
 using EvAutoreg.Exceptions;
 using EvAutoreg.Services.Interfaces;
-using Microsoft.CodeAnalysis.VisualBasic.Syntax;
 
 namespace EvAutoreg.Services;
 

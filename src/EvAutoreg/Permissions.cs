@@ -4,7 +4,7 @@ namespace EvAutoreg;
 
 public static class Permissions
 {
-    private static readonly List<PermissionModel> permissions = new List<PermissionModel>()
+    private static readonly List<PermissionModel> PermissionList = new List<PermissionModel>()
     {
         new()
         {
@@ -28,6 +28,6 @@ public static class Permissions
 
     public static List<PermissionModel> GetPermissions()
     {
-        return permissions;
+        return PermissionList;
     }
 }

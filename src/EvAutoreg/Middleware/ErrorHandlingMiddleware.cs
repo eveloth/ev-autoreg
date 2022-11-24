@@ -31,8 +31,8 @@ public class ErrorHandlingMiddleware
         catch (NullConfigurationEntryException e)
         {
             _logger.LogCritical(
-                "An error occured while reading configuration file, service might not be operational! " +
-                "Error Message: {ErrorMessage}",
+                "An error occured while reading configuration file, service might not be operational! "
+                    + "Error Message: {ErrorMessage}",
                 e
             );
             context.Response.StatusCode = 500;

@@ -23,7 +23,8 @@ public class RolePermissionRepository : IRolePermissionRepository
         var take = filter.Pagesize;
         var skip = (filter.PageNumber - 1) * filter.Pagesize;
 
-        var sql = $@"SELECT r.role_id, r.role_name,
+        var sql =
+            $@"SELECT r.role_id, r.role_name,
                         p.id AS permission_id, 
                         p.permission_name AS permission_name,
                         p.description
@@ -36,12 +37,14 @@ public class RolePermissionRepository : IRolePermissionRepository
                         LEFT JOIN role_permission rp ON r.role_id = rp.role_id 
                         LEFT JOIN permission p ON rp.permission_id = p.id 
                         ORDER BY r.role_id, p.id";
-        
 
         return await _db.LoadAllData<RolePermissionModel>(sql, cts);
     }
 
-    public async Task<IEnumerable<RolePermissionModel>> GetRolePermissions(int roleId, CancellationToken cts)
+    public async Task<IEnumerable<RolePermissionModel>> GetRolePermissions(
+        int roleId,
+        CancellationToken cts
+    )
     {
         const string sql =
             @"SELECT role.id AS role_id, 
@@ -54,13 +57,9 @@ public class RolePermissionRepository : IRolePermissionRepository
                              LEFT JOIN permission p ON rp.permission_id = p.id
                              WHERE role.id = @RoleId";
 
-        var parameters = new DynamicParameters(new {RoleId = roleId});
-        
-        return await _db.LoadData<RolePermissionModel>(
-            sql,
-            parameters,
-            cts
-        );
+        var parameters = new DynamicParameters(new { RoleId = roleId });
+
+        return await _db.LoadData<RolePermissionModel>(sql, parameters, cts);
     }
 
     public async Task<IEnumerable<RolePermissionModel>> AddPermissionToRole(
@@ -111,12 +110,10 @@ public class RolePermissionRepository : IRolePermissionRepository
         const string sql =
             @"SELECT EXISTS (SELECT true FROM role_permission WHERE role_id = @RoleId AND permission_id = @PermissionId)";
 
-        var parameters = new DynamicParameters(new {RoleId = roleId, PermissionId = permissionId});
-        
-        return await _db.LoadFirst<bool>(
-            sql,
-            parameters,
-            cts
+        var parameters = new DynamicParameters(
+            new { RoleId = roleId, PermissionId = permissionId }
         );
+
+        return await _db.LoadFirst<bool>(sql, parameters, cts);
     }
 }

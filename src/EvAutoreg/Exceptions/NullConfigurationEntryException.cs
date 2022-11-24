@@ -2,17 +2,10 @@
 
 public class NullConfigurationEntryException : Exception
 {
-    public NullConfigurationEntryException()
-    {
-    }
+    public NullConfigurationEntryException() { }
 
-    public NullConfigurationEntryException(string message)
-        : base(message)
-    {
-    }
+    public NullConfigurationEntryException(string message) : base(message) { }
 
-    public NullConfigurationEntryException(string message, Exception inner)
-        : base(message, inner)
-    {
-    }
+    public NullConfigurationEntryException(string message, Exception inner) : base(message, inner)
+    { }
 }
