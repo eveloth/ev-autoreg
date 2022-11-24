@@ -24,6 +24,8 @@ public interface ISqlDataAccess
         CancellationToken cts
     );
 
+    Task<TModel?> LoadFirst<TModel>(string sql, CancellationToken cts);
+    
     Task<TModel?> LoadFirst<TModel>(
         string sql,
         DynamicParameters parameters,

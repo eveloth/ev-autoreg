@@ -67,6 +67,13 @@ public class SqlDataAccess : ISqlDataAccess
         return result;
     }
 
+    public async Task<TModel?> LoadFirst<TModel>(string sql, CancellationToken cts)
+    {
+        return await _connection.QueryFirstOrDefaultAsync<TModel?>(
+            new CommandDefinition(sql, cancellationToken: cts)
+        );
+    }
+
     public async Task<TModel?> LoadFirst<TModel>(
         string sql,
         DynamicParameters parameters,
