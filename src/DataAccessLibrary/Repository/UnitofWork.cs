@@ -20,6 +20,7 @@ public sealed class UnitofWork : IUnitofWork
     public IRuleRepository RuleRepository { get; set; }
     public IEvApiQueryParametersRepository EvApiQueryParametersRepository { get; set; }
     public IMailAnalysisRulesRepository MailAnalysisRulesRepository { get; set; }
+    public IIssueFieldRepository IssueFieldRepository { get; set; }
 
     public UnitofWork(
         ILogger<UnitofWork> logger,
@@ -34,7 +35,8 @@ public sealed class UnitofWork : IUnitofWork
         IIssueRepository issueRepository,
         IRuleRepository ruleRepository,
         IEvApiQueryParametersRepository evApiQueryParametersRepository,
-        IMailAnalysisRulesRepository mailAnalysisRulesRepository
+        IMailAnalysisRulesRepository mailAnalysisRulesRepository,
+        IIssueFieldRepository issueFieldRepository
     )
     {
         _logger = logger;
@@ -50,6 +52,7 @@ public sealed class UnitofWork : IUnitofWork
         RuleRepository = ruleRepository;
         EvApiQueryParametersRepository = evApiQueryParametersRepository;
         MailAnalysisRulesRepository = mailAnalysisRulesRepository;
+        IssueFieldRepository = issueFieldRepository;
     }
 
     public async Task CommitAsync(CancellationToken cts)

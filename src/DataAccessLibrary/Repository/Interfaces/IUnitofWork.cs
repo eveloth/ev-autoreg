@@ -13,5 +13,6 @@ public interface IUnitofWork
     IRuleRepository RuleRepository { get; set; }
     IEvApiQueryParametersRepository EvApiQueryParametersRepository { get; set; }
     IMailAnalysisRulesRepository MailAnalysisRulesRepository { get; set; }
+    IIssueFieldRepository IssueFieldRepository { get; set; }
     Task CommitAsync(CancellationToken cts);
 }

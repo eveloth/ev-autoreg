@@ -15,26 +15,30 @@ public class RuleRepository : IRuleRepository
         _db = db;
     }
 
-    public async Task<RuleModel?> GetRule(int ruleId, CancellationToken cts)
+    public async Task<RuleModel?> GetRule(int ruleId, int userId, CancellationToken cts)
     {
-        const string sql = @"SELECT * FROM rule WHERE id = @RuleId";
+        const string sql = @"SELECT * FROM rule WHERE id = @RuleId AND owner_user_id = @UserId";
 
-        var parameters = new DynamicParameters(new { RuleId = ruleId });
+        var parameters = new DynamicParameters(new { RuleId = ruleId, UserId = userId });
 
         return await _db.LoadFirst<RuleModel?>(sql, parameters, cts);
     }
 
     public async Task<IEnumerable<RuleModel>> GetAllRules(
         PaginationFilter filter,
+        int userId,
         CancellationToken cts
     )
     {
         var take = filter.Pagesize;
         var skip = (filter.PageNumber - 1) * filter.Pagesize;
 
-        var sql = @$"SELECT * FROM rule ORDER BY id LIMIT {take} OFFSET {skip}";
+        var sql =
+            @$"SELECT * FROM rule WHERE owner_user_id = @UserId ORDER BY id LIMIT {take} OFFSET {skip}";
 
-        return await _db.LoadAllData<RuleModel>(sql, cts);
+        var parameters = new DynamicParameters(new { UserId = userId });
+
+        return await _db.LoadData<RuleModel>(sql, parameters, cts);
     }
 
     public async Task<RuleModel> AddRule(RuleModel rule, CancellationToken cts)
@@ -57,12 +61,12 @@ public class RuleRepository : IRuleRepository
         const string sql =
             @"UPDATE rule SET
                              rule = @Rule,
-                             owner_user_id = @OwnerUserId,
                              issue_type_id = @IssueTypeId,
                              issue_field_id = @IssueFieldId,
                              is_regex = @IsRegex,
                              is_negative = @IsNegative
                              WHERE id = @Id
+                             AND owner_user_id = @OwnerUserId
                              RETURNING *";
 
         var parameters = new DynamicParameters(rule);
@@ -70,20 +74,21 @@ public class RuleRepository : IRuleRepository
         return await _db.SaveData<RuleModel>(sql, parameters, cts);
     }
 
-    public async Task<RuleModel> DeleteRule(int ruleId, CancellationToken cts)
+    public async Task<RuleModel> DeleteRule(int ruleId, int userId, CancellationToken cts)
     {
-        const string sql = @"DELETE FROM rule WHERE id = @RuleId RETURNING *";
+        const string sql =
+            @"DELETE FROM rule WHERE id = @RuleId AND owner_user_id = @UserId RETURNING *";
 
-        var parameters = new DynamicParameters(new { RuleId = ruleId });
+        var parameters = new DynamicParameters(new { RuleId = ruleId, UserId = userId});
 
         return await _db.SaveData<RuleModel>(sql, parameters, cts);
     }
 
-    public async Task<bool> DoesRuleExist(int ruleId, CancellationToken cts)
+    public async Task<bool> DoesRuleExist(int ruleId, int userId, CancellationToken cts)
     {
-        const string sql = @"SELECT EXISTS (SELECT true FROM rule WHERE id = @RuleId)";
+        const string sql = @"SELECT EXISTS (SELECT true FROM rule WHERE id = @RuleId AND owner_user_id = @UserId)";
 
-        var parameters = new DynamicParameters(new { RuleId = ruleId });
+        var parameters = new DynamicParameters(new { RuleId = ruleId, UserId = userId });
 
         return await _db.LoadFirst<bool>(sql, parameters, cts);
     }
