@@ -2,8 +2,8 @@
 using DataAccessLibrary.Models;
 using DataAccessLibrary.Repository.Interfaces;
 using EvAutoreg.Contracts.Dto;
-using EvAutoreg.Contracts.Extensions;
 using EvAutoreg.Services.Interfaces;
+using MapsterMapper;
 using Npgsql;
 
 namespace EvAutoreg.Services;
@@ -11,16 +11,19 @@ namespace EvAutoreg.Services;
 public class DatabaseSeeder
 {
     private readonly ILogger<DatabaseSeeder> _logger;
+    private readonly IMapper _mapper;
     private readonly IPasswordHasher _hasher;
     private readonly IUnitofWork _unitofWork;
 
     public DatabaseSeeder(
         ILogger<DatabaseSeeder> logger,
+        IMapper mapper,
         IPasswordHasher hasher,
         IUnitofWork unitofWork
     )
     {
         _logger = logger;
+        _mapper = mapper;
         _hasher = hasher;
         _unitofWork = unitofWork;
     }
@@ -97,7 +100,7 @@ public class DatabaseSeeder
     {
         const string defaultRoleName = "superadmin";
 
-        return (await _unitofWork.RoleRepository.AddRole(defaultRoleName, ct)).ToRoleDto();
+        return _mapper.Map<RoleDto>(await _unitofWork.RoleRepository.AddRole(defaultRoleName, ct));
     }
 
     private async Task AddPermissionsToDefaultRole(int roleId, CancellationToken ct)

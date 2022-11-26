@@ -1,10 +1,10 @@
 using System.Security.Claims;
 using DataAccessLibrary.Repository.Interfaces;
 using EvAutoreg.Contracts.Dto;
-using EvAutoreg.Contracts.Extensions;
 using EvAutoreg.Contracts.Requests;
 using EvAutoreg.Contracts.Responses;
 using EvAutoreg.Services.Interfaces;
+using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using static EvAutoreg.Errors.ErrorCodes;
@@ -17,6 +17,7 @@ namespace EvAutoreg.Controllers;
 public class MeController : ControllerBase
 {
     private readonly ILogger<MeController> _logger;
+    private readonly IMapper _mapper;
     private readonly IUnitofWork _unitofWork;
     private readonly IAuthenticationService _authService;
     private readonly IPasswordHasher _passwordHasher;
@@ -25,13 +26,15 @@ public class MeController : ControllerBase
         ILogger<MeController> logger,
         IUnitofWork unitofWork,
         IAuthenticationService authService,
-        IPasswordHasher passwordHasher
+        IPasswordHasher passwordHasher,
+        IMapper mapper
     )
     {
         _logger = logger;
         _unitofWork = unitofWork;
         _authService = authService;
         _passwordHasher = passwordHasher;
+        _mapper = mapper;
     }
 
     [HttpGet]
@@ -45,7 +48,7 @@ public class MeController : ControllerBase
 
         await _unitofWork.CommitAsync(cts);
 
-        var response = new Response<UserProfileDto>(me!.ToUserProfileDto());
+        var response = new Response<UserProfileDto>(_mapper.Map<UserProfileDto>(me!));
 
         return Ok(response);
     }
@@ -78,7 +81,7 @@ public class MeController : ControllerBase
             userProfile.Id
         );
 
-        var response = new Response<UserProfileDto>(userProfile.ToUserProfileDto());
+        var response = new Response<UserProfileDto>(_mapper.Map<UserProfileDto>(userProfile));
 
         return Ok(response);
     }
@@ -142,7 +145,7 @@ public class MeController : ControllerBase
 
         _logger.LogInformation("User profile was updated for user ID {UserId}", userId);
 
-        var response = new Response<UserProfileDto>(user.ToUserProfileDto());
+        var response = new Response<UserProfileDto>(_mapper.Map<UserProfileDto>(user));
 
         return Ok(response);
     }

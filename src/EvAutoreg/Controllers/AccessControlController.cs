@@ -1,10 +1,12 @@
+using DataAccessLibrary.Filters;
 using DataAccessLibrary.Models;
 using DataAccessLibrary.Repository.Interfaces;
 using EvAutoreg.Contracts;
 using EvAutoreg.Contracts.Dto;
-using EvAutoreg.Contracts.Extensions;
 using EvAutoreg.Contracts.Requests;
 using EvAutoreg.Contracts.Responses;
+using Extensions;
+using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using static EvAutoreg.Errors.ErrorCodes;
@@ -17,11 +19,17 @@ public class AccessControlController : ControllerBase
 {
     private readonly ILogger<AccessControlController> _logger;
     private readonly IUnitofWork _unitofWork;
+    private readonly IMapper _mapper;
 
-    public AccessControlController(ILogger<AccessControlController> logger, IUnitofWork unitofWork)
+    public AccessControlController(
+        ILogger<AccessControlController> logger,
+        IUnitofWork unitofWork,
+        IMapper mapper
+    )
     {
         _logger = logger;
         _unitofWork = unitofWork;
+        _mapper = mapper;
     }
 
     [Authorize(Policy = "ReadRoles")]
@@ -32,12 +40,12 @@ public class AccessControlController : ControllerBase
         CancellationToken cts
     )
     {
-        var paginationFilter = pagination.ToFilter();
+        var paginationFilter = _mapper.Map<PaginationFilter>(pagination);
         var roles = await _unitofWork.RoleRepository.GetRoles(paginationFilter, cts);
 
         await _unitofWork.CommitAsync(cts);
 
-        var response = new PagedResponse<RoleDto>(roles.ToRoleCollection(), pagination);
+        var response = new PagedResponse<RoleDto>(_mapper.Map<IEnumerable<RoleDto>>(roles), pagination);
 
         return Ok(response);
     }
@@ -65,7 +73,9 @@ public class AccessControlController : ControllerBase
             newRole.RoleName
         );
 
-        var response = new Response<RoleDto>(newRole.ToRoleDto());
+        var roleDto = _mapper.Map<RoleDto>(newRole);
+
+        var response = new Response<RoleDto>(roleDto);
 
         return Ok(response);
     }
@@ -98,7 +108,7 @@ public class AccessControlController : ControllerBase
             updatedRole.RoleName
         );
 
-        var response = new Response<RoleDto>(updatedRole.ToRoleDto());
+        var response = new Response<RoleDto>(_mapper.Map<RoleDto>(updatedRole));
 
         return Ok(response);
     }
@@ -125,7 +135,7 @@ public class AccessControlController : ControllerBase
             deletedRole.RoleName
         );
 
-        var response = new Response<RoleDto>(deletedRole.ToRoleDto());
+        var response = new Response<RoleDto>(_mapper.Map<RoleDto>(deletedRole));
 
         return Ok(response);
     }
@@ -138,7 +148,7 @@ public class AccessControlController : ControllerBase
         CancellationToken cts
     )
     {
-        var paginationFilter = pagination.ToFilter();
+        var paginationFilter = _mapper.Map<PaginationFilter>(pagination);
 
         var permissions = await _unitofWork.PermissionRepository.GetAllPermissions(
             paginationFilter,
@@ -148,7 +158,7 @@ public class AccessControlController : ControllerBase
         await _unitofWork.CommitAsync(cts);
 
         var response = new PagedResponse<PermissionDto>(
-            permissions.ToPermissionCollection(),
+            _mapper.Map<IEnumerable<PermissionDto>>(permissions),
             pagination
         );
 
@@ -192,7 +202,7 @@ public class AccessControlController : ControllerBase
             addedPermission.PermissionName
         );
 
-        var response = new Response<PermissionDto>(addedPermission.ToPermissionDto());
+        var response = new Response<PermissionDto>(_mapper.Map<PermissionDto>(addedPermission));
 
         return Ok(response);
     }
@@ -219,7 +229,7 @@ public class AccessControlController : ControllerBase
             deletedPermission.PermissionName
         );
 
-        var response = new Response<PermissionDto>(deletedPermission.ToPermissionDto());
+        var response = new Response<PermissionDto>(_mapper.Map<PermissionDto>(deletedPermission));
 
         return Ok(response);
     }
@@ -232,17 +242,19 @@ public class AccessControlController : ControllerBase
         CancellationToken cts
     )
     {
-        var paginationFilter = pagination.ToFilter();
+        var paginationFilter = _mapper.Map<PaginationFilter>(pagination);
 
         var rolePermissions = await _unitofWork.RolePermissionRepository.GetAllRolePermissions(
             paginationFilter,
             cts
         );
 
+        var listsOfRolePermissions = rolePermissions.GroupByIntoList(x => new {x.RoleId, x.RoleName});
+
         await _unitofWork.CommitAsync(cts);
 
         var response = new PagedResponse<RolePermissionDto>(
-            rolePermissions.ToRolePermissionCollection(),
+            _mapper.Map<IEnumerable<RolePermissionDto>>(listsOfRolePermissions),
             pagination
         );
 
@@ -268,7 +280,9 @@ public class AccessControlController : ControllerBase
 
         await _unitofWork.CommitAsync(cts);
 
-        var response = new Response<RolePermissionDto>(rolePermissions.ToRolePermissionDto());
+        var response = _mapper.Map<RolePermissionDto>(rolePermissions.ToList());
+
+        //var response = new Response<RolePermissionDto>(rolePermissions.ToRolePermissionDto());
 
         return Ok(response);
     }
@@ -313,7 +327,7 @@ public class AccessControlController : ControllerBase
             roleId
         );
 
-        var response = new Response<RolePermissionDto>(rolePermissions.ToRolePermissionDto());
+        var response = new Response<RolePermissionDto>(_mapper.Map<RolePermissionDto>(rolePermissions));
 
         return Ok(response);
     }
@@ -353,7 +367,7 @@ public class AccessControlController : ControllerBase
             roleId
         );
 
-        var response = new Response<RolePermissionDto>(rolePermissions.ToRolePermissionDto());
+        var response = new Response<RolePermissionDto>(_mapper.Map<RolePermissionDto>(rolePermissions));
 
         return Ok(response);
     }
@@ -391,7 +405,7 @@ public class AccessControlController : ControllerBase
             updatedUser.Role!.Id
         );
 
-        var response = new Response<UserProfileDto>(updatedUser.ToUserProfileDto());
+        var response = new Response<UserProfileDto>(_mapper.Map<UserProfileDto>(updatedUser));
 
         return Ok(response);
     }
@@ -425,7 +439,7 @@ public class AccessControlController : ControllerBase
             existingUser.Role!.Id
         );
 
-        var response = new Response<UserProfileDto>(updatedUser.ToUserProfileDto());
+        var response = new Response<UserProfileDto>(_mapper.Map<UserProfileDto>(updatedUser));
 
         return Ok(response);
     }

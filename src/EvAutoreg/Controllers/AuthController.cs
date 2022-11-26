@@ -1,14 +1,15 @@
 using DataAccessLibrary.Models;
 using DataAccessLibrary.Repository.Interfaces;
 using EvAutoreg.Contracts.Dto;
-using EvAutoreg.Contracts.Extensions;
 using EvAutoreg.Contracts.Requests;
 using EvAutoreg.Contracts.Responses;
 using EvAutoreg.Services.Interfaces;
+using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using static EvAutoreg.Errors.ErrorCodes;
+using UserProfileModel = DataAccessLibrary.Models.UserProfileModel;
 
 namespace EvAutoreg.Controllers;
 
@@ -17,6 +18,7 @@ namespace EvAutoreg.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly ILogger<AuthController> _logger;
+    private readonly IMapper _mapper;
     private readonly IUnitofWork _unitofWork;
     private readonly IUserRepository _userRepository;
     private readonly IPasswordHasher _passwordHasher;
@@ -27,7 +29,8 @@ public class AuthController : ControllerBase
         IPasswordHasher passwordHasher,
         IAuthenticationService authService,
         ILogger<AuthController> logger,
-        IUnitofWork unitofWork
+        IUnitofWork unitofWork,
+        IMapper mapper
     )
     {
         _userRepository = userRepository;
@@ -35,6 +38,7 @@ public class AuthController : ControllerBase
         _authService = authService;
         _logger = logger;
         _unitofWork = unitofWork;
+        _mapper = mapper;
     }
 
     /// <summary>
@@ -123,7 +127,7 @@ public class AuthController : ControllerBase
         await _unitofWork.CommitAsync(cts);
         _logger.LogInformation("User ID {UserId} was registered", createdUser.Id);
 
-        var response = new Response<UserProfileDto>(createdUser.ToUserProfileDto());
+        var response = new Response<UserProfileDto>(_mapper.Map<UserProfileDto>(createdUser));
 
         return Ok(response);
     }

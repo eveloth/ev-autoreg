@@ -4,6 +4,7 @@ using EvAutoreg.Contracts.Dto;
 using EvAutoreg.Contracts.Requests;
 using EvAutoreg.Contracts.Responses;
 using EvAutoreg.Services.Interfaces;
+using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using static EvAutoreg.Errors.ErrorCodes;
@@ -16,18 +17,21 @@ namespace EvAutoreg.Controllers;
 public class RegistrarController : ControllerBase
 {
     private readonly ILogger<RegistrarController> _logger;
+    private readonly IMapper _mapper;
     private readonly IUnitofWork _unitofWork;
     private readonly ICredentialsEncryptor _credentialsEncryptor;
 
     public RegistrarController(
         ILogger<RegistrarController> logger,
         IUnitofWork unitofWork,
-        ICredentialsEncryptor credentialsEncryptor
+        ICredentialsEncryptor credentialsEncryptor,
+        IMapper mapper
     )
     {
         _logger = logger;
         _unitofWork = unitofWork;
         _credentialsEncryptor = credentialsEncryptor;
+        _mapper = mapper;
     }
 
     [Authorize(Policy = "UseRegistrar")]
@@ -54,6 +58,32 @@ public class RegistrarController : ControllerBase
         );
 
         var response = new Response<int>(evCredentialsUpdatedForId);
+
+        return Ok(response);
+    }
+
+    [Obsolete("Added for testing purposes")]
+    [Authorize(Policy = "UseRegistrar")]
+    [Route("credentials/ev")]
+    [HttpGet]
+    public async Task<IActionResult> GetEvCredentials(CancellationToken cts)
+    {
+        var userId = int.Parse(
+            HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
+        );
+
+        var encryptedCredentials = await _unitofWork.ExtCredentialsRepository.GetEvCredentials(
+            userId,
+            cts
+        );
+
+        if (encryptedCredentials is null)
+        {
+            return BadRequest(ErrorCode[5001]);
+        }
+
+        var decryptedCredentials = _credentialsEncryptor.DecryptEvCredentials(encryptedCredentials);
+        var response = new Response<EvCredentialsDto>(decryptedCredentials);
 
         return Ok(response);
     }
@@ -94,32 +124,6 @@ public class RegistrarController : ControllerBase
 
     [Obsolete("Added for testing purposes")]
     [Authorize(Policy = "UseRegistrar")]
-    [Route("credentials/ev")]
-    [HttpGet]
-    public async Task<IActionResult> GetEvCredentials(CancellationToken cts)
-    {
-        var userId = int.Parse(
-            HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
-        );
-
-        var encryptedCredentials = await _unitofWork.ExtCredentialsRepository.GetEvCredentials(
-            userId,
-            cts
-        );
-
-        if (encryptedCredentials is null)
-        {
-            return BadRequest(ErrorCode[5001]);
-        }
-
-        var decryptedCredentials = _credentialsEncryptor.DecryptEvCredentials(encryptedCredentials);
-        var response = new Response<EvCredentialsDto>(decryptedCredentials);
-
-        return Ok(response);
-    }
-
-    [Obsolete("Added for testing purposes")]
-    [Authorize(Policy = "UseRegistrar")]
     [Route("credentials/exchange")]
     [HttpGet]
     public async Task<IActionResult> GetExchangeCredentials(CancellationToken cts)
@@ -144,11 +148,20 @@ public class RegistrarController : ControllerBase
         return Ok(response);
     }
 
-    [AllowAnonymous]
-    [Route("time")]
+    /*[Authorize(Policy = "UseRegistrar")]
+    [Route("rules")]
     [HttpGet]
-    public IActionResult GetTime(CancellationToken cts)
+    public async Task<IActionResult> GetAllRules([FromQuery] PaginationQuery pagination, CancellationToken cts)
     {
-        return Ok(new { Local = DateTime.Now, Universal = DateTime.UtcNow });
-    }
+        var userId = int.Parse(
+            HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
+        );
+
+        var paginationFilter = pagination.ToFilter();
+
+        var rules = await _unitofWork.RuleRepository.GetAllRules(paginationFilter, userId, cts);
+        await _unitofWork.CommitAsync(cts);
+        
+        var pesponse = new PagedResponse<RuleDto>()
+    }*/
 }

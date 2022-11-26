@@ -1,10 +1,11 @@
+using DataAccessLibrary.Filters;
 using DataAccessLibrary.Repository.Interfaces;
 using EvAutoreg.Contracts;
 using EvAutoreg.Contracts.Dto;
-using EvAutoreg.Contracts.Extensions;
 using EvAutoreg.Contracts.Requests;
 using EvAutoreg.Contracts.Responses;
 using EvAutoreg.Services.Interfaces;
+using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using static EvAutoreg.Errors.ErrorCodes;
@@ -16,6 +17,7 @@ namespace EvAutoreg.Controllers;
 public class UsersController : ControllerBase
 {
     private readonly ILogger<UsersController> _logger;
+    private readonly IMapper _mapper;
     private readonly IUnitofWork _unitofWork;
     private readonly IAuthenticationService _authService;
     private readonly IPasswordHasher _passwordHasher;
@@ -24,13 +26,14 @@ public class UsersController : ControllerBase
         ILogger<UsersController> logger,
         IAuthenticationService authService,
         IPasswordHasher passwordHasher,
-        IUnitofWork unitofWork
-    )
+        IUnitofWork unitofWork, 
+        IMapper mapper)
     {
         _logger = logger;
         _authService = authService;
         _passwordHasher = passwordHasher;
         _unitofWork = unitofWork;
+        _mapper = mapper;
     }
 
     [Authorize(Policy = "ReadUsers")]
@@ -40,13 +43,13 @@ public class UsersController : ControllerBase
         CancellationToken cts
     )
     {
-        var paginationFilter = pagination.ToFilter();
+        var paginationFilter = _mapper.Map<PaginationFilter>(pagination);
         var users = await _unitofWork.UserRepository.GetAllUserProfiles(paginationFilter, cts);
 
         await _unitofWork.CommitAsync(cts);
 
         var response = new PagedResponse<UserProfileDto>(
-            users.ToUserProfileCollection(),
+            _mapper.Map<IEnumerable<UserProfileDto>>(users),
             pagination
         );
 
@@ -64,7 +67,7 @@ public class UsersController : ControllerBase
 
         return user is null
             ? NotFound(ErrorCode[2001])
-            : Ok(new Response<UserProfileDto>(user.ToUserProfileDto()));
+            : Ok(new Response<UserProfileDto>(_mapper.Map<UserProfileDto>(user)));
     }
 
     [Authorize(Policy = "ResetUserPasswords")]
@@ -123,7 +126,7 @@ public class UsersController : ControllerBase
         await _unitofWork.CommitAsync(cts);
 
         _logger.LogInformation("User ID {UserId} was blocked", blockedUser.Id);
-        var response = new Response<UserProfileDto>(blockedUser.ToUserProfileDto());
+        var response = new Response<UserProfileDto>(_mapper.Map<UserProfileDto>(blockedUser));
 
         return Ok(response);
     }
@@ -145,7 +148,7 @@ public class UsersController : ControllerBase
         await _unitofWork.CommitAsync(cts);
 
         _logger.LogInformation("User ID {UserId} was unblocked", unblockedUser.Id);
-        var response = new Response<UserProfileDto>(unblockedUser.ToUserProfileDto());
+        var response = new Response<UserProfileDto>(_mapper.Map<UserProfileDto>(unblockedUser));
 
         return Ok(response);
     }
@@ -167,7 +170,7 @@ public class UsersController : ControllerBase
         await _unitofWork.CommitAsync(cts);
         _logger.LogInformation("User ID {UserId} was deleted", deletedUser.Id);
 
-        var response = new Response<UserProfileDto>(deletedUser.ToUserProfileDto());
+        var response = new Response<UserProfileDto>(_mapper.Map<UserProfileDto>(deletedUser));
 
         return Ok(response);
     }
@@ -189,7 +192,7 @@ public class UsersController : ControllerBase
         await _unitofWork.CommitAsync(cts);
         _logger.LogInformation("User ID {UserId} was restored", restoredUser.Id);
 
-        var response = new Response<UserProfileDto>(restoredUser.ToUserProfileDto());
+        var response = new Response<UserProfileDto>(_mapper.Map<UserProfileDto>(restoredUser));
 
         return Ok(response);
     }

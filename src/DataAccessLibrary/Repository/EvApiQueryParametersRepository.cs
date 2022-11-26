@@ -33,8 +33,8 @@ public class EvApiQueryParametersRepository : IEvApiQueryParametersRepository
         CancellationToken cts
     )
     {
-        var take = filter.Pagesize;
-        var skip = (filter.PageNumber - 1) * filter.Pagesize;
+        var take = filter.PageSize;
+        var skip = (filter.PageNumber - 1) * filter.PageSize;
 
         var sql =
             @$"SELECT * FROM registering_parameters ORDER BY issue_type_id LIMIT {take} OFFSET {skip}";

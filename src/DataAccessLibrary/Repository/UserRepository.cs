@@ -70,8 +70,8 @@ public class UserRepository : IUserRepository
         bool includeDeleted = false
     )
     {
-        var skip = (filter.PageNumber - 1) * filter.Pagesize;
-        var take = filter.Pagesize;
+        var skip = (filter.PageNumber - 1) * filter.PageSize;
+        var take = filter.PageSize;
 
         var sqlTemplateBuilder = new StringBuilder(
             @"SELECT * FROM app_user
@@ -89,7 +89,7 @@ public class UserRepository : IUserRepository
                     .Append(' ')
                     .Append(paginator)
                     .ToString(),
-            false => sqlTemplateBuilder.Append(" ").Append(paginator).ToString()
+            false => sqlTemplateBuilder.Append(' ').Append(paginator).ToString()
         };
 
         return await _db.LoadAllData<UserProfileModel, RoleModel>(resultingSql, cts);

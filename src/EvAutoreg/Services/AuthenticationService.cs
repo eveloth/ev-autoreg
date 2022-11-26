@@ -4,9 +4,10 @@ using System.Text;
 using System.Text.RegularExpressions;
 using DataAccessLibrary.Models;
 using DataAccessLibrary.Repository.Interfaces;
-using EvAutoreg.Contracts.Extensions;
+using EvAutoreg.Contracts.Dto;
 using EvAutoreg.Exceptions;
 using EvAutoreg.Services.Interfaces;
+using MapsterMapper;
 using Microsoft.IdentityModel.Tokens;
 
 namespace EvAutoreg.Services;
@@ -27,11 +28,13 @@ public class AuthenticationService : IAuthenticationService
 
     private readonly IConfiguration _config;
     private readonly IUnitofWork _unitofWork;
+    private readonly IMapper _mapper;
 
-    public AuthenticationService(IConfiguration config, IUnitofWork unitofWork)
+    public AuthenticationService(IConfiguration config, IUnitofWork unitofWork, IMapper mapper)
     {
         _config = config;
         _unitofWork = unitofWork;
+        _mapper = mapper;
     }
 
     public bool IsEmailValid(string email)
@@ -61,7 +64,7 @@ public class AuthenticationService : IAuthenticationService
                     cts
                 );
 
-            var rolePermissions = rolePermissionModels.ToRolePermissionDto();
+            var rolePermissions = _mapper.Map<RolePermissionDto>(rolePermissionModels.ToList());
 
             if (rolePermissions.Permissions.Count != 0)
             {

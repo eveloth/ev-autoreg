@@ -30,8 +30,8 @@ public class RuleRepository : IRuleRepository
         CancellationToken cts
     )
     {
-        var take = filter.Pagesize;
-        var skip = (filter.PageNumber - 1) * filter.Pagesize;
+        var take = filter.PageSize;
+        var skip = (filter.PageNumber - 1) * filter.PageSize;
 
         var sql =
             @$"SELECT * FROM rule WHERE owner_user_id = @UserId ORDER BY id LIMIT {take} OFFSET {skip}";

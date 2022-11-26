@@ -29,8 +29,8 @@ public class IssueRepository : IIssueRepository
         CancellationToken cts
     )
     {
-        var take = filter.Pagesize;
-        var skip = (filter.PageNumber - 1) * filter.Pagesize;
+        var take = filter.PageSize;
+        var skip = (filter.PageNumber - 1) * filter.PageSize;
 
         var sql = @$"SELECT * FROM issue ORDER BY id LIMIT {take} OFFSET {skip}";
 

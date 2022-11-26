@@ -7,7 +7,7 @@ public class RuleModel
     public int Id { get; set; }
     public string Rule { get; set; }
     public int OwnerUserId { get; set; }
-    public int IssueTypeid { get; set; }
+    public int IssueTypeId { get; set; }
     public int IssueFieldId { get; set; }
     public bool IsRegex { get; set; }
     public bool IsNegative { get; set; }
