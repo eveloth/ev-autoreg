@@ -14,6 +14,8 @@ using EvAutoreg.Services;
 using EvAutoreg.Services.Interfaces;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc.ApplicationModels;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Npgsql;
@@ -37,11 +39,16 @@ internal static class Program
         builder.Logging.ClearProviders();
         builder.Logging.AddSerilog(logger);
 
-        builder.Services.AddControllers();
+        builder.Services.AddControllers(options =>
+        {
+            options.Conventions.Add(
+                new RouteTokenTransformerConvention(new ToSlugCaseTransformerConvention())
+            );
+        });
 
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
-        
+
         #region Swagger
 
         builder.Services.AddSwaggerGen(options =>
@@ -83,9 +90,9 @@ internal static class Program
         });
 
         #endregion
-        
+
         builder.Services.AddRouting(options => options.LowercaseUrls = true);
-        
+
         #region JWT Authentication
 
         builder.Services
@@ -107,9 +114,9 @@ internal static class Program
                     IssuerSigningKey = new SymmetricSecurityKey(
                         Encoding.UTF8.GetBytes(
                             builder.Configuration["Jwt:Key"]
-                            ?? throw new NullConfigurationEntryException(
-                                "Could not read configuration for JWT"
-                            )
+                                ?? throw new NullConfigurationEntryException(
+                                    "Could not read configuration for JWT"
+                                )
                         )
                     ),
                     ValidateIssuer = true,
@@ -118,9 +125,9 @@ internal static class Program
                     ValidateIssuerSigningKey = true
                 };
             });
-        
+
         #endregion
-        
+
         #region Policy-based Authorization
 
         builder.Services.AddAuthorization(options =>
@@ -135,9 +142,9 @@ internal static class Program
                 );
             }
         });
-        
+
         #endregion
-        
+
         #region SqlDataAccess
 
         builder.Services.AddScoped<IDbConnection>(
@@ -150,7 +157,6 @@ internal static class Program
             return (DbTransaction)connection.BeginTransaction();
         });
 
-        
         builder.Services.ConfigureSqlDataAccess().UseAffixForModelMapping("Model");
         builder.Services.AddScoped<ISqlDataAccess, SqlDataAccess>();
 
@@ -163,7 +169,10 @@ internal static class Program
         builder.Services.AddScoped<IIssueTypeRepository, IssueTypeRepository>();
         builder.Services.AddScoped<IIssueRepository, IssueRepository>();
         builder.Services.AddScoped<IRuleRepository, RuleRepository>();
-        builder.Services.AddScoped<IEvApiQueryParametersRepository, EvApiQueryParametersRepository>();
+        builder.Services.AddScoped<
+            IEvApiQueryParametersRepository,
+            EvApiQueryParametersRepository
+        >();
         builder.Services.AddScoped<IMailAnalysisRulesRepository, MailAnalysisRulesRepository>();
         builder.Services.AddScoped<IIssueFieldRepository, IssueFieldRepository>();
         builder.Services.AddScoped<IUnitofWork, UnitofWork>();
@@ -173,13 +182,13 @@ internal static class Program
         builder.Services.AddScoped<ICredentialsEncryptor, CredentialsEncryptor>();
 
         builder.Services.AddTransient<DatabaseSeeder>();
-        
+
         #endregion
 
         builder.Services.AddSingleton<IMapper, Mapper>();
 
         var app = builder.Build();
-        
+
         app.ConfigureDomainToDtoMapping();
 
         // Configure the HTTP request pipeline.

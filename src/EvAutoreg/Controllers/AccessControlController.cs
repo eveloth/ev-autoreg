@@ -13,7 +13,7 @@ using static EvAutoreg.Errors.ErrorCodes;
 
 namespace EvAutoreg.Controllers;
 
-[Route("api/access-control")]
+[Route("api/[controller]")]
 [ApiController]
 public class AccessControlController : ControllerBase
 {
@@ -100,8 +100,6 @@ public class AccessControlController : ControllerBase
         {
             return BadRequest(ErrorCode[3003]);
         }
-
-        //TODO: check if role name exists
 
         var role = new RoleModel { Id = id, RoleName = request.RoleName.ToLower() };
 
