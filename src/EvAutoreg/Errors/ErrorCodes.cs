@@ -21,6 +21,12 @@ public static class ErrorCodes
             { 4002, new ApiError(4002, "Permission not found.") },
             { 4003, new ApiError(4003, "No such role to permission correlation found.") },
             { 5001, new ApiError(5001, "No credentials assciated with user.") },
+            { 6001, new ApiError(6001, "Rule doesn't exist.") },
+            { 7001, new ApiError(7001, "Issue type doesn't exist.") },
+            { 7002, new ApiError(7002, "Issue field doesn't exist.") },
+            { 7003, new ApiError(7003, "Mail analysis rules are empty") },
+            { 7004, new ApiError(7004, "Issue type with the specified name already exists.") },
+            { 7005, new ApiError(7005, "ExtraView API query parameters are empty.") },
             { 9001, new ApiError(9001, "Couldn't perform database transaction.") },
             { 10001, new ApiError(10001, "Service configuration is not valid.") }
         };

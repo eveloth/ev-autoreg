@@ -47,21 +47,24 @@ public class IssueTypeRepository : IIssueTypeRepository
     }
 
     public async Task<IssueTypeModel> ChangeIssueTypeName(
-        IssueTypeModel issueType,
+        int issueTypeId,
+        string issueTypeName,
         CancellationToken cts
     )
     {
         const string sql =
-            @"UPDATE issue_type SET issue_type_name = @NewIssueTypeName WHERE id = @Id RETURNING *";
+            @"UPDATE issue_type SET issue_type_name = @IssueTypeName WHERE id = @IssueTypeId RETURNING *";
 
-        var parameters = new DynamicParameters(issueType);
+        var parameters = new DynamicParameters(
+            new { IssueTypeId = issueTypeId, IssueTypeName = issueTypeName }
+        );
 
         return await _db.SaveData<IssueTypeModel>(sql, parameters, cts);
     }
 
     public async Task<IssueTypeModel> DeleteIssueType(int issueTypeId, CancellationToken cts)
     {
-        const string sql = @"DELETE FROM issue_type WHERE id = @IssueTypeId";
+        const string sql = @"DELETE FROM issue_type WHERE id = @IssueTypeId RETURNING *";
 
         var parameters = new DynamicParameters(new { IssueTypeId = issueTypeId });
 

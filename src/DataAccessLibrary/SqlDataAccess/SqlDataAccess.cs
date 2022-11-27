@@ -100,6 +100,13 @@ public class SqlDataAccess : ISqlDataAccess
         return result.FirstOrDefault();
     }
 
+    public async Task SaveData(string sql, DynamicParameters parameters, CancellationToken cts)
+    {
+        await _connection.ExecuteAsync(
+            new CommandDefinition(sql, parameters, cancellationToken: cts)
+        );
+    }
+
     public async Task<TResult> SaveData<TResult>(string sql, CancellationToken cts)
     {
         return await _connection.QueryFirstAsync<TResult>(

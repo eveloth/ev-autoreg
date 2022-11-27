@@ -15,7 +15,7 @@ public class IssueFieldRepository : IIssueFieldRepository
         _db = db;
     }
 
-    public async Task<IssueFieldModel?> GetIssueFiled(int issueFieldId, CancellationToken cts)
+    public async Task<IssueFieldModel?> GetIssueField(int issueFieldId, CancellationToken cts)
     {
         const string sql = @"SELECT * FROM issue_field WHERE id = @IssueFieldId";
 
@@ -35,5 +35,23 @@ public class IssueFieldRepository : IIssueFieldRepository
         var sql = @$"SELECT * FROM issue_field ORDER BY id LIMIT {take} OFFSET {skip}";
 
         return await _db.LoadAllData<IssueFieldModel>(sql, cts);
+    }
+
+    public async Task AddIssueField(string issueFieldName, CancellationToken cts)
+    {
+        const string sql = "INSERT INTO issue_field (field_name) VALUES (@IssueFieldName) RETURNING id";
+
+        var parameters = new DynamicParameters(new {IssueFieldName = issueFieldName});
+
+        await _db.SaveData(sql, parameters, cts);
+    }
+
+    public async Task<bool> DoesIssueFieldExist(int issueFieldId, CancellationToken cts)
+    {
+        const string sql = @"SELECT EXISTS (SELECT true FROM issue_field WHERE id = @IssueFieldId)";
+
+        var parameters = new DynamicParameters(new { IssueFieldId = issueFieldId });
+
+        return await _db.LoadFirst<bool>(sql, parameters, cts);
     }
 }

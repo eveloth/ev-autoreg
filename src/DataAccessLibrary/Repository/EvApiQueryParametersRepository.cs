@@ -61,7 +61,7 @@ public class EvApiQueryParametersRepository : IEvApiQueryParametersRepository
                                          inwork_status = excluded.inwork_status,
                                          assigned_group = excluded.assigned_group,
                                          request_type = excluded.request_type
-                `                        RETURNING * ";
+                                         RETURNING * ";
 
         var paratmeters = new DynamicParameters(queryParameters);
 

@@ -11,7 +11,7 @@ public interface IIssueTypeRepository
         CancellationToken cts
     );
     Task<IssueTypeModel> AddIssueType(string issueTypeName, CancellationToken cts);
-    Task<IssueTypeModel> ChangeIssueTypeName(IssueTypeModel issueType, CancellationToken cts);
+    Task<IssueTypeModel> ChangeIssueTypeName(int issueTypeId, string issueTypeName, CancellationToken cts);
     Task<IssueTypeModel> DeleteIssueType(int issueTypeId, CancellationToken cts);
     Task<bool> DoesIssueTypeExist(int issueTypeId, CancellationToken cts);
     Task<bool> DoesIssueTypeExist(string issueTypeName, CancellationToken cts);

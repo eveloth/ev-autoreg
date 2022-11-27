@@ -28,7 +28,18 @@ public static class DomainToDtoMappingConfig
                         )
             );
 
-        TypeAdapterConfig<(RuleModel, IssueTypeModel, IssueFieldModel), RuleDto>
+        TypeAdapterConfig<(EvApiQueryParametersModel, IssueTypeModel?), EvApiQueryParametersDto>
+            .NewConfig()
+            .Map(dest => dest.IssueType.Id, src => src.Item2.Id)
+            .Map(dest => dest.IssueType.IssueTypeName, src => src.Item2.IssueTypeName)
+            .Map(dest => dest.WorkTime, src => src.Item1.WorkTime)
+            .Map(dest => dest.RegStatus, src => src.Item1.RegStatus)
+            .Map(dest => dest.InWorkStatus, src => src.Item1.InWorkStatus)
+            .Map(dest => dest.AssignedGroup, src => src.Item1.AssignedGroup)
+            .Map(dest => dest.RequestType, src => src.Item1.RequestType)
+            .IgnoreNullValues(true);
+
+        TypeAdapterConfig<(RuleModel, IssueTypeModel?, IssueFieldModel?), RuleDto>
             .NewConfig()
             .Map(dest => dest.Id, src => src.Item1.Id)
             .Map(dest => dest.Rule, src => src.Item1.Rule)
@@ -37,7 +48,8 @@ public static class DomainToDtoMappingConfig
             .Map(dest => dest.IssueField.Id, src => src.Item3.Id)
             .Map(dest => dest.IssueField.FieldName, src => src.Item3.FieldName)
             .Map(dest => dest.IsRegex, src => src.Item1.IsRegex)
-            .Map(dest => dest.IsNegative, src => src.Item1.IsNegative);
+            .Map(dest => dest.IsNegative, src => src.Item1.IsNegative)
+            .IgnoreNullValues(true);
 
         TypeAdapterConfig<(IssueModel, UserProfileModel, IssueTypeModel), IssueDto>
             .NewConfig()
@@ -57,6 +69,7 @@ public static class DomainToDtoMappingConfig
             .Map(dest => dest.Registrar.IsBlocked, src => src.Item2.IsBlocked)
             .Map(dest => dest.Registrar.IsDeleted, src => src.Item2.IsDeleted)
             .Map(dest => dest.IssueType.Id, src => src.Item3.Id)
-            .Map(dest => dest.IssueType.IssueTypeName, src => src.Item3.IssueTypeName);
+            .Map(dest => dest.IssueType.IssueTypeName, src => src.Item3.IssueTypeName)
+            .IgnoreNullValues(true);
     }
 }

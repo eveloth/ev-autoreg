@@ -25,8 +25,8 @@ public class RuleRepository : IRuleRepository
     }
 
     public async Task<IEnumerable<RuleModel>> GetAllRules(
-        PaginationFilter filter,
         int userId,
+        PaginationFilter filter,
         CancellationToken cts
     )
     {

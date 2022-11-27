@@ -32,13 +32,28 @@ public class DatabaseSeeder
     {
         _logger.LogInformation("Initialiizing database seeding...");
 
-        _logger.LogInformation("Seeding permissions...");
-
         using var cts = new CancellationTokenSource();
         var ct = cts.Token;
 
         try
         {
+            _logger.LogInformation("Seeding issue fields...");
+
+            var issueFieldTableIsNotEmpty = await _unitofWork.GpRepository.IsTableEmpty("issue_field", ct);
+
+            if (issueFieldTableIsNotEmpty)
+            {
+                _logger.LogInformation("Issue fields table OK, skipping seeding...");
+                return;
+            }
+
+            await SeedIssueFields(ct);
+            await _unitofWork.CommitAsync(ct);
+
+            _logger.LogInformation("Finished seeding issue fields");
+
+            _logger.LogInformation("Seeding permissions...");
+
             var permissionTableIsNotEmply = await _unitofWork.GpRepository.IsTableEmpty(
                 "permission",
                 ct
@@ -84,6 +99,18 @@ public class DatabaseSeeder
             _logger.LogCritical("Unknown error: {ErrorMessage}", e.Message);
             _logger.LogCritical("{Error}", e);
             throw;
+        }
+    }
+
+    private async Task SeedIssueFields(CancellationToken ct)
+    {
+        var issueModel = new IssueModel();
+
+        var issueFields = issueModel.GetType().GetProperties().Select(x => x.Name).ToList();
+
+        foreach (var field in issueFields)
+        {
+            await _unitofWork.IssueFieldRepository.AddIssueField(field, ct);
         }
     }
 

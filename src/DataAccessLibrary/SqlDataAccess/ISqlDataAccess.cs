@@ -25,7 +25,7 @@ public interface ISqlDataAccess
     );
 
     Task<TModel?> LoadFirst<TModel>(string sql, CancellationToken cts);
-    
+
     Task<TModel?> LoadFirst<TModel>(
         string sql,
         DynamicParameters parameters,
@@ -38,6 +38,7 @@ public interface ISqlDataAccess
         CancellationToken cts
     );
 
+    Task SaveData(string sql, DynamicParameters parameters, CancellationToken cts);
     Task<TResult> SaveData<TResult>(string sql, CancellationToken cts);
 
     Task<TResult> SaveData<TResult>(

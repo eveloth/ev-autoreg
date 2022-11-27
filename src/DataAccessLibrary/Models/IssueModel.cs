@@ -14,8 +14,8 @@ public class IssueModel
     public string? Assignee { get; set; }
     public string ShortDescription { get; set; }
     public string Description { get; set; }
-    public int RegistrarId { get; set; }
-    public int IssueTypeId { get; set; }
+    public int? RegistrarId { get; set; }
+    public int? IssueTypeId { get; set; }
 
 #pragma warning restore
 }

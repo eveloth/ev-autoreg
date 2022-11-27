@@ -9,7 +9,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using static EvAutoreg.Errors.ErrorCodes;
-using UserProfileModel = DataAccessLibrary.Models.UserProfileModel;
 
 namespace EvAutoreg.Controllers;
 
