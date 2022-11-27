@@ -1,7 +1,6 @@
 ﻿namespace EvAutoreg.Contracts.Requests;
 
-public readonly record struct UserCredentialsRequest
+public record UserCredentialsRequest(string Email, string Password)
 {
-    public string Email { get; init; }
-    public string Password { get; init; }
+    public string Email { get; init; } = Email.ToLower();
 }

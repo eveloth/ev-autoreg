@@ -1,6 +1,6 @@
 ﻿namespace EvAutoreg.Contracts.Requests;
 
-public readonly record struct RoleRequest
+public record RoleRequest(string RoleName)
 {
-    public string RoleName { get; init; }
+    public string RoleName { get; init; } = RoleName.ToLower();
 }

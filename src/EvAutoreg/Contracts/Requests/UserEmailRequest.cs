@@ -1,6 +1,6 @@
 namespace EvAutoreg.Contracts.Requests;
 
-public readonly record struct UserEmailRequest
+public record UserEmailRequest(string NewEmail)
 {
-    public string NewEmail { get; init; }
+    public string NewEmail { get; init; } = NewEmail.ToLower();
 }

@@ -75,7 +75,7 @@ public class UsersController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> ResetPassword(
         [FromRoute] int id,
-        [FromBody] UserPasswordRequest password,
+        [FromBody] UserPasswordRequest request,
         CancellationToken cts
     )
     {
@@ -86,14 +86,12 @@ public class UsersController : ControllerBase
             return NotFound(ErrorCode[2001]);
         }
 
-        var email = existingUser.Email.ToLower();
-
-        if (!_authService.IsPasswordValid(email, password.NewPassword))
+        if (!_authService.IsPasswordValid(existingUser.Email, request.NewPassword))
         {
             return BadRequest(ErrorCode[1002]);
         }
 
-        var passwordHash = _passwordHasher.HashPassword(password.NewPassword);
+        var passwordHash = _passwordHasher.HashPassword(request.NewPassword);
 
         var userWithPassswordReset = await _unitofWork.UserRepository.UpdateUserPassword(
             id,

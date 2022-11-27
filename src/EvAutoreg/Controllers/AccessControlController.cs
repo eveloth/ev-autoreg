@@ -55,15 +55,13 @@ public class AccessControlController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> AddRole([FromBody] RoleRequest roleName, CancellationToken cts)
     {
-        var newRoleName = roleName.RoleName.ToLower();
-
-        var roleExists = await _unitofWork.RoleRepository.DoesRoleExist(newRoleName, cts);
+        var roleExists = await _unitofWork.RoleRepository.DoesRoleExist(roleName.RoleName, cts);
 
         if (roleExists)
         {
             return BadRequest(ErrorCode[3003]);
         }
-        var newRole = await _unitofWork.RoleRepository.AddRole(newRoleName, cts);
+        var newRole = await _unitofWork.RoleRepository.AddRole(roleName.RoleName, cts);
 
         await _unitofWork.CommitAsync(cts);
 
@@ -85,7 +83,7 @@ public class AccessControlController : ControllerBase
     [HttpPut]
     public async Task<IActionResult> ChangeRoleName(
         [FromRoute] int id,
-        [FromBody] RoleRequest roleName,
+        [FromBody] RoleRequest request,
         CancellationToken cts
     )
     {
@@ -96,7 +94,7 @@ public class AccessControlController : ControllerBase
             return BadRequest(ErrorCode[3001]);
         }
 
-        var role = new RoleModel { Id = id, RoleName = roleName.RoleName.ToLower() };
+        var role = new RoleModel { Id = id, RoleName = request.RoleName.ToLower() };
 
         var updatedRole = await _unitofWork.RoleRepository.ChangeRoleName(role, cts);
 
@@ -169,12 +167,12 @@ public class AccessControlController : ControllerBase
     [Route("permissions")]
     [HttpPost]
     public async Task<IActionResult> AddPermission(
-        [FromBody] PermissionRequest permission,
+        [FromBody] PermissionRequest request,
         CancellationToken cts
     )
     {
         var permissionExists = await _unitofWork.PermissionRepository.DoesPermissionExist(
-            permission.PermissionName,
+            request.PermissionName,
             cts
         );
 
@@ -185,8 +183,8 @@ public class AccessControlController : ControllerBase
 
         var newPermission = new PermissionModel
         {
-            PermissionName = permission.PermissionName,
-            Description = permission.Description
+            PermissionName = request.PermissionName,
+            Description = request.Description
         };
 
         var addedPermission = await _unitofWork.PermissionRepository.AddPermission(

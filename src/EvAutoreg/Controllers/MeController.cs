@@ -56,7 +56,7 @@ public class MeController : ControllerBase
     [Route("email")]
     [HttpPost]
     public async Task<IActionResult> UpdateEmail(
-        [FromBody] UserEmailRequest email,
+        [FromBody] UserEmailRequest request,
         CancellationToken cts
     )
     {
@@ -64,14 +64,12 @@ public class MeController : ControllerBase
             HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
         );
 
-        var newEmail = email.NewEmail.ToLower();
-
-        if (!_authService.IsEmailValid(newEmail))
+        if (!_authService.IsEmailValid(request.NewEmail))
         {
             return BadRequest(ErrorCode[1001]);
         }
 
-        var userProfile = await _unitofWork.UserRepository.UpdateUserEmail(userId, newEmail, cts);
+        var userProfile = await _unitofWork.UserRepository.UpdateUserEmail(userId, request.NewEmail, cts);
 
         await _unitofWork.CommitAsync(cts);
 
@@ -89,7 +87,7 @@ public class MeController : ControllerBase
     [Route("password")]
     [HttpPost]
     public async Task<IActionResult> UpdatePassword(
-        [FromBody] UserPasswordRequest password,
+        [FromBody] UserPasswordRequest request,
         CancellationToken cts
     )
     {
@@ -100,12 +98,12 @@ public class MeController : ControllerBase
         var user = await _unitofWork.UserRepository.GetUserById(userId, cts);
         var email = user!.Email;
 
-        if (!_authService.IsPasswordValid(email, password.NewPassword))
+        if (!_authService.IsPasswordValid(email, request.NewPassword))
         {
             return BadRequest(ErrorCode[1002]);
         }
 
-        var passwordHash = _passwordHasher.HashPassword(password.NewPassword);
+        var passwordHash = _passwordHasher.HashPassword(request.NewPassword);
 
         var userWithChangedPassword = await _unitofWork.UserRepository.UpdateUserPassword(
             userId,
@@ -126,7 +124,7 @@ public class MeController : ControllerBase
 
     [HttpPatch]
     public async Task<IActionResult> UpdateUserProfile(
-        [FromBody] UserProfileRequest profile,
+        [FromBody] UserProfileRequest request,
         CancellationToken cts
     )
     {
@@ -136,8 +134,8 @@ public class MeController : ControllerBase
 
         var user = await _unitofWork.UserRepository.UpdateUserProfile(
             userId,
-            profile.FisrtName,
-            profile.LastName,
+            request.FisrtName,
+            request.LastName,
             cts
         );
 
