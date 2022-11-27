@@ -4,7 +4,7 @@ public record EvApiQueryParametersRequest(
     int IssueTypeId,
     string WorkTime,
     string RegStatus,
-    string InWorkStatus,
-    string AssignedGroup,
-    string RequestType
+    string? InWorkStatus,
+    string? AssignedGroup,
+    string? RequestType
 );

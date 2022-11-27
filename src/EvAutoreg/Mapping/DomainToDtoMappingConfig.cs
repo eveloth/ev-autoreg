@@ -22,8 +22,8 @@ public static class DomainToDtoMappingConfig
                                 new PermissionDto
                                 {
                                     Id = x.PermissionId!.Value,
-                                    PermissionName = x.PermissionName,
-                                    Description = x.Description
+                                    PermissionName = x.PermissionName!,
+                                    Description = x.Description!
                                 }
                         )
             );

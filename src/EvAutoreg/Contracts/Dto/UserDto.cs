@@ -2,14 +2,12 @@
 
 public class UserDto
 {
-#pragma warning disable CS8618
-
-    public int Id { get; set; }
-    public string Email { get; set; }
-    public string PasswordHash { get; set; }
+    public required int Id { get; set; }
+    public required string Email { get; set; }
+    public required string PasswordHash { get; set; }
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
-    public bool IsBlocked { get; set; }
-    public bool IsDeleted { get; set; }
+    public required bool IsBlocked { get; set; }
+    public required bool IsDeleted { get; set; }
     public int? RoleId { get; set; } = null;
 }

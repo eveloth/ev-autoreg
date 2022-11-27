@@ -2,10 +2,10 @@ namespace EvAutoreg.Contracts.Dto;
 
 public class RuleDto
 {
-    public int Id { get; set; }
-    public string Rule { get; set; }
-    public IssueTypeDto IssueType { get; set; }
-    public IssueFieldDto IssueField { get; set; }
-    public bool IsRegex { get; set; }
-    public bool IsNegative { get; set; }
+    public required int Id { get; set; }
+    public required string Rule { get; set; }
+    public required IssueTypeDto IssueType { get; set; }
+    public required IssueFieldDto IssueField { get; set; }
+    public required bool IsRegex { get; set; }
+    public required bool IsNegative { get; set; }
 }
