@@ -94,6 +94,15 @@ public class AccessControlController : ControllerBase
             return BadRequest(ErrorCode[3001]);
         }
 
+        var roleNameIsTaken = await _unitofWork.RoleRepository.DoesRoleExist(request.RoleName, cts);
+
+        if (roleNameIsTaken)
+        {
+            return BadRequest(ErrorCode[3003]);
+        }
+
+        //TODO: check if role name exists
+
         var role = new RoleModel { Id = id, RoleName = request.RoleName.ToLower() };
 
         var updatedRole = await _unitofWork.RoleRepository.ChangeRoleName(role, cts);
