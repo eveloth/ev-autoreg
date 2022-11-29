@@ -20,6 +20,13 @@
 
     <ItemGroup>
         <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+        <PackageReference Include="Google.Protobuf" Version="3.21.9" />
+        <PackageReference Include="Grpc.Net.Client" Version="2.50.0" />
+        <PackageReference Include="Grpc.Net.ClientFactory" Version="2.50.0" />
+        <PackageReference Include="Grpc.Tools" Version="2.50.0">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
         <PackageReference Include="Mapster" Version="7.3.0" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.0" />
         <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="7.0.0" />
@@ -32,6 +39,12 @@
 
     <ItemGroup>
       <ProjectReference Include="..\DataAccessLibrary\DataAccessLibrary.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Protobuf Include="Protos\evautoreg.proto">
+        <GrpcServices>Client</GrpcServices>
+      </Protobuf>
     </ItemGroup>
 
 </Project>

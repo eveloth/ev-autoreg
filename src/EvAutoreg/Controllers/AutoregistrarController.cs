@@ -20,23 +20,30 @@ public class AutoregistrarController : ControllerBase
     private readonly ILogger<AutoregistrarController> _logger;
     private readonly IMapper _mapper;
     private readonly IUnitofWork _unitofWork;
+    private readonly Registrar.RegistrarClient _grpcClient;
 
     public AutoregistrarController(
         ILogger<AutoregistrarController> logger,
         IMapper mapper,
-        IUnitofWork unitofWork
+        IUnitofWork unitofWork,
+        Registrar.RegistrarClient grpcClient
     )
     {
         _logger = logger;
         _mapper = mapper;
         _unitofWork = unitofWork;
+        _grpcClient = grpcClient;
     }
 
     [Route("start")]
     [HttpPost]
     public async Task<IActionResult> StartAutoregistrar(CancellationToken cts)
     {
-        return Ok();
+        var grpcResponse = _grpcClient.StartService(new StartRequest {Code = 200}, cancellationToken: cts);
+
+        var response = new Response<StatusResponse>(grpcResponse);
+
+        return Ok(response);
     }
 
     [Route("stop")]

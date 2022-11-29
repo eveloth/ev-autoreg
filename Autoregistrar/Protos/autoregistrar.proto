@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+option csharp_namespace = "Autoregistrar";
+
+package registrar;
+
+service Registrar {
+  rpc StartService (StartRequest) returns (StatusResponse);
+}
+
+message StartRequest {
+  sint32 code = 1;
+}
+
+message StatusResponse {
+  string message = 1;
+}

@@ -15,9 +15,11 @@ using EvAutoreg.Services.Interfaces;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Npgsql;
+using NuGet.Protocol;
 using Serilog;
 
 namespace EvAutoreg;
@@ -185,6 +187,11 @@ internal static class Program
         #endregion
 
         builder.Services.AddSingleton<IMapper, Mapper>();
+        builder.Services.AddGrpcClient<Registrar.RegistrarClient>(options =>
+        {
+            options.Address = new Uri("https://localhost:7037");
+        });
+
 
         var app = builder.Build();
 
