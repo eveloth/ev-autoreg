@@ -28,6 +28,9 @@ public static class DomainToDtoMappingConfig
                         )
             );
 
+        //CS8602 is useless in this context because we're ignoring null values
+        #pragma warning disable CS8602
+
         TypeAdapterConfig<(EvApiQueryParametersModel, IssueTypeModel?), EvApiQueryParametersDto>
             .NewConfig()
             .Map(dest => dest.IssueType.Id, src => src.Item2.Id)
@@ -71,5 +74,7 @@ public static class DomainToDtoMappingConfig
             .Map(dest => dest.IssueType.Id, src => src.Item3.Id)
             .Map(dest => dest.IssueType.IssueTypeName, src => src.Item3.IssueTypeName)
             .IgnoreNullValues(true);
+
+        #pragma warning restore
     }
 }

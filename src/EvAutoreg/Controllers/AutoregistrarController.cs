@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using DataAccessLibrary.Filters;
 using DataAccessLibrary.Models;
 using DataAccessLibrary.Repository.Interfaces;
@@ -12,7 +13,7 @@ using static EvAutoreg.Errors.ErrorCodes;
 
 namespace EvAutoreg.Controllers;
 
-[Authorize(Policy = "UseRegistrar")]
+[Authorize]
 [Route("api/[controller]")]
 [ApiController]
 public class AutoregistrarController : ControllerBase
@@ -35,31 +36,85 @@ public class AutoregistrarController : ControllerBase
         _grpcClient = grpcClient;
     }
 
+    [Authorize(Policy = "UseRegistrar")]
     [Route("start")]
     [HttpPost]
     public async Task<IActionResult> StartAutoregistrar(CancellationToken cts)
     {
-        var grpcResponse = _grpcClient.StartService(new StartRequest {Code = 200}, cancellationToken: cts);
+        var userId = int.Parse(
+            HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
+        );
 
-        var response = new Response<StatusResponse>(grpcResponse);
+        var currentStatus = await _grpcClient.RequestStatusAsync(
+            new Empty(),
+            cancellationToken: cts
+        );
+
+        if (currentStatus.Status != Status.Stopped)
+        {
+            return BadRequest(ErrorCode[8001]);
+        }
+
+        var statusResponse = await _grpcClient.StartServiceAsync(
+            new StartRequest { UserId = userId },
+            cancellationToken: cts
+        );
+
+        var response = new Response<StatusResponse>(statusResponse);
 
         return Ok(response);
     }
 
+    [Authorize(Policy = "UseRegistrar")]
     [Route("stop")]
     [HttpPost]
     public async Task<IActionResult> StopAutoregistar(CancellationToken cts)
     {
-        return Ok();
+        var userId = int.Parse(
+            HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
+        );
+
+        var currentStatus = await _grpcClient.RequestStatusAsync(
+            new Empty(),
+            cancellationToken: cts
+        );
+
+        if (currentStatus.Status != Status.Started)
+        {
+            return BadRequest(ErrorCode[8002]);
+        }
+
+        if (currentStatus.UserId != userId)
+        {
+            return BadRequest(ErrorCode[8003]);
+        }
+
+        var statusResponse = await _grpcClient.StopServiceAsync(
+            new StopRequest { UserId = userId },
+            cancellationToken: cts
+        );
+
+        var response = new Response<StatusResponse>(statusResponse);
+
+        return Ok(response);
     }
 
+    [Authorize(Policy = "UseRegistrar")]
     [Route("status")]
     [HttpGet]
     public async Task<IActionResult> GetAutoregistrarStatus(CancellationToken cts)
     {
-        return Ok();
+        var currentStatus = await _grpcClient.RequestStatusAsync(
+            new Empty(),
+            cancellationToken: cts
+        );
+
+        var response = new Response<StatusResponse>(currentStatus);
+
+        return Ok(response);
     }
 
+    [Authorize(Policy = "UseRegistrar")]
     [Route("settings/mail-analysis-rules")]
     [HttpGet]
     public async Task<IActionResult> GetMailAnalysisRules(CancellationToken cts)
@@ -82,6 +137,7 @@ public class AutoregistrarController : ControllerBase
         return Ok(response);
     }
 
+    [Authorize(Policy = "ConfigureRegistrar")]
     [Route("settings/mail-analysis-rules")]
     [HttpPost]
     public async Task<IActionResult> AddMailNalysisRules(
@@ -103,6 +159,7 @@ public class AutoregistrarController : ControllerBase
         return Ok(response);
     }
 
+    [Authorize(Policy = "UseRegistrar")]
     [Route("settings/issue-types")]
     [HttpGet]
     public async Task<IActionResult> GetAllIssueTypes(
@@ -127,6 +184,7 @@ public class AutoregistrarController : ControllerBase
         return Ok(response);
     }
 
+    [Authorize(Policy = "UseRegistrar")]
     [Route("settings/issue-types/{id:int}")]
     [HttpGet]
     public async Task<IActionResult> GetIssueType([FromRoute] int id, CancellationToken cts)
@@ -144,6 +202,7 @@ public class AutoregistrarController : ControllerBase
         return Ok(response);
     }
 
+    [Authorize(Policy = "ConfigureRegistrar")]
     [Route("settings/issue-types")]
     [HttpPost]
     public async Task<IActionResult> AddIssueType(
@@ -177,6 +236,7 @@ public class AutoregistrarController : ControllerBase
         return Ok(response);
     }
 
+    [Authorize(Policy = "ConfigureRegistrar")]
     [Route("settings/issue-types/{id:int}")]
     [HttpPut]
     public async Task<IActionResult> ChangeIssueTypeName(
@@ -210,6 +270,7 @@ public class AutoregistrarController : ControllerBase
         return Ok(response);
     }
 
+    [Authorize(Policy = "ConfigureRegistrar")]
     [Route("settings/issue-types/{id:int}")]
     [HttpDelete]
     public async Task<IActionResult> DeleteIssueType([FromRoute] int id, CancellationToken cts)
@@ -230,6 +291,7 @@ public class AutoregistrarController : ControllerBase
         return Ok(response);
     }
 
+    [Authorize(Policy = "UseRegistrar")]
     [Route("settings/issue-fields")]
     [HttpGet]
     public async Task<IActionResult> GetAllIssueFields(
@@ -253,6 +315,7 @@ public class AutoregistrarController : ControllerBase
         return Ok(response);
     }
 
+    [Authorize(Policy = "UseRegistrar")]
     [Route("settings/issue-types/ev-api-query-parameters")]
     [HttpGet]
     public async Task<IActionResult> GetAllEvApiQueryParametersForIssueType(
@@ -296,6 +359,7 @@ public class AutoregistrarController : ControllerBase
         return Ok(response);
     }
 
+    [Authorize(Policy = "UseRegistrar")]
     [Route("settings/issue-types/{id:int}/ev-api-query-parameters")]
     [HttpGet]
     public async Task<IActionResult> GetEvApiQueryParametersForIssueType(
@@ -340,6 +404,7 @@ public class AutoregistrarController : ControllerBase
         return Ok(response);
     }
 
+    [Authorize(Policy = "ConfigureRegistrar")]
     [Route("settings/issue-types/{id:int}/ev-api-query-parameters")]
     [HttpPost]
     public async Task<IActionResult> UpsertEvApiQueryParametersForIssueType(

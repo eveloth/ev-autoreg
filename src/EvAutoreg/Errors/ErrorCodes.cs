@@ -27,6 +27,9 @@ public static class ErrorCodes
             { 7003, new ApiError(7003, "Mail analysis rules are empty") },
             { 7004, new ApiError(7004, "Issue type with the specified name already exists.") },
             { 7005, new ApiError(7005, "ExtraView API query parameters are empty.") },
+            { 8001, new ApiError(8001, "Couldn't start autoregistar; it is not stopped.") },
+            { 8002, new ApiError(8002, "Couldn't stop autoregistar; it is not started.") },
+            { 8003, new ApiError(8003, "Only the owner of the current session can terminate it.") },
             { 9001, new ApiError(9001, "Couldn't perform database transaction.") },
             { 10001, new ApiError(10001, "Service configuration is not valid.") }
         };

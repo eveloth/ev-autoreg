@@ -6,12 +6,29 @@ package registrar;
 
 service Registrar {
   rpc StartService (StartRequest) returns (StatusResponse);
+  rpc StopService (StopRequest) returns (StatusResponse);
+  rpc RequestStatus (Empty) returns (StatusResponse);
 }
 
 message StartRequest {
-  sint32 code = 1;
+  int32 userId = 1;
+}
+
+message StopRequest {
+  int32 userId = 1;
+}
+
+message Empty {
 }
 
 message StatusResponse {
-  string message = 1;
+  Status status = 1;
+  optional int32 userId = 2;
+}
+
+enum Status {
+  UNKNOWN = 0;
+  STARTED = 1;
+  STOPPED = 2;
+  PENDING = 3;
 }

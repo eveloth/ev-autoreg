@@ -144,7 +144,7 @@ public class RulesController : ControllerBase
         var addedRule = await _unitofWork.RuleRepository.AddRule(newRule, cts);
         await _unitofWork.CommitAsync(cts);
         _logger.LogInformation(
-            "Rule ID {RuleId} was added for user {UserId}",
+            "Rule ID {RuleId} was added for user ID {UserId}",
             addedRule.Id,
             addedRule.OwnerUserId
         );
@@ -208,7 +208,7 @@ public class RulesController : ControllerBase
         await _unitofWork.CommitAsync(cts);
 
         _logger.LogInformation(
-            "Rule ID {RuleId} was updated for user {UserId}",
+            "Rule ID {RuleId} was updated for user ID {UserId}",
             updatedRule.Id,
             updatedRule.OwnerUserId
         );
@@ -257,7 +257,7 @@ public class RulesController : ControllerBase
 
         await _unitofWork.CommitAsync(cts);
         _logger.LogInformation(
-            "Rule ID {RuleId} was updated for user {UserId}",
+            "Rule ID {RuleId} was updated for user ID {UserId}",
             deletedRule.Id,
             deletedRule.OwnerUserId
         );
