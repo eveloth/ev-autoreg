@@ -2,7 +2,7 @@
 
 namespace Autoregistrar.Services;
 
-public class RegistrarService : Registrar.RegistrarBase
+public class AutoregistrarService : Autoregistrar.AutoregistrarBase
 {
     private static Status CurrentStatus { get; set; } = Status.Stopped;
     private static int ForUser { get; set; }

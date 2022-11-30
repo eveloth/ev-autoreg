@@ -4,7 +4,7 @@ option csharp_namespace = "Autoregistrar";
 
 package registrar;
 
-service Registrar {
+service Autoregistrar {
   rpc StartService (StartRequest) returns (StatusResponse);
   rpc StopService (StopRequest) returns (StatusResponse);
   rpc RequestStatus (Empty) returns (StatusResponse);
