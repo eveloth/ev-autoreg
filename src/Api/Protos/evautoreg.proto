@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option csharp_namespace = "Autoregistrar";
+option csharp_namespace = "Api";
 
 package autoregistrar;
 

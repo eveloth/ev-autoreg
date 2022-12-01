@@ -11,7 +11,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Data", "src\Data\Data.cspro
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataAccessLibrary", "src\DataAccessLibrary\DataAccessLibrary.csproj", "{BDC91302-D8A3-4EA6-AFA0-653A17299F71}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EvAutoreg", "src\EvAutoreg\EvAutoreg.csproj", "{C103E63A-0173-4728-A832-8E50F9A9E49D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Api", "src\Api\Api.csproj", "{C103E63A-0173-4728-A832-8E50F9A9E49D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Extensions", "src\Extensions\Extensions.csproj", "{C782A7D7-25A5-40D4-A548-39039C53712D}"
 EndProject
