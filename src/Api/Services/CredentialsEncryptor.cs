@@ -32,6 +32,7 @@ public class CredentialsEncryptor : ICredentialsEncryptor
         encrypfedCredentials.IV = aes.IV;
 
         aes.Key = Encoding.ASCII.GetBytes(key);
+        aes.Padding = PaddingMode.PKCS7;
 
         var encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
 
@@ -59,6 +60,7 @@ public class CredentialsEncryptor : ICredentialsEncryptor
         encrypfedCredentials.IV = aes.IV;
 
         aes.Key = Encoding.ASCII.GetBytes(key);
+        aes.Padding = PaddingMode.PKCS7;
 
         var encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
 
@@ -80,6 +82,7 @@ public class CredentialsEncryptor : ICredentialsEncryptor
 
         aes.Key = Encoding.ASCII.GetBytes(key);
         aes.IV = credentials.IV;
+        aes.Padding = PaddingMode.PKCS7;
 
         var decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
 
@@ -104,6 +107,7 @@ public class CredentialsEncryptor : ICredentialsEncryptor
 
         aes.Key = Encoding.ASCII.GetBytes(key);
         aes.IV = credentials.IV;
+        aes.Padding = PaddingMode.PKCS7;
 
         var decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
 
@@ -118,15 +122,19 @@ public class CredentialsEncryptor : ICredentialsEncryptor
 
     private static byte[] Encrypt(string valueToEncrypt, ICryptoTransform encryptor)
     {
-        using var memStream = new MemoryStream();
-        using var cryptoSream = new CryptoStream(memStream, encryptor, CryptoStreamMode.Write);
+        byte[] encrypted;
 
-        using (var streamWriter = new StreamWriter(cryptoSream))
+        using (var memStream = new MemoryStream())
         {
-            streamWriter.Write(valueToEncrypt);
+            using (var cryptoSream = new CryptoStream(memStream, encryptor, CryptoStreamMode.Write))
+            {
+                using (var streamWriter = new StreamWriter(cryptoSream))
+                {
+                    streamWriter.Write(valueToEncrypt);
+                }
+                encrypted = memStream.ToArray();
+            }
         }
-
-        var encrypted = memStream.ToArray();
 
         return encrypted;
     }

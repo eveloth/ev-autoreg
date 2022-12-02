@@ -47,7 +47,6 @@ public static class WebApplicationBuilderExtensions
             );
 
             var xmlCommentsFileName = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-            Console.WriteLine(Path.Combine(AppContext.BaseDirectory, xmlCommentsFileName));
             options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlCommentsFileName));
         });
 
