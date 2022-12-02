@@ -1,4 +1,8 @@
+using Autoregistrar.Apis;
+using Autoregistrar.App;
+using Autoregistrar.GrpcServices;
 using Autoregistrar.Services;
+using Autoregistrar.Settings;
 using DataAccessLibrary.Extensions;
 using Serilog;
 
@@ -22,6 +26,11 @@ builder
     .UseAffixForModelMapping("Model")
     .AddDapperSnakeCaseConvention()
     .AddRepositories();
+
+builder.Services.AddSingleton<ICredentialsDecryptor, CredentialsDecryptor>();
+builder.Services.AddSingleton<ISettingsProvider, SettingsProvider>();
+builder.Services.AddSingleton<ExchangeApi>();
+builder.Services.AddSingleton<IMailEventListener, MailEventListener>();
 
 builder.Services.AddGrpc();
 builder.Services.AddGrpcReflection();
