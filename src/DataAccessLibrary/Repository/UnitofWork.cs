@@ -19,7 +19,7 @@ public sealed class UnitofWork : IUnitofWork
     public IIssueRepository IssueRepository { get; set; }
     public IRuleRepository RuleRepository { get; set; }
     public IEvApiQueryParametersRepository EvApiQueryParametersRepository { get; set; }
-    public IMailAnalysisRulesRepository MailAnalysisRulesRepository { get; set; }
+    public IAutoregistrarSettingsRepository AutoregistrarSettingsRepository { get; set; }
     public IIssueFieldRepository IssueFieldRepository { get; set; }
 
     public UnitofWork(
@@ -35,7 +35,7 @@ public sealed class UnitofWork : IUnitofWork
         IIssueRepository issueRepository,
         IRuleRepository ruleRepository,
         IEvApiQueryParametersRepository evApiQueryParametersRepository,
-        IMailAnalysisRulesRepository mailAnalysisRulesRepository,
+        IAutoregistrarSettingsRepository mailAnalysisRulesRepository,
         IIssueFieldRepository issueFieldRepository
     )
     {
@@ -51,7 +51,7 @@ public sealed class UnitofWork : IUnitofWork
         IssueRepository = issueRepository;
         RuleRepository = ruleRepository;
         EvApiQueryParametersRepository = evApiQueryParametersRepository;
-        MailAnalysisRulesRepository = mailAnalysisRulesRepository;
+        AutoregistrarSettingsRepository = mailAnalysisRulesRepository;
         IssueFieldRepository = issueFieldRepository;
     }
 

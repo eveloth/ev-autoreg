@@ -12,7 +12,7 @@ public interface IUnitofWork
     IIssueRepository IssueRepository { get; set; }
     IRuleRepository RuleRepository { get; set; }
     IEvApiQueryParametersRepository EvApiQueryParametersRepository { get; set; }
-    IMailAnalysisRulesRepository MailAnalysisRulesRepository { get; set; }
+    IAutoregistrarSettingsRepository AutoregistrarSettingsRepository { get; set; }
     IIssueFieldRepository IssueFieldRepository { get; set; }
     Task CommitAsync(CancellationToken cts);
 }

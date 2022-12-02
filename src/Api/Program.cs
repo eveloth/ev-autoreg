@@ -1,3 +1,4 @@
+using Api.Exceptions;
 using Api.Middleware;
 using Api.Services;
 using Api.Services.Interfaces;
@@ -56,7 +57,10 @@ internal static class Program
         builder.Services.AddSingleton<IMapper, Mapper>();
         builder.Services.AddGrpcClient<Autoregistrar.AutoregistrarClient>(options =>
         {
-            options.Address = new Uri("https://localhost:7037");
+            options.Address = new Uri(
+                builder.Configuration["AutoregistrarUri"]
+                    ?? throw new NullConfigurationEntryException("Autoregistrar URI wasn't set")
+            );
         });
 
         var app = builder.Build();

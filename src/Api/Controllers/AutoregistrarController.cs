@@ -115,13 +115,11 @@ public class AutoregistrarController : ControllerBase
     }
 
     [Authorize(Policy = "UseRegistrar")]
-    [Route("settings/mail-analysis-rules")]
+    [Route("settings")]
     [HttpGet]
     public async Task<IActionResult> GetMailAnalysisRules(CancellationToken cts)
     {
-        var mailAnalysisRules = await _unitofWork.MailAnalysisRulesRepository.GetMailAnalysisRules(
-            cts
-        );
+        var mailAnalysisRules = await _unitofWork.AutoregistrarSettingsRepository.Get(cts);
 
         await _unitofWork.CommitAsync(cts);
 
@@ -130,30 +128,32 @@ public class AutoregistrarController : ControllerBase
             return NotFound(ErrorCode[7003]);
         }
 
-        var response = new Response<MailAnalysisRulesDto>(
-            _mapper.Map<MailAnalysisRulesDto>(mailAnalysisRules)
+        var response = new Response<AutoregistrarSettingsDto>(
+            _mapper.Map<AutoregistrarSettingsDto>(mailAnalysisRules)
         );
 
         return Ok(response);
     }
 
     [Authorize(Policy = "ConfigureRegistrar")]
-    [Route("settings/mail-analysis-rules")]
+    [Route("settings")]
     [HttpPost]
     public async Task<IActionResult> AddMailNalysisRules(
-        [FromBody] MailAnalysisRulesRequest request,
+        [FromBody] AutoregistrarSettingsRequest request,
         CancellationToken cts
     )
     {
-        var rules = _mapper.Map<MailAnalysisRuleModel>(request);
-        var mailAnalysisRules =
-            await _unitofWork.MailAnalysisRulesRepository.UpsertMailAnalysisRules(rules, cts);
+        var rules = _mapper.Map<AutoregstrarSettingsModel>(request);
+        var mailAnalysisRules = await _unitofWork.AutoregistrarSettingsRepository.Upsert(
+            rules,
+            cts
+        );
 
         await _unitofWork.CommitAsync(cts);
         _logger.LogInformation("Mail analysis rules were updated");
 
-        var response = new Response<MailAnalysisRulesDto>(
-            _mapper.Map<MailAnalysisRulesDto>(mailAnalysisRules)
+        var response = new Response<AutoregistrarSettingsDto>(
+            _mapper.Map<AutoregistrarSettingsDto>(mailAnalysisRules)
         );
 
         return Ok(response);

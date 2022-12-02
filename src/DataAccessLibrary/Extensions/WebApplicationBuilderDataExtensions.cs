@@ -74,7 +74,7 @@ public static class WebApplicationBuilderDataExtensions
             IEvApiQueryParametersRepository,
             EvApiQueryParametersRepository
         >();
-        builder.Services.AddScoped<IMailAnalysisRulesRepository, MailAnalysisRulesRepository>();
+        builder.Services.AddScoped<IAutoregistrarSettingsRepository, AutoregistrarSettingsRepository>();
         builder.Services.AddScoped<IIssueFieldRepository, IssueFieldRepository>();
         builder.Services.AddScoped<IUnitofWork, UnitofWork>();
 
