@@ -39,51 +39,71 @@ public class DatabaseSeeder
         {
             _logger.LogInformation("Seeding issue fields...");
 
-            var issueFieldTableIsNotEmpty = await _unitofWork.GpRepository.IsTableEmpty("issue_field", ct);
+            var issueFieldTableIsEmpty = await _unitofWork.GpRepository.IsTableEmpty(
+                "issue_field",
+                ct
+            );
 
-            if (issueFieldTableIsNotEmpty)
+            if (issueFieldTableIsEmpty)
+            {
+                await SeedIssueFields(ct);
+                await _unitofWork.CommitAsync(ct);
+
+                _logger.LogInformation("Finished seeding issue fields");
+            }
+            else
             {
                 _logger.LogInformation("Issue fields table OK, skipping seeding...");
-                return;
             }
-
-            await SeedIssueFields(ct);
-            await _unitofWork.CommitAsync(ct);
-
-            _logger.LogInformation("Finished seeding issue fields");
 
             _logger.LogInformation("Seeding permissions...");
 
-            var permissionTableIsNotEmply = await _unitofWork.GpRepository.IsTableEmpty(
+            var permissionTableIsEmply = await _unitofWork.GpRepository.IsTableEmpty(
                 "permission",
                 ct
             );
-            var userTableIsNotEmply = await _unitofWork.GpRepository.IsTableEmpty("app_user", ct);
-            var roleTableIsNotEmply = await _unitofWork.GpRepository.IsTableEmpty("role", ct);
-            var rolePermissionTableIsNotEmply = await _unitofWork.GpRepository.IsTableEmpty(
+
+            if (permissionTableIsEmply)
+            {
+                await SeedPermissions(ct);
+                await _unitofWork.CommitAsync(ct);
+
+                _logger.LogInformation("Finished seeding permissions");
+            }
+            else
+            {
+                _logger.LogInformation("Permissions table OK, skipping seeding...");
+            }
+
+            _logger.LogInformation("Seeding default user and role...");
+
+            var roleTableIsEmply = await _unitofWork.GpRepository.IsTableEmpty("role", ct);
+            var userTableIsEmply = await _unitofWork.GpRepository.IsTableEmpty("app_user", ct);
+            var rolePermissionTableIsEmply = await _unitofWork.GpRepository.IsTableEmpty(
                 "role_permission",
                 ct
             );
 
-            if (
-                permissionTableIsNotEmply
-                || userTableIsNotEmply
-                || roleTableIsNotEmply
-                || rolePermissionTableIsNotEmply
-            )
+            if (userTableIsEmply || roleTableIsEmply || rolePermissionTableIsEmply)
             {
-                _logger.LogInformation("Tables OK, skipping seeding");
-                return;
+                _logger.LogInformation(
+                    "Roles, user or role-permission tables are empty. " +
+                    "Seeding data to into all of them to ensure proper behaviour..."
+                );
+
+                var role = await SeedDefaultRole(ct);
+                await AddPermissionsToDefaultRole(role.Id, ct);
+                await SeedDefaultUser(role.Id, ct);
+
+                await _unitofWork.CommitAsync(ct);
+            }
+            else
+            {
+                _logger.LogInformation("Tables are OK");
             }
 
-            await SeedPermissions(ct);
-            var role = await SeedDefaultRole(ct);
-            await AddPermissionsToDefaultRole(role.Id, ct);
-            await SeedDefaultUser(role.Id, ct);
 
-            await _unitofWork.CommitAsync(ct);
-
-            _logger.LogInformation("Finished seeding permissions");
+            _logger.LogInformation("Finished seeding data");
         }
         catch (NpgsqlException e)
         {
@@ -96,17 +116,21 @@ public class DatabaseSeeder
         }
         catch (Exception e)
         {
-            _logger.LogCritical("Unknown error: {ErrorMessage}", e.Message);
-            _logger.LogCritical("{Error}", e);
+            _logger.LogCritical("Unknown error occured while seeding data: {ErrorMessage}", e);
             throw;
         }
     }
 
     private async Task SeedIssueFields(CancellationToken ct)
     {
-        var issueModel = new IssueModel();
-
-        var issueFields = issueModel.GetType().GetProperties().Select(x => x.Name).ToList();
+        var issueFields = new[]
+        {
+            "Author",
+            "Company",
+            "Priority",
+            "ShortDescription",
+            "Description"
+        };
 
         foreach (var field in issueFields)
         {

@@ -24,6 +24,6 @@ public class GeneralPurposeRepository : IGeneralPurposeRepository
 
         var result = (await _db.LoadAllData<bool>(sql, cts)).First();
 
-        return result;
+        return !result;
     }
 }
