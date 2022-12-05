@@ -12,16 +12,17 @@ public class MailEventListener : IMailEventListener
 {
     private readonly ILogger<MailEventListener> _logger;
     private readonly IHubContext<AutoregistrarHub, IAutoregistrarClient> _hubContext;
+    private readonly IIssueProcessor _issueProcessor;
     private ExchangeService Exchange { get; set; } = null!;
     private StreamingSubscriptionConnection? Connection { get; set; }
 
     public MailEventListener(
         ILogger<MailEventListener> logger,
-        IHubContext<AutoregistrarHub, IAutoregistrarClient> hubContext
-    )
+        IHubContext<AutoregistrarHub, IAutoregistrarClient> hubContext, IIssueProcessor issueProcessor)
     {
         _logger = logger;
         _hubContext = hubContext;
+        _issueProcessor = issueProcessor;
     }
 
     public async Task OpenConnection(CancellationToken cts)
@@ -75,6 +76,8 @@ public class MailEventListener : IMailEventListener
                 .Groups[1].Value;
             _logger.LogInformation("Received new issue, ID {IssueNo}", issueNo);
             await _hubContext.Clients.All.ReceiveLog($"Received new issue, ID {issueNo}");
+
+            await _issueProcessor.ProcessEvent(issueNo);
         }
     }
 

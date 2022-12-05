@@ -32,6 +32,14 @@ builder.Services.AddSingleton<IMapper, Mapper>();
 builder.Services.AddSingleton<ICredentialsDecryptor, CredentialsDecryptor>();
 builder.Services.AddSingleton<ISettingsProvider, SettingsProvider>();
 builder.Services.AddSingleton<IMailEventListener, MailEventListener>();
+builder.Services.AddSingleton<IIssueProcessor, IssueProcessor>();
+
+builder.Services.AddSingleton(() =>
+{
+    new HttpClient(
+        new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(2) }
+    ).DefaultRequestHeaders.Add("User-agent", "OperatorsAPI");
+});
 
 builder.Services.AddGrpc();
 builder.Services.AddGrpcReflection();
