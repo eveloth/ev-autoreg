@@ -1,4 +1,3 @@
-using Autoregistrar.App;
 using Autoregistrar.GrpcServices;
 using Autoregistrar.Hubs;
 using Autoregistrar.Mapping;

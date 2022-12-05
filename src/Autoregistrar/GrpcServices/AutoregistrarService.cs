@@ -1,5 +1,5 @@
-﻿using Autoregistrar.App;
-using Autoregistrar.Hubs;
+﻿using Autoregistrar.Hubs;
+using Autoregistrar.Services;
 using Autoregistrar.Settings;
 using Grpc.Core;
 using Microsoft.AspNetCore.SignalR;

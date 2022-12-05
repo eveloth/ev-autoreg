@@ -6,7 +6,7 @@ using Microsoft.Exchange.WebServices.Data;
 using Task = System.Threading.Tasks.Task;
 using static Autoregistrar.Settings.StateManager;
 
-namespace Autoregistrar.App;
+namespace Autoregistrar.Services;
 
 public class MailEventListener : IMailEventListener
 {
