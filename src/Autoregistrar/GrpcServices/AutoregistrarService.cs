@@ -1,19 +1,30 @@
 ﻿using Autoregistrar.App;
+using Autoregistrar.Hubs;
 using Autoregistrar.Settings;
 using Grpc.Core;
+using Microsoft.AspNetCore.SignalR;
 using Task = System.Threading.Tasks.Task;
 
 namespace Autoregistrar.GrpcServices;
 
 public class AutoregistrarService : Autoregistrar.AutoregistrarBase
 {
+    private readonly ILogger<AutoregistrarService> _logger;
     private readonly ISettingsProvider _settingsProvider;
     private readonly IMailEventListener _listener;
+    private readonly IHubContext<AutoregistrarHub, IAutoregistrarClient> _hubContext;
 
-    public AutoregistrarService(ISettingsProvider settingsProvider, IMailEventListener listener)
+    public AutoregistrarService(
+        ISettingsProvider settingsProvider,
+        IMailEventListener listener,
+        IHubContext<AutoregistrarHub, IAutoregistrarClient> hubContext,
+        ILogger<AutoregistrarService> logger
+    )
     {
         _settingsProvider = settingsProvider;
         _listener = listener;
+        _hubContext = hubContext;
+        _logger = logger;
     }
 
     public override async Task<StatusResponse> StartService(
@@ -22,8 +33,14 @@ public class AutoregistrarService : Autoregistrar.AutoregistrarBase
     )
     {
         StateManager.Status = Status.Pending;
-        Console.WriteLine("Starting service...");
         StateManager.StartedForUserId = request.UserId;
+        _logger.LogInformation(
+            "Starting autoregistrar for user ID {UserId}",
+            StateManager.StartedForUserId
+        );
+        await _hubContext.Clients.All.ReceiveLog(
+            $"Starting autoregistrar for user ID {StateManager.StartedForUserId}"
+        );
 
         try
         {
@@ -38,7 +55,7 @@ public class AutoregistrarService : Autoregistrar.AutoregistrarBase
                     new Grpc.Core.Status(
                         StatusCode.FailedPrecondition,
                         "Autoregistrar configuraion is not valid, make sure all necessary settings are set "
-                            + "and each issue type has it's query parameters"
+                        + "and each issue type has it's query parameters"
                     )
                 );
             }
@@ -65,17 +82,24 @@ public class AutoregistrarService : Autoregistrar.AutoregistrarBase
         };
     }
 
-    public override Task<StatusResponse> StopService(StopRequest request, ServerCallContext context)
+    public override async Task<StatusResponse> StopService(StopRequest request, ServerCallContext context)
     {
         StateManager.Status = Status.Pending;
-        Console.WriteLine("Stopping service...");
 
         _settingsProvider.Clear(StateManager.StartedForUserId);
         _listener.CloseConnection();
 
+        await _hubContext.Clients.All.ReceiveLog(
+            $"Stopped autoregistrar for user ID {StateManager.StartedForUserId}"
+        );
+        _logger.LogInformation(
+            "Stopped autoregistrar for user ID {UserId}",
+            StateManager.StartedForUserId
+        );
+
         StateManager.StartedForUserId = default;
         StateManager.Status = Status.Stopped;
-        return Task.FromResult(new StatusResponse { Status = StateManager.Status });
+        return new StatusResponse { Status = StateManager.Status };
     }
 
     public override Task<StatusResponse> RequestStatus(Empty request, ServerCallContext context)

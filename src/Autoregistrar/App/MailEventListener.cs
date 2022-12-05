@@ -1,5 +1,7 @@
 using Autoregistrar.Apis;
+using Autoregistrar.Hubs;
 using Autoregistrar.Settings;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Exchange.WebServices.Data;
 using Task = System.Threading.Tasks.Task;
 using static Autoregistrar.Settings.StateManager;
@@ -9,12 +11,17 @@ namespace Autoregistrar.App;
 public class MailEventListener : IMailEventListener
 {
     private readonly ILogger<MailEventListener> _logger;
+    private readonly IHubContext<AutoregistrarHub, IAutoregistrarClient> _hubContext;
     private ExchangeService Exchange { get; set; } = null!;
     private StreamingSubscriptionConnection? Connection { get; set; }
 
-    public MailEventListener(ILogger<MailEventListener> logger)
+    public MailEventListener(
+        ILogger<MailEventListener> logger,
+        IHubContext<AutoregistrarHub, IAutoregistrarClient> hubContext
+    )
     {
         _logger = logger;
+        _hubContext = hubContext;
     }
 
     public async Task OpenConnection(CancellationToken cts)
@@ -29,7 +36,14 @@ public class MailEventListener : IMailEventListener
 
         Connection.AddSubscription(subscription);
         Connection.Open();
-        _logger.LogInformation("A connection was opened for user ID {UserId}", StartedForUserId);
+
+        if (Connection.IsOpen)
+        {
+            _logger.LogInformation("A connection was opened for user ID {UserId}", StartedForUserId);
+            await _hubContext.Clients.All.ReceiveLog(
+                $"A connection was opened for user ID {StartedForUserId}"
+            );
+        }
     }
 
     public void CloseConnection()
@@ -50,6 +64,9 @@ public class MailEventListener : IMailEventListener
                 _logger.LogInformation(
                     "Received an email that is not a new issue notification, skipping"
                 );
+                await _hubContext.Clients.All.ReceiveLog(
+                    "Received an email that is not a new issue notification, skipping"
+                );
                 continue;
             }
 
@@ -57,6 +74,7 @@ public class MailEventListener : IMailEventListener
                 .Match(email.Subject)
                 .Groups[1].Value;
             _logger.LogInformation("Received new issue, ID {IssueNo}", issueNo);
+            await _hubContext.Clients.All.ReceiveLog($"Received new issue, ID {issueNo}");
         }
     }
 
@@ -68,6 +86,9 @@ public class MailEventListener : IMailEventListener
                 "The connection was gracefully closed for user ID {UserId}",
                 StartedForUserId
             );
+            await _hubContext.Clients.All.ReceiveLog(
+                $"The connection was gracefully closed for user ID {StartedForUserId}"
+            );
             return;
         }
 
@@ -75,17 +96,25 @@ public class MailEventListener : IMailEventListener
             "The connection was automatically closed for user ID {UserId}, reopening connection",
             StartedForUserId
         );
+        await _hubContext.Clients.All.ReceiveLog(
+            $"The connection was automatically closed for user ID {StartedForUserId}, reopening connection"
+        );
 
         Connection!.Open();
 
         if (Connection.IsOpen)
         {
-            _logger.LogInformation("A connection was opened for user ID {UserId}", StartedForUserId);
+            _logger.LogInformation(
+                "A connection was opened for user ID {UserId}",
+                StartedForUserId
+            );
+            await _hubContext.Clients.All.ReceiveLog($"A connection was opened for user ID {StartedForUserId}");
         }
     }
 
     private async void OnSubscriptionError(object sender, SubscriptionErrorEventArgs args)
     {
         _logger.LogError("A subscription error occured, details: {ErrorMessage}", args.Exception);
+        await _hubContext.Clients.All.ReceiveLog($"A subscription error occured, details: {args.Exception}");
     }
 }

@@ -1,5 +1,6 @@
 using Autoregistrar.App;
 using Autoregistrar.GrpcServices;
+using Autoregistrar.Hubs;
 using Autoregistrar.Mapping;
 using Autoregistrar.Services;
 using Autoregistrar.Settings;
@@ -36,6 +37,8 @@ builder.Services.AddSingleton<IMailEventListener, MailEventListener>();
 builder.Services.AddGrpc();
 builder.Services.AddGrpcReflection();
 
+builder.Services.AddSignalR();
+
 var app = builder.Build();
 
 app.ConfigureDbToDomainMapping();
@@ -55,5 +58,7 @@ app.MapGet(
     () =>
         "Communication with gRPC endpoints must be made through a gRPC client. To learn how to create a client, visit: https://go.microsoft.com/fwlink/?linkid=2086909"
 );
+
+app.MapHub<AutoregistrarHub>("/log");
 
 app.Run();
