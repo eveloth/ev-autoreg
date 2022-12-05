@@ -1,9 +1,10 @@
-using Autoregistrar.Apis;
 using Autoregistrar.App;
 using Autoregistrar.GrpcServices;
+using Autoregistrar.Mapping;
 using Autoregistrar.Services;
 using Autoregistrar.Settings;
 using DataAccessLibrary.Extensions;
+using MapsterMapper;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,15 +28,18 @@ builder
     .AddDapperSnakeCaseConvention()
     .AddRepositories();
 
+builder.Services.AddSingleton<IMapper, Mapper>();
 builder.Services.AddSingleton<ICredentialsDecryptor, CredentialsDecryptor>();
 builder.Services.AddSingleton<ISettingsProvider, SettingsProvider>();
-builder.Services.AddSingleton<ExchangeApi>();
 builder.Services.AddSingleton<IMailEventListener, MailEventListener>();
 
 builder.Services.AddGrpc();
 builder.Services.AddGrpcReflection();
 
 var app = builder.Build();
+
+app.ConfigureDbToDomainMapping();
+
 var env = app.Environment;
 
 // Configure the HTTP request pipeline.

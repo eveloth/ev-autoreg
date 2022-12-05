@@ -1,6 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
-using Autoregistrar.Contracts.Dto;
+using Autoregistrar.Domain;
 using Autoregistrar.Exceptions;
 using DataAccessLibrary.Models;
 
@@ -15,7 +15,7 @@ public class CredentialsDecryptor : ICredentialsDecryptor
         _config = config;
     }
 
-    public EvCredentialsDto DecryptEvCredentials(EvCredentialsModel credentials)
+    public ExtraViewCredentials DecryptEvCredentials(EvCredentialsModel credentials)
     {
         var key =
             _config["SymmetricSecurityKey"]
@@ -31,7 +31,7 @@ public class CredentialsDecryptor : ICredentialsDecryptor
 
         var decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
 
-        var decryptedCredentials = new EvCredentialsDto
+        var decryptedCredentials = new ExtraViewCredentials
         {
             Email = Decrypt(credentials.EncryptedEmail, decryptor),
             Password = Decrypt(credentials.EncryptedPassword, decryptor)
@@ -40,7 +40,7 @@ public class CredentialsDecryptor : ICredentialsDecryptor
         return decryptedCredentials;
     }
 
-    public ExchangeCredentialsDto DecryptExchangeCredentials(ExchangeCredentialsModel credentials)
+    public ExchangeCredentials DecryptExchangeCredentials(ExchangeCredentialsModel credentials)
     {
         var key =
             _config["SymmetricSecurityKey"]
@@ -56,7 +56,7 @@ public class CredentialsDecryptor : ICredentialsDecryptor
 
         var decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
 
-        var decryptedCredentials = new ExchangeCredentialsDto
+        var decryptedCredentials = new ExchangeCredentials
         {
             Email = Decrypt(credentials.EncryptedEmail, decryptor),
             Password = Decrypt(credentials.EncryptedPassword, decryptor)

@@ -4,25 +4,24 @@ using Microsoft.Exchange.WebServices.Data;
 
 namespace Autoregistrar.Apis;
 
-public class ExchangeApi {
+public static class ExchangeApi {
 
-    public ExchangeService CreateService()
+    public static ExchangeService CreateService()
     {
         return new ExchangeService()
         {
             Url = new Uri(
-                $"https://{StatusManager.Settings.AutoregSettings.ExchangeServerUri}/ews/exchange.asmx"
+                $"https://{StateManager.Settings!.AutoregistrarSettings.ExchangeServerUri}/ews/exchange.asmx"
             ),
             Credentials = new NetworkCredential(
-                StatusManager.Settings.ExchangeCredentials.Email,
-                StatusManager.Settings.ExchangeCredentials.Password
+                StateManager.Settings.ExchangeCredentials.Email,
+                StateManager.Settings.ExchangeCredentials.Password
             )
         };
     }
 
-    public async Task<StreamingSubscription> CreateStreamingSubscription(
-        ExchangeService exchange,
-        CancellationToken cts
+    public static async Task<StreamingSubscription> CreateStreamingSubscription(
+        ExchangeService exchange
     )
     {
         return await exchange.SubscribeToStreamingNotifications(

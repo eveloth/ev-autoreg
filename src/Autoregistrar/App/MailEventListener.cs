@@ -1,29 +1,26 @@
-using System.Text.RegularExpressions;
 using Autoregistrar.Apis;
 using Autoregistrar.Settings;
 using Microsoft.Exchange.WebServices.Data;
 using Task = System.Threading.Tasks.Task;
+using static Autoregistrar.Settings.StateManager;
 
 namespace Autoregistrar.App;
 
 public class MailEventListener : IMailEventListener
 {
     private readonly ILogger<MailEventListener> _logger;
-    private readonly ExchangeApi _exchangeApi;
-
-    private ExchangeService Exchange { get; set; }
+    private ExchangeService Exchange { get; set; } = null!;
     private StreamingSubscriptionConnection? Connection { get; set; }
 
-    public MailEventListener(ExchangeApi exchangeApi, ILogger<MailEventListener> logger)
+    public MailEventListener(ILogger<MailEventListener> logger)
     {
-        _exchangeApi = exchangeApi;
         _logger = logger;
     }
 
     public async Task OpenConnection(CancellationToken cts)
     {
-        Exchange = _exchangeApi.CreateService();
-        var subscription = await _exchangeApi.CreateStreamingSubscription(Exchange, cts);
+        Exchange = ExchangeApi.CreateService();
+        var subscription = await ExchangeApi.CreateStreamingSubscription(Exchange);
         Connection = new StreamingSubscriptionConnection(Exchange, 20);
 
         Connection.OnNotificationEvent += OnNotificationEvent;
@@ -32,7 +29,7 @@ public class MailEventListener : IMailEventListener
 
         Connection.AddSubscription(subscription);
         Connection.Open();
-        Console.WriteLine("Connection open?" + Connection.IsOpen);
+        _logger.LogInformation("A connection was opened for user ID {UserId}", StartedForUserId);
     }
 
     public void CloseConnection()
@@ -45,35 +42,50 @@ public class MailEventListener : IMailEventListener
     {
         foreach (var ev in args.Events)
         {
-            var notification = (ItemEvent) ev;
+            var notification = (ItemEvent)ev;
             var email = await EmailMessage.Bind(Exchange, notification.ItemId);
 
-            if (!Regex.IsMatch(email.Subject, StatusManager.Settings.AutoregSettings.NewIssueRegex))
+            if (!StateManager.Settings!.AutoregistrarSettings.NewIssueRegex.IsMatch(email.Subject))
             {
-                Console.WriteLine("Won't process");
+                _logger.LogInformation(
+                    "Received an email that is not a new issue notification, skipping"
+                );
                 continue;
             }
 
-            Console.WriteLine(email.Subject);
+            var issueNo = StateManager.Settings.AutoregistrarSettings.IssueNoRegex
+                .Match(email.Subject)
+                .Groups[1].Value;
+            _logger.LogInformation("Received new issue, ID {IssueNo}", issueNo);
         }
     }
 
     private async void OnDisconnect(object sender, SubscriptionErrorEventArgs args)
     {
-        if (StatusManager.Status != Status.Started)
+        if (StateManager.Status != Status.Started)
         {
-            Console.WriteLine("Closed by user");
+            _logger.LogInformation(
+                "The connection was gracefully closed for user ID {UserId}",
+                StartedForUserId
+            );
             return;
         }
 
-        Console.WriteLine("Reopening connection");
+        _logger.LogInformation(
+            "The connection was automatically closed for user ID {UserId}, reopening connection",
+            StartedForUserId
+        );
 
         Connection!.Open();
-        Console.WriteLine("Connection open?" + Connection.IsOpen);
+
+        if (Connection.IsOpen)
+        {
+            _logger.LogInformation("A connection was opened for user ID {UserId}", StartedForUserId);
+        }
     }
 
     private async void OnSubscriptionError(object sender, SubscriptionErrorEventArgs args)
     {
-        Console.WriteLine("Subscription error");
+        _logger.LogError("A subscription error occured, details: {ErrorMessage}", args.Exception);
     }
 }

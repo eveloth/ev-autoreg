@@ -1,6 +1,6 @@
-namespace Autoregistrar.Contracts.Dto;
+﻿namespace Autoregistrar.Domain;
 
-public class EvCredentialsDto
+public class ExchangeCredentials
 {
     public required string Email { get; set; }
     public required string Password { get; set; }

@@ -1,6 +1,7 @@
 ﻿using Autoregistrar.App;
 using Autoregistrar.Settings;
 using Grpc.Core;
+using Task = System.Threading.Tasks.Task;
 
 namespace Autoregistrar.GrpcServices;
 
@@ -20,45 +21,73 @@ public class AutoregistrarService : Autoregistrar.AutoregistrarBase
         ServerCallContext context
     )
     {
-        StatusManager.Status = Status.Pending;
+        StateManager.Status = Status.Pending;
         Console.WriteLine("Starting service...");
-        StatusManager.StartedForUserId = request.UserId;
+        StateManager.StartedForUserId = request.UserId;
 
         try
         {
-            StatusManager.Settings = await _settingsProvider.GetSettings(StatusManager.StartedForUserId, context.CancellationToken);
+            var areSettingsValid = await _settingsProvider.CheckSettingsIntegrity(
+                StateManager.StartedForUserId,
+                context.CancellationToken
+            );
+
+            if (!areSettingsValid)
+            {
+                throw new RpcException(
+                    new Grpc.Core.Status(
+                        StatusCode.FailedPrecondition,
+                        "Autoregistrar configuraion is not valid, make sure all necessary settings are set "
+                            + "and each issue type has it's query parameters"
+                    )
+                );
+            }
+
+            StateManager.Settings = await _settingsProvider.GetSettings(
+                StateManager.StartedForUserId,
+                context.CancellationToken
+            );
             await _listener.OpenConnection(context.CancellationToken);
         }
         catch (Exception e)
         {
             Console.WriteLine(e);
-            StatusManager.Status = Status.Stopped;
+            StateManager.Status = Status.Stopped;
             throw new RpcException(new Grpc.Core.Status(StatusCode.Internal, e.ToString()));
         }
 
-        StatusManager.Status = Status.Started;
-        return await Task.FromResult(new StatusResponse { Status = StatusManager.Status, UserId = StatusManager.StartedForUserId });
+        StateManager.Status = Status.Started;
+
+        return new StatusResponse
+        {
+            Status = StateManager.Status,
+            UserId = StateManager.StartedForUserId
+        };
     }
 
     public override Task<StatusResponse> StopService(StopRequest request, ServerCallContext context)
     {
-        StatusManager.Status = Status.Pending;
+        StateManager.Status = Status.Pending;
         Console.WriteLine("Stopping service...");
 
-        _settingsProvider.Clear(StatusManager.StartedForUserId);
+        _settingsProvider.Clear(StateManager.StartedForUserId);
         _listener.CloseConnection();
 
-        StatusManager.StartedForUserId = default;
-        StatusManager.Status = Status.Stopped;
-        return Task.FromResult(new StatusResponse { Status = StatusManager.Status });
+        StateManager.StartedForUserId = default;
+        StateManager.Status = Status.Stopped;
+        return Task.FromResult(new StatusResponse { Status = StateManager.Status });
     }
 
     public override Task<StatusResponse> RequestStatus(Empty request, ServerCallContext context)
     {
         return Task.FromResult(
-            StatusManager.Status == Status.Started
-                ? new StatusResponse { Status = StatusManager.Status, UserId = StatusManager.StartedForUserId }
-                : new StatusResponse { Status = StatusManager.Status }
+            StateManager.Status == Status.Started
+                ? new StatusResponse
+                {
+                    Status = StateManager.Status,
+                    UserId = StateManager.StartedForUserId
+                }
+                : new StatusResponse { Status = StateManager.Status }
         );
     }
 }

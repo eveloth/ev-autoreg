@@ -1,10 +1,10 @@
-using Autoregistrar.Contracts.Dto;
+using Autoregistrar.Domain;
 using DataAccessLibrary.Models;
 
 namespace Autoregistrar.Services;
 
 public interface ICredentialsDecryptor
 {
-    EvCredentialsDto DecryptEvCredentials(EvCredentialsModel credentials);
-    ExchangeCredentialsDto DecryptExchangeCredentials(ExchangeCredentialsModel credentials);
+    ExtraViewCredentials DecryptEvCredentials(EvCredentialsModel credentials);
+    ExchangeCredentials DecryptExchangeCredentials(ExchangeCredentialsModel credentials);
 }
