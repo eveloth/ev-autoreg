@@ -117,19 +117,19 @@ public class AutoregistrarController : ControllerBase
     [Authorize(Policy = "UseRegistrar")]
     [Route("settings")]
     [HttpGet]
-    public async Task<IActionResult> GetMailAnalysisRules(CancellationToken cts)
+    public async Task<IActionResult> GetAutoregistrarSettings(CancellationToken cts)
     {
-        var mailAnalysisRules = await _unitofWork.AutoregistrarSettingsRepository.Get(cts);
+        var settings = await _unitofWork.AutoregistrarSettingsRepository.Get(cts);
 
         await _unitofWork.CommitAsync(cts);
 
-        if (mailAnalysisRules is null)
+        if (settings is null)
         {
             return NotFound(ErrorCode[7003]);
         }
 
         var response = new Response<AutoregistrarSettingsDto>(
-            _mapper.Map<AutoregistrarSettingsDto>(mailAnalysisRules)
+            _mapper.Map<AutoregistrarSettingsDto>(settings)
         );
 
         return Ok(response);
@@ -138,22 +138,22 @@ public class AutoregistrarController : ControllerBase
     [Authorize(Policy = "ConfigureRegistrar")]
     [Route("settings")]
     [HttpPost]
-    public async Task<IActionResult> AddMailNalysisRules(
+    public async Task<IActionResult> AddAutoregistrarSettings(
         [FromBody] AutoregistrarSettingsRequest request,
         CancellationToken cts
     )
     {
-        var rules = _mapper.Map<AutoregstrarSettingsModel>(request);
-        var mailAnalysisRules = await _unitofWork.AutoregistrarSettingsRepository.Upsert(
-            rules,
+        var settings = _mapper.Map<AutoregstrarSettingsModel>(request);
+        var insertedSettings = await _unitofWork.AutoregistrarSettingsRepository.Upsert(
+            settings,
             cts
         );
 
         await _unitofWork.CommitAsync(cts);
-        _logger.LogInformation("Mail analysis rules were updated");
+        _logger.LogInformation("Autoregistrar settings were set");
 
         var response = new Response<AutoregistrarSettingsDto>(
-            _mapper.Map<AutoregistrarSettingsDto>(mailAnalysisRules)
+            _mapper.Map<AutoregistrarSettingsDto>(insertedSettings)
         );
 
         return Ok(response);

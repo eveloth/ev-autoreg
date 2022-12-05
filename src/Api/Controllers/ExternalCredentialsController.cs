@@ -3,7 +3,6 @@ using Api.Contracts.Requests;
 using Api.Contracts.Responses;
 using Api.Services.Interfaces;
 using DataAccessLibrary.Repository.Interfaces;
-using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,25 +14,22 @@ namespace Api.Controllers;
 public class ExternalCredentialsController : ControllerBase
 {
     private readonly ILogger<ExternalCredentialsController> _logger;
-    private readonly IMapper _mapper;
     private readonly IUnitofWork _unitofWork;
     private readonly ICredentialsEncryptor _credentialsEncryptor;
 
     public ExternalCredentialsController(
         ILogger<ExternalCredentialsController> logger,
         IUnitofWork unitofWork,
-        ICredentialsEncryptor credentialsEncryptor,
-        IMapper mapper
+        ICredentialsEncryptor credentialsEncryptor
     )
     {
         _logger = logger;
         _unitofWork = unitofWork;
         _credentialsEncryptor = credentialsEncryptor;
-        _mapper = mapper;
     }
 
     [Authorize(Policy = "UseRegistrar")]
-    [Route("credentials/ev")]
+    [Route("ev")]
     [HttpPost]
     public async Task<IActionResult> SaveEvCredentials(
         [FromBody] EvCredentialsRequest credentials,
@@ -61,7 +57,7 @@ public class ExternalCredentialsController : ControllerBase
     }
 
     [Authorize(Policy = "UseRegistrar")]
-    [Route("credentials/exchange")]
+    [Route("exchange")]
     [HttpPost]
     public async Task<IActionResult> SaveExchangeCredentials(
         [FromBody] ExchangeCredentialsRequest credentials,
