@@ -1,3 +1,4 @@
+using Autoregistrar.Apis;
 using Autoregistrar.GrpcServices;
 using Autoregistrar.Hubs;
 using Autoregistrar.Mapping;
@@ -32,6 +33,7 @@ builder.Services.AddSingleton<IMapper, Mapper>();
 builder.Services.AddSingleton<ICredentialsDecryptor, CredentialsDecryptor>();
 builder.Services.AddSingleton<ISettingsProvider, SettingsProvider>();
 builder.Services.AddSingleton<IMailEventListener, MailEventListener>();
+builder.Services.AddSingleton<IEvApi, EvApi>();
 builder.Services.AddSingleton<IIssueProcessor, IssueProcessor>();
 
 builder.Services.AddSingleton(() =>
