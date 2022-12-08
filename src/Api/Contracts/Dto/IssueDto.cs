@@ -6,6 +6,7 @@ public class IssueDto
     public required DateTime TimeCreated { get; set; }
     public required string Author { get; set; }
     public required string Company { get; set; }
+    public required string Status { get; set; }
     public required string Priority { get; set; }
     public string? AssignedGroup { get; set; }
     public string? Assignee { get; set; }

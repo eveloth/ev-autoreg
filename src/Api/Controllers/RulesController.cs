@@ -229,7 +229,6 @@ public class RulesController : ControllerBase
     [HttpDelete]
     public async Task<IActionResult> DeleteRule(
         [FromRoute] int id,
-        [FromBody] RuleRequest request,
         CancellationToken cts
     )
     {
