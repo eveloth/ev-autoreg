@@ -5,13 +5,10 @@ namespace DataAccessLibrary.Repository.Interfaces;
 
 public interface IPermissionRepository
 {
-    Task<IEnumerable<PermissionModel>> GetAllPermissions(
-        PaginationFilter filter,
-        CancellationToken cts
-    );
-    Task<PermissionModel> AddPermission(PermissionModel permission, CancellationToken cts);
-    Task<PermissionModel> DeletePermission(int permissionId, CancellationToken cts);
-    Task<int> ClearPermissions(CancellationToken cts);
-    Task<bool> DoesPermissionExist(int permissionId, CancellationToken cts);
-    Task<bool> DoesPermissionExist(string permissionName, CancellationToken cts);
+    Task<IEnumerable<PermissionModel>> GetAll(PaginationFilter filter, CancellationToken cts);
+    Task<PermissionModel> Add(PermissionModel permission, CancellationToken cts);
+    Task<PermissionModel> Delete(int permissionId, CancellationToken cts);
+    Task<int> Clear(CancellationToken cts);
+    Task<bool> DoesExist(int permissionId, CancellationToken cts);
+    Task<bool> DoesExist(string permissionName, CancellationToken cts);
 }

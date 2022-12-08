@@ -69,7 +69,7 @@ public class MeController : ControllerBase
             return BadRequest(ErrorCode[1001]);
         }
 
-        var userProfile = await _unitofWork.UserRepository.UpdateUserEmail(userId, request.NewEmail, cts);
+        var userProfile = await _unitofWork.UserRepository.UpdateEmail(userId, request.NewEmail, cts);
 
         await _unitofWork.CommitAsync(cts);
 
@@ -95,7 +95,7 @@ public class MeController : ControllerBase
             HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
         );
 
-        var user = await _unitofWork.UserRepository.GetUserById(userId, cts);
+        var user = await _unitofWork.UserRepository.GetById(userId, cts);
         var email = user!.Email;
 
         if (!_authService.IsPasswordValid(email, request.NewPassword))
@@ -105,7 +105,7 @@ public class MeController : ControllerBase
 
         var passwordHash = _passwordHasher.HashPassword(request.NewPassword);
 
-        var userWithChangedPassword = await _unitofWork.UserRepository.UpdateUserPassword(
+        var userWithChangedPassword = await _unitofWork.UserRepository.UpdatePassword(
             userId,
             passwordHash,
             cts

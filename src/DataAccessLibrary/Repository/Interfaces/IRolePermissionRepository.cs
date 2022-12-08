@@ -5,24 +5,17 @@ namespace DataAccessLibrary.Repository.Interfaces;
 
 public interface IRolePermissionRepository
 {
-    Task<IEnumerable<RolePermissionModel>> GetAllRolePermissions(
-        PaginationFilter filter,
-        CancellationToken cts
-    );
-    Task<IEnumerable<RolePermissionModel>> GetRolePermissions(int roleId, CancellationToken cts);
+    Task<IEnumerable<RolePermissionModel>> GetAll(PaginationFilter filter, CancellationToken cts);
+    Task<IEnumerable<RolePermissionModel>> GetRole(int roleId, CancellationToken cts);
     Task<IEnumerable<RolePermissionModel>> AddPermissionToRole(
         int roleId,
         int permissionId,
         CancellationToken cts
     );
-    Task<IEnumerable<RolePermissionModel>> DeletePermissionFromRole(
+    Task<IEnumerable<RolePermissionModel>> RemovePermissionFromRole(
         int roleId,
         int permissionId,
         CancellationToken cts
     );
-    Task<bool> DoesRolePermissionCorrecationExist(
-        int roleId,
-        int permissionId,
-        CancellationToken cts
-    );
+    Task<bool> DoesCorrecationExist(int roleId, int permissionId, CancellationToken cts);
 }

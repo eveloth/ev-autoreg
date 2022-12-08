@@ -15,10 +15,7 @@ public class RoleRepository : IRoleRepository
         _db = db;
     }
 
-    public async Task<IEnumerable<RoleModel>> GetRoles(
-        PaginationFilter filter,
-        CancellationToken cts
-    )
+    public async Task<IEnumerable<RoleModel>> GetAll(PaginationFilter filter, CancellationToken cts)
     {
         var take = filter.PageSize;
         var skip = (filter.PageNumber - 1) * filter.PageSize;
@@ -28,7 +25,7 @@ public class RoleRepository : IRoleRepository
         return await _db.LoadAllData<RoleModel>(sql, cts);
     }
 
-    public async Task<RoleModel> AddRole(string roleName, CancellationToken cts)
+    public async Task<RoleModel> Add(string roleName, CancellationToken cts)
     {
         const string sql = @"INSERT INTO role (role_name) VALUES (@RoleName) RETURNING *";
 
@@ -37,7 +34,7 @@ public class RoleRepository : IRoleRepository
         return await _db.SaveData<RoleModel>(sql, parameters, cts);
     }
 
-    public async Task<RoleModel> ChangeRoleName(RoleModel role, CancellationToken cts)
+    public async Task<RoleModel> ChangeName(RoleModel role, CancellationToken cts)
     {
         //There's a point that I'll address later:
         //Here I have an @Id parameter placeholder, not @RoleId, because I'm getting it from RoleModel,
@@ -51,7 +48,7 @@ public class RoleRepository : IRoleRepository
         return await _db.SaveData<RoleModel>(sql, parameters, cts);
     }
 
-    public async Task<RoleModel> DeleteRole(int roleId, CancellationToken cts)
+    public async Task<RoleModel> Delete(int roleId, CancellationToken cts)
     {
         const string sql = @"DELETE FROM role WHERE id = @RoleId RETURNING *";
 
@@ -60,7 +57,7 @@ public class RoleRepository : IRoleRepository
         return await _db.SaveData<RoleModel>(sql, parameters, cts);
     }
 
-    public async Task<bool> DoesRoleExist(int roleId, CancellationToken cts)
+    public async Task<bool> DoesExist(int roleId, CancellationToken cts)
     {
         const string sql = @"SELECT EXISTS (SELECT true FROM role WHERE id = @RoleId)";
 
@@ -69,7 +66,7 @@ public class RoleRepository : IRoleRepository
         return await _db.LoadFirst<bool>(sql, parameters, cts);
     }
 
-    public async Task<bool> DoesRoleExist(string roleName, CancellationToken cts)
+    public async Task<bool> DoesExist(string roleName, CancellationToken cts)
     {
         const string sql = @"SELECT EXISTS (SELECT true FROM role WHERE role_name = @RoleName)";
 

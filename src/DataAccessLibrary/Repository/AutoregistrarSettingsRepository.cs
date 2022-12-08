@@ -23,9 +23,13 @@ public class AutoregistrarSettingsRepository : IAutoregistrarSettingsRepository
         return result;
     }
 
-    public async Task<AutoregstrarSettingsModel> Upsert(AutoregstrarSettingsModel settings, CancellationToken cts)
+    public async Task<AutoregstrarSettingsModel> Upsert(
+        AutoregstrarSettingsModel settings,
+        CancellationToken cts
+    )
     {
-        const string sql = @"INSERT INTO autoregistrar_settings 
+        const string sql =
+            @"INSERT INTO autoregistrar_settings 
                              (id, exchange_server_uri, extra_view_uri,
                              new_issue_regex, issue_no_regex)
                              VALUES(1, @ExchangeServerUri, @ExtraViewUri,

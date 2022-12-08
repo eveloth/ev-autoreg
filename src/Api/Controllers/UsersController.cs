@@ -93,7 +93,7 @@ public class UsersController : ControllerBase
 
         var passwordHash = _passwordHasher.HashPassword(request.NewPassword);
 
-        var userWithPassswordReset = await _unitofWork.UserRepository.UpdateUserPassword(
+        var userWithPassswordReset = await _unitofWork.UserRepository.UpdatePassword(
             id,
             passwordHash,
             cts
@@ -119,7 +119,7 @@ public class UsersController : ControllerBase
             return NotFound(ErrorCode[2001]);
         }
 
-        var blockedUser = await _unitofWork.UserRepository.BlockUser(id, cts);
+        var blockedUser = await _unitofWork.UserRepository.Block(id, cts);
 
         await _unitofWork.CommitAsync(cts);
 
@@ -141,7 +141,7 @@ public class UsersController : ControllerBase
             return NotFound(ErrorCode[2001]);
         }
 
-        var unblockedUser = await _unitofWork.UserRepository.UnblockUser(id, cts);
+        var unblockedUser = await _unitofWork.UserRepository.Unblock(id, cts);
 
         await _unitofWork.CommitAsync(cts);
 
@@ -156,14 +156,14 @@ public class UsersController : ControllerBase
     [HttpDelete]
     public async Task<IActionResult> DeleteUser([FromRoute] int id, CancellationToken cts)
     {
-        var userExists = await _unitofWork.UserRepository.DoesUserExist(id, cts);
+        var userExists = await _unitofWork.UserRepository.DoesExist(id, cts);
 
         if (!userExists)
         {
             return NotFound("User not found");
         }
 
-        var deletedUser = await _unitofWork.UserRepository.DeleteUser(id, cts);
+        var deletedUser = await _unitofWork.UserRepository.Delete(id, cts);
 
         await _unitofWork.CommitAsync(cts);
         _logger.LogInformation("User ID {UserId} was deleted", deletedUser.Id);
@@ -178,14 +178,14 @@ public class UsersController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> RestoreUser([FromRoute] int id, CancellationToken cts)
     {
-        var userExists = await _unitofWork.UserRepository.DoesUserExist(id, cts);
+        var userExists = await _unitofWork.UserRepository.DoesExist(id, cts);
 
         if (!userExists)
         {
             return NotFound("User not found");
         }
 
-        var restoredUser = await _unitofWork.UserRepository.RestoreUser(id, cts);
+        var restoredUser = await _unitofWork.UserRepository.Restore(id, cts);
 
         await _unitofWork.CommitAsync(cts);
         _logger.LogInformation("User ID {UserId} was restored", restoredUser.Id);

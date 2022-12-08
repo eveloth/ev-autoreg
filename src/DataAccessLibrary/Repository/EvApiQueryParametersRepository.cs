@@ -15,10 +15,7 @@ public class EvApiQueryParametersRepository : IEvApiQueryParametersRepository
         _db = db;
     }
 
-    public async Task<EvApiQueryParametersModel?> GetQueryParameters(
-        int issueTypeId,
-        CancellationToken cts
-    )
+    public async Task<EvApiQueryParametersModel?> Get(int issueTypeId, CancellationToken cts)
     {
         const string sql =
             @"SELECT * FROM registering_parameters WHERE issue_type_id = @IssueTypeId";
@@ -28,7 +25,7 @@ public class EvApiQueryParametersRepository : IEvApiQueryParametersRepository
         return await _db.LoadFirst<EvApiQueryParametersModel?>(sql, parameters, cts);
     }
 
-    public async Task<IEnumerable<EvApiQueryParametersModel>> GetAllQueryParameters(
+    public async Task<IEnumerable<EvApiQueryParametersModel>> GetAll(
         PaginationFilter filter,
         CancellationToken cts
     )
@@ -42,7 +39,7 @@ public class EvApiQueryParametersRepository : IEvApiQueryParametersRepository
         return await _db.LoadAllData<EvApiQueryParametersModel>(sql, cts);
     }
 
-    public async Task<EvApiQueryParametersModel> UpsertQueryParameters(
+    public async Task<EvApiQueryParametersModel> Upsert(
         EvApiQueryParametersModel queryParameters,
         CancellationToken cts
     )
@@ -68,10 +65,7 @@ public class EvApiQueryParametersRepository : IEvApiQueryParametersRepository
         return await _db.SaveData<EvApiQueryParametersModel>(sql, paratmeters, cts);
     }
 
-    public async Task<EvApiQueryParametersModel> DeleteQueryParameters(
-        int issueTypeId,
-        CancellationToken cts
-    )
+    public async Task<EvApiQueryParametersModel> Delete(int issueTypeId, CancellationToken cts)
     {
         const string sql =
             @"DELETE FROM registering_parameters WHERE issue_type_id = @IssueTypeId RETURNING *";

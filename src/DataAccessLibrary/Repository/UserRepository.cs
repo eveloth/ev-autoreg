@@ -18,7 +18,7 @@ public class UserRepository : IUserRepository
         _db = db;
     }
 
-    public async Task<UserModel?> GetUserById(
+    public async Task<UserModel?> GetById(
         int userId,
         CancellationToken cts,
         bool includeDeleted = false
@@ -41,7 +41,7 @@ public class UserRepository : IUserRepository
         return await _db.LoadFirst<UserModel>(resultingSql, parameters, cts);
     }
 
-    public async Task<UserModel?> GetUserByEmail(
+    public async Task<UserModel?> GetByEmail(
         string email,
         CancellationToken cts,
         bool includeDeleted = false
@@ -118,7 +118,7 @@ public class UserRepository : IUserRepository
         return await _db.LoadFirst<UserProfileModel?, RoleModel>(resultingSql, parameters, cts);
     }
 
-    public async Task<UserProfileModel> CreateUser(UserModel user, CancellationToken cts)
+    public async Task<UserProfileModel> Create(UserModel user, CancellationToken cts)
     {
         const string sql =
             @"WITH inserted AS
@@ -138,11 +138,7 @@ public class UserRepository : IUserRepository
         return result;
     }
 
-    public async Task<int> UpdateUserPassword(
-        int userId,
-        string passwordHash,
-        CancellationToken cts
-    )
+    public async Task<int> UpdatePassword(int userId, string passwordHash, CancellationToken cts)
     {
         const string sql =
             @"UPDATE app_user SET password_hash = @PasswordHash WHERE id = @UserId RETURNING id";
@@ -154,7 +150,7 @@ public class UserRepository : IUserRepository
         return await _db.SaveData<int>(sql, parameters, cts);
     }
 
-    public async Task<UserProfileModel> UpdateUserEmail(
+    public async Task<UserProfileModel> UpdateEmail(
         int userId,
         string newEmail,
         CancellationToken cts
@@ -199,7 +195,7 @@ public class UserRepository : IUserRepository
         return await _db.SaveData<UserProfileModel, RoleModel>(sql, parameters, cts);
     }
 
-    public async Task<UserProfileModel> BlockUser(int userId, CancellationToken cts)
+    public async Task<UserProfileModel> Block(int userId, CancellationToken cts)
     {
         const string sql =
             @"WITH updated as 
@@ -216,7 +212,7 @@ public class UserRepository : IUserRepository
         return await _db.SaveData<UserProfileModel, RoleModel>(sql, parameters, cts);
     }
 
-    public async Task<UserProfileModel> UnblockUser(int userId, CancellationToken cts)
+    public async Task<UserProfileModel> Unblock(int userId, CancellationToken cts)
     {
         const string sql =
             @"WITH updated as 
@@ -232,7 +228,7 @@ public class UserRepository : IUserRepository
         return await _db.SaveData<UserProfileModel, RoleModel>(sql, parameters, cts);
     }
 
-    public async Task<UserProfileModel> DeleteUser(int userId, CancellationToken cts)
+    public async Task<UserProfileModel> Delete(int userId, CancellationToken cts)
     {
         const string sql =
             @"WITH updated as 
@@ -249,7 +245,7 @@ public class UserRepository : IUserRepository
         return await _db.SaveData<UserProfileModel, RoleModel>(sql, parameters, cts);
     }
 
-    public async Task<UserProfileModel> RestoreUser(int userId, CancellationToken cts)
+    public async Task<UserProfileModel> Restore(int userId, CancellationToken cts)
     {
         const string sql =
             @"WITH updated as 
@@ -266,7 +262,7 @@ public class UserRepository : IUserRepository
         return await _db.SaveData<UserProfileModel, RoleModel>(sql, parameters, cts);
     }
 
-    public async Task<bool> DoesUserExist(int userId, CancellationToken cts)
+    public async Task<bool> DoesExist(int userId, CancellationToken cts)
     {
         const string sql = @"SELECT EXISTS (SELECT true FROM app_user WHERE id = @UserId)";
 
@@ -275,7 +271,7 @@ public class UserRepository : IUserRepository
         return await _db.LoadFirst<bool>(sql, parameters, cts);
     }
 
-    public async Task<bool> DoesUserExist(string email, CancellationToken cts)
+    public async Task<bool> DoesExist(string email, CancellationToken cts)
     {
         const string sql = @"SELECT EXISTS (SELECT true FROM app_user WHERE email = @Email)";
 

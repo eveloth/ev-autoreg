@@ -58,7 +58,7 @@ public class AuthController : ControllerBase
         CancellationToken cts
     )
     {
-        var existingUser = await _unitofWork.UserRepository.GetUserByEmail(request.Email, cts);
+        var existingUser = await _unitofWork.UserRepository.GetByEmail(request.Email, cts);
 
         if (existingUser is null)
         {
@@ -107,7 +107,7 @@ public class AuthController : ControllerBase
             return BadRequest(ErrorCode[1002]);
         }
 
-        var userExists = await _userRepository.DoesUserExist(request.Email, cts);
+        var userExists = await _userRepository.DoesExist(request.Email, cts);
 
         if (userExists)
         {
@@ -117,7 +117,7 @@ public class AuthController : ControllerBase
         var passwordHash = _passwordHasher.HashPassword(request.Password);
         var newUser = new UserModel { Email = request.Email, PasswordHash = passwordHash };
 
-        var createdUser = await _unitofWork.UserRepository.CreateUser(newUser, cts);
+        var createdUser = await _unitofWork.UserRepository.Create(newUser, cts);
 
         await _unitofWork.CommitAsync(cts);
         _logger.LogInformation("User ID {UserId} was registered", createdUser.Id);

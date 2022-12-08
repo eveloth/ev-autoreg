@@ -15,7 +15,7 @@ public class PermissionRepository : IPermissionRepository
         _db = db;
     }
 
-    public async Task<IEnumerable<PermissionModel>> GetAllPermissions(
+    public async Task<IEnumerable<PermissionModel>> GetAll(
         PaginationFilter filter,
         CancellationToken cts
     )
@@ -28,10 +28,7 @@ public class PermissionRepository : IPermissionRepository
         return await _db.LoadAllData<PermissionModel>(sql, cts);
     }
 
-    public async Task<PermissionModel> AddPermission(
-        PermissionModel permission,
-        CancellationToken cts
-    )
+    public async Task<PermissionModel> Add(PermissionModel permission, CancellationToken cts)
     {
         const string sql =
             @"INSERT INTO permission (permission_name, description) 
@@ -43,7 +40,7 @@ public class PermissionRepository : IPermissionRepository
         return await _db.SaveData<PermissionModel>(sql, parameters, cts);
     }
 
-    public async Task<PermissionModel> DeletePermission(int permissionId, CancellationToken cts)
+    public async Task<PermissionModel> Delete(int permissionId, CancellationToken cts)
     {
         const string sql = @"DELETE FROM permission WHERE id = @PermissionId RETURNING *";
 
@@ -52,7 +49,7 @@ public class PermissionRepository : IPermissionRepository
         return await _db.SaveData<PermissionModel>(sql, parameters, cts);
     }
 
-    public async Task<int> ClearPermissions(CancellationToken cts)
+    public async Task<int> Clear(CancellationToken cts)
     {
         const string sql =
             @"WITH deleted AS
@@ -63,7 +60,7 @@ public class PermissionRepository : IPermissionRepository
         return await _db.SaveData<int>(sql, cts);
     }
 
-    public async Task<bool> DoesPermissionExist(int permissionId, CancellationToken cts)
+    public async Task<bool> DoesExist(int permissionId, CancellationToken cts)
     {
         const string sql = @"SELECT EXISTS (SELECT true FROM permission WHERE id = @PermissionId)";
 
@@ -72,7 +69,7 @@ public class PermissionRepository : IPermissionRepository
         return await _db.LoadFirst<bool>(sql, parameters, cts);
     }
 
-    public async Task<bool> DoesPermissionExist(string permissionName, CancellationToken cts)
+    public async Task<bool> DoesExist(string permissionName, CancellationToken cts)
     {
         const string sql =
             @"SELECT EXISTS (SELECT true FROM permission WHERE permission_name = @PermissionName)";

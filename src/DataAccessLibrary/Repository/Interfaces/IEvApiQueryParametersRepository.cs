@@ -5,15 +5,15 @@ namespace DataAccessLibrary.Repository.Interfaces;
 
 public interface IEvApiQueryParametersRepository
 {
-    Task<EvApiQueryParametersModel?> GetQueryParameters(int issueTypeId, CancellationToken cts);
-    Task<IEnumerable<EvApiQueryParametersModel>> GetAllQueryParameters(
+    Task<EvApiQueryParametersModel?> Get(int issueTypeId, CancellationToken cts);
+    Task<IEnumerable<EvApiQueryParametersModel>> GetAll(
         PaginationFilter filter,
         CancellationToken cts
     );
-    Task<EvApiQueryParametersModel> UpsertQueryParameters(
+    Task<EvApiQueryParametersModel> Upsert(
         EvApiQueryParametersModel queryParameters,
         CancellationToken cts
     );
-    Task<EvApiQueryParametersModel> DeleteQueryParameters(int issueTypeId, CancellationToken cts);
+    Task<EvApiQueryParametersModel> Delete(int issueTypeId, CancellationToken cts);
     Task<bool> DoQueryParametersExistFor(int issueTypeId, CancellationToken cts);
 }

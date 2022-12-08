@@ -169,10 +169,7 @@ public class AutoregistrarController : ControllerBase
     {
         var paginationFilter = _mapper.Map<PaginationFilter>(pagination);
 
-        var issueTypes = await _unitofWork.IssueTypeRepository.GetAllIssueTypes(
-            paginationFilter,
-            cts
-        );
+        var issueTypes = await _unitofWork.IssueTypeRepository.GetAll(paginationFilter, cts);
 
         await _unitofWork.CommitAsync(cts);
 
@@ -189,7 +186,7 @@ public class AutoregistrarController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetIssueType([FromRoute] int id, CancellationToken cts)
     {
-        var issueType = await _unitofWork.IssueTypeRepository.GetIssueType(id, cts);
+        var issueType = await _unitofWork.IssueTypeRepository.Get(id, cts);
         await _unitofWork.CommitAsync(cts);
 
         if (issueType is null)
@@ -210,7 +207,7 @@ public class AutoregistrarController : ControllerBase
         CancellationToken cts
     )
     {
-        var issueTypeExists = await _unitofWork.IssueTypeRepository.DoesIssueTypeExist(
+        var issueTypeExists = await _unitofWork.IssueTypeRepository.DoesExist(
             request.IssueTypeName,
             cts
         );
@@ -220,10 +217,7 @@ public class AutoregistrarController : ControllerBase
             return BadRequest(ErrorCode[7004]);
         }
 
-        var newIssueType = await _unitofWork.IssueTypeRepository.AddIssueType(
-            request.IssueTypeName,
-            cts
-        );
+        var newIssueType = await _unitofWork.IssueTypeRepository.Add(request.IssueTypeName, cts);
         await _unitofWork.CommitAsync(cts);
         _logger.LogInformation(
             "Added issue type ID {IssueTypeId} with name {IssueTypeName}",
@@ -245,14 +239,14 @@ public class AutoregistrarController : ControllerBase
         CancellationToken cts
     )
     {
-        var issueTypeExists = await _unitofWork.IssueTypeRepository.DoesIssueTypeExist(id, cts);
+        var issueTypeExists = await _unitofWork.IssueTypeRepository.DoesExist(id, cts);
 
         if (!issueTypeExists)
         {
             return NotFound(ErrorCode[7001]);
         }
 
-        var changedIssueType = await _unitofWork.IssueTypeRepository.ChangeIssueTypeName(
+        var changedIssueType = await _unitofWork.IssueTypeRepository.ChangeName(
             id,
             request.IssueTypeName,
             cts
@@ -275,14 +269,14 @@ public class AutoregistrarController : ControllerBase
     [HttpDelete]
     public async Task<IActionResult> DeleteIssueType([FromRoute] int id, CancellationToken cts)
     {
-        var issueTypeExists = await _unitofWork.IssueTypeRepository.DoesIssueTypeExist(id, cts);
+        var issueTypeExists = await _unitofWork.IssueTypeRepository.DoesExist(id, cts);
 
         if (!issueTypeExists)
         {
             return NotFound(ErrorCode[7001]);
         }
 
-        var deletedIssueType = await _unitofWork.IssueTypeRepository.DeleteIssueType(id, cts);
+        var deletedIssueType = await _unitofWork.IssueTypeRepository.Delete(id, cts);
         await _unitofWork.CommitAsync(cts);
         _logger.LogInformation("Issue type ID {IssueTypeId} was deleted", deletedIssueType.Id);
 
@@ -301,10 +295,7 @@ public class AutoregistrarController : ControllerBase
     {
         var paginationFilter = _mapper.Map<PaginationFilter>(pagination);
 
-        var issueFields = await _unitofWork.IssueFieldRepository.GetAllIssueFields(
-            paginationFilter,
-            cts
-        );
+        var issueFields = await _unitofWork.IssueFieldRepository.GetAll(paginationFilter, cts);
         await _unitofWork.CommitAsync(cts);
 
         var response = new PagedResponse<IssueFieldDto>(
@@ -325,20 +316,16 @@ public class AutoregistrarController : ControllerBase
     {
         var paginationFilter = _mapper.Map<PaginationFilter>(pagination);
 
-        var queryParameters =
-            await _unitofWork.EvApiQueryParametersRepository.GetAllQueryParameters(
-                paginationFilter,
-                cts
-            );
+        var queryParameters = await _unitofWork.EvApiQueryParametersRepository.GetAll(
+            paginationFilter,
+            cts
+        );
 
         List<ValueTuple<EvApiQueryParametersModel, IssueTypeModel?>> aggregationTable = new();
 
         foreach (var parameter in queryParameters)
         {
-            var issueType = await _unitofWork.IssueTypeRepository.GetIssueType(
-                parameter.IssueTypeId,
-                cts
-            );
+            var issueType = await _unitofWork.IssueTypeRepository.Get(parameter.IssueTypeId, cts);
 
             aggregationTable.Add(
                 new ValueTuple<EvApiQueryParametersModel, IssueTypeModel?>
@@ -367,27 +354,21 @@ public class AutoregistrarController : ControllerBase
         CancellationToken cts
     )
     {
-        var issueTypeExists = await _unitofWork.IssueTypeRepository.DoesIssueTypeExist(id, cts);
+        var issueTypeExists = await _unitofWork.IssueTypeRepository.DoesExist(id, cts);
 
         if (!issueTypeExists)
         {
             return NotFound(ErrorCode[7001]);
         }
 
-        var queryParameters = await _unitofWork.EvApiQueryParametersRepository.GetQueryParameters(
-            id,
-            cts
-        );
+        var queryParameters = await _unitofWork.EvApiQueryParametersRepository.Get(id, cts);
 
         if (queryParameters is null)
         {
             return NotFound(ErrorCode[7005]);
         }
 
-        var issueType = await _unitofWork.IssueTypeRepository.GetIssueType(
-            queryParameters.IssueTypeId,
-            cts
-        );
+        var issueType = await _unitofWork.IssueTypeRepository.Get(queryParameters.IssueTypeId, cts);
 
         await _unitofWork.CommitAsync(cts);
 
@@ -413,7 +394,7 @@ public class AutoregistrarController : ControllerBase
         CancellationToken cts
     )
     {
-        var issueTypeExists = await _unitofWork.IssueTypeRepository.DoesIssueTypeExist(id, cts);
+        var issueTypeExists = await _unitofWork.IssueTypeRepository.DoesExist(id, cts);
 
         if (!issueTypeExists)
         {
@@ -423,13 +404,12 @@ public class AutoregistrarController : ControllerBase
         var queryParameters = _mapper.Map<EvApiQueryParametersModel>(request);
         queryParameters.IssueTypeId = id;
 
-        var addedQueryParameters =
-            await _unitofWork.EvApiQueryParametersRepository.UpsertQueryParameters(
-                queryParameters,
-                cts
-            );
+        var addedQueryParameters = await _unitofWork.EvApiQueryParametersRepository.Upsert(
+            queryParameters,
+            cts
+        );
 
-        var issueType = await _unitofWork.IssueTypeRepository.GetIssueType(
+        var issueType = await _unitofWork.IssueTypeRepository.Get(
             addedQueryParameters.IssueTypeId,
             cts
         );

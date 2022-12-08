@@ -15,7 +15,7 @@ public class IssueFieldRepository : IIssueFieldRepository
         _db = db;
     }
 
-    public async Task<IssueFieldModel?> GetIssueField(int issueFieldId, CancellationToken cts)
+    public async Task<IssueFieldModel?> Get(int issueFieldId, CancellationToken cts)
     {
         const string sql = @"SELECT * FROM issue_field WHERE id = @IssueFieldId";
 
@@ -24,7 +24,7 @@ public class IssueFieldRepository : IIssueFieldRepository
         return await _db.LoadFirst<IssueFieldModel?>(sql, parameters, cts);
     }
 
-    public async Task<IEnumerable<IssueFieldModel>> GetAllIssueFields(
+    public async Task<IEnumerable<IssueFieldModel>> GetAll(
         PaginationFilter filter,
         CancellationToken cts
     )
@@ -37,16 +37,17 @@ public class IssueFieldRepository : IIssueFieldRepository
         return await _db.LoadAllData<IssueFieldModel>(sql, cts);
     }
 
-    public async Task AddIssueField(string issueFieldName, CancellationToken cts)
+    public async Task Add(string issueFieldName, CancellationToken cts)
     {
-        const string sql = "INSERT INTO issue_field (field_name) VALUES (@IssueFieldName) RETURNING id";
+        const string sql =
+            "INSERT INTO issue_field (field_name) VALUES (@IssueFieldName) RETURNING id";
 
-        var parameters = new DynamicParameters(new {IssueFieldName = issueFieldName});
+        var parameters = new DynamicParameters(new { IssueFieldName = issueFieldName });
 
         await _db.SaveData(sql, parameters, cts);
     }
 
-    public async Task<bool> DoesIssueFieldExist(int issueFieldId, CancellationToken cts)
+    public async Task<bool> DoesExist(int issueFieldId, CancellationToken cts)
     {
         const string sql = @"SELECT EXISTS (SELECT true FROM issue_field WHERE id = @IssueFieldId)";
 

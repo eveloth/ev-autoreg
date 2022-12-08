@@ -41,17 +41,17 @@ public class RulesController : ControllerBase
 
         var paginationFilter = _mapper.Map<PaginationFilter>(pagination);
 
-        var rules = await _unitofWork.RuleRepository.GetAllRules(userId, paginationFilter, cts);
+        var rules = await _unitofWork.RuleRepository.GetAll(userId, paginationFilter, cts);
 
         List<(RuleModel, IssueTypeModel?, IssueFieldModel?)> aggregationTable = new();
 
         foreach (var rule in rules)
         {
-            var issueType = await _unitofWork.IssueTypeRepository.GetIssueType(
+            var issueType = await _unitofWork.IssueTypeRepository.Get(
                 rule.IssueTypeId,
                 cts
             );
-            var issueField = await _unitofWork.IssueFieldRepository.GetIssueField(
+            var issueField = await _unitofWork.IssueFieldRepository.Get(
                 rule.IssueFieldId,
                 cts
             );
@@ -84,15 +84,15 @@ public class RulesController : ControllerBase
             HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
         );
 
-        var rule = await _unitofWork.RuleRepository.GetRule(id, userId, cts);
+        var rule = await _unitofWork.RuleRepository.Get(id, userId, cts);
 
         if (rule is null)
         {
             return NotFound(ErrorCode[6001]);
         }
 
-        var issueType = await _unitofWork.IssueTypeRepository.GetIssueType(rule.IssueTypeId, cts);
-        var issueField = await _unitofWork.IssueFieldRepository.GetIssueField(
+        var issueType = await _unitofWork.IssueTypeRepository.Get(rule.IssueTypeId, cts);
+        var issueField = await _unitofWork.IssueFieldRepository.Get(
             rule.IssueFieldId,
             cts
         );
@@ -118,7 +118,7 @@ public class RulesController : ControllerBase
             HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
         );
 
-        var issueType = await _unitofWork.IssueTypeRepository.GetIssueType(
+        var issueType = await _unitofWork.IssueTypeRepository.Get(
             request.IssueTypeId,
             cts
         );
@@ -128,7 +128,7 @@ public class RulesController : ControllerBase
             return NotFound(ErrorCode[7001]);
         }
 
-        var issueField = await _unitofWork.IssueFieldRepository.GetIssueField(
+        var issueField = await _unitofWork.IssueFieldRepository.Get(
             request.IssueFieldId,
             cts
         );
@@ -141,7 +141,7 @@ public class RulesController : ControllerBase
         var newRule = _mapper.Map<RuleModel>(request);
         newRule.OwnerUserId = userId;
 
-        var addedRule = await _unitofWork.RuleRepository.AddRule(newRule, cts);
+        var addedRule = await _unitofWork.RuleRepository.Add(newRule, cts);
         await _unitofWork.CommitAsync(cts);
         _logger.LogInformation(
             "Rule ID {RuleId} was added for user ID {UserId}",
@@ -173,14 +173,14 @@ public class RulesController : ControllerBase
             HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
         );
 
-        var ruleExist = await _unitofWork.RuleRepository.DoesRuleExist(id, userId, cts);
+        var ruleExist = await _unitofWork.RuleRepository.DoesExist(id, userId, cts);
 
         if (!ruleExist)
         {
             return NotFound(ErrorCode[6001]);
         }
 
-        var issueType = await _unitofWork.IssueTypeRepository.GetIssueType(
+        var issueType = await _unitofWork.IssueTypeRepository.Get(
             request.IssueTypeId,
             cts
         );
@@ -190,7 +190,7 @@ public class RulesController : ControllerBase
             return NotFound(ErrorCode[7001]);
         }
 
-        var issueField = await _unitofWork.IssueFieldRepository.GetIssueField(
+        var issueField = await _unitofWork.IssueFieldRepository.Get(
             request.IssueFieldId,
             cts
         );
@@ -204,7 +204,7 @@ public class RulesController : ControllerBase
         rule.Id = id;
         rule.OwnerUserId = userId;
 
-        var updatedRule = await _unitofWork.RuleRepository.UpdateRule(rule, cts);
+        var updatedRule = await _unitofWork.RuleRepository.Update(rule, cts);
         await _unitofWork.CommitAsync(cts);
 
         _logger.LogInformation(
@@ -237,20 +237,20 @@ public class RulesController : ControllerBase
             HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
         );
 
-        var ruleExist = await _unitofWork.RuleRepository.DoesRuleExist(id, userId, cts);
+        var ruleExist = await _unitofWork.RuleRepository.DoesExist(id, userId, cts);
 
         if (!ruleExist)
         {
             return NotFound(ErrorCode[6001]);
         }
 
-        var deletedRule = await _unitofWork.RuleRepository.DeleteRule(id, userId, cts);
+        var deletedRule = await _unitofWork.RuleRepository.Delete(id, userId, cts);
 
-        var issueType = await _unitofWork.IssueTypeRepository.GetIssueType(
+        var issueType = await _unitofWork.IssueTypeRepository.Get(
             deletedRule.IssueTypeId,
             cts
         );
-        var issueField = await _unitofWork.IssueFieldRepository.GetIssueField(
+        var issueField = await _unitofWork.IssueFieldRepository.Get(
             deletedRule.IssueFieldId,
             cts
         );

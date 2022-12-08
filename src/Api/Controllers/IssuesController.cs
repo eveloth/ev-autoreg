@@ -38,7 +38,7 @@ public class IssuesController : ControllerBase
     {
         var paginationFilter = _mapper.Map<PaginationFilter>(pagination);
 
-        var issues = await _unitofWork.IssueRepository.GetAllIssues(paginationFilter, cts);
+        var issues = await _unitofWork.IssueRepository.GetAll(paginationFilter, cts);
 
         var aggregationTable =
             new List<ValueTuple<IssueModel, UserProfileModel?, IssueTypeModel?>>();
@@ -49,7 +49,7 @@ public class IssuesController : ControllerBase
                 issue.RegistrarId!.Value,
                 cts
             );
-            var issueType = await _unitofWork.IssueTypeRepository.GetIssueType(
+            var issueType = await _unitofWork.IssueTypeRepository.Get(
                 issue.IssueTypeId!.Value,
                 cts
             );

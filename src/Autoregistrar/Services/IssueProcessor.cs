@@ -160,7 +160,7 @@ public class IssueProcessor : IIssueProcessor
 
             using var scope = _scopeFactory.CreateScope();
             var unitofWork = scope.ServiceProvider.GetService<IUnitofWork>();
-            await unitofWork!.IssueRepository.UpsertIssue(issue, CancellationToken.None);
+            await unitofWork!.IssueRepository.Upsert(issue, CancellationToken.None);
 
             _logger.LogInformation("Issue ID {IssueId} was updated", issue.Id);
             await _hubContext.Clients.All.ReceiveLog($"Issue ID {issue.Id} was updated");

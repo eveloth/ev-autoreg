@@ -134,7 +134,7 @@ public class DatabaseSeeder
 
         foreach (var field in issueFields)
         {
-            await _unitofWork.IssueFieldRepository.AddIssueField(field, ct);
+            await _unitofWork.IssueFieldRepository.Add(field, ct);
         }
     }
 
@@ -143,7 +143,7 @@ public class DatabaseSeeder
         var permissions = Permissions.GetPermissions();
         foreach (var permission in permissions)
         {
-            await _unitofWork.PermissionRepository.AddPermission(permission, ct);
+            await _unitofWork.PermissionRepository.Add(permission, ct);
         }
     }
 
@@ -151,13 +151,13 @@ public class DatabaseSeeder
     {
         const string defaultRoleName = "superadmin";
 
-        return _mapper.Map<RoleDto>(await _unitofWork.RoleRepository.AddRole(defaultRoleName, ct));
+        return _mapper.Map<RoleDto>(await _unitofWork.RoleRepository.Add(defaultRoleName, ct));
     }
 
     private async Task AddPermissionsToDefaultRole(int roleId, CancellationToken ct)
     {
         var paginationDummy = new PaginationFilter(1, 100000);
-        var permissions = await _unitofWork.PermissionRepository.GetAllPermissions(
+        var permissions = await _unitofWork.PermissionRepository.GetAll(
             paginationDummy,
             ct
         );
@@ -180,7 +180,7 @@ public class DatabaseSeeder
 
         var user = new UserModel { Email = "eadmin@vautoreg.org", PasswordHash = passwordHash };
 
-        var defaultUser = await _unitofWork.UserRepository.CreateUser(user, ct);
+        var defaultUser = await _unitofWork.UserRepository.Create(user, ct);
         await _unitofWork.RoleRepository.SetUserRole(defaultUser.Id, roleId, ct);
     }
 }

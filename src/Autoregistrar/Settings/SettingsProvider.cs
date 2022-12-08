@@ -42,12 +42,12 @@ public class SettingsProvider : ISettingsProvider
         );
 
         var queryParams = (
-            await unitofWork.EvApiQueryParametersRepository.GetAllQueryParameters(
+            await unitofWork.EvApiQueryParametersRepository.GetAll(
                 new PaginationFilter(1, 1000),
                 cts
             )
         ).ToList();
-        var issueTypeSet = await unitofWork.IssueTypeRepository.GetAllIssueTypes(
+        var issueTypeSet = await unitofWork.IssueTypeRepository.GetAll(
             new PaginationFilter(1, 1000),
             cts
         );
@@ -63,9 +63,9 @@ public class SettingsProvider : ISettingsProvider
         }
 
         var rules = (
-            await unitofWork.RuleRepository.GetAllRules(userId, new PaginationFilter(1, 1000), cts)
+            await unitofWork.RuleRepository.GetAll(userId, new PaginationFilter(1, 1000), cts)
         ).ToList();
-        var issueFieldSet = await unitofWork.IssueFieldRepository.GetAllIssueFields(
+        var issueFieldSet = await unitofWork.IssueFieldRepository.GetAll(
             new PaginationFilter(1, 1000),
             cts
         );
@@ -128,14 +128,14 @@ public class SettingsProvider : ISettingsProvider
             return false;
         }
 
-        var issueTypes = await unitofWork.IssueTypeRepository.GetAllIssueTypes(
+        var issueTypes = await unitofWork.IssueTypeRepository.GetAll(
             new PaginationFilter(1, 1000),
             cts
         );
 
         foreach (var issueType in issueTypes)
         {
-            var queryParams = await unitofWork.EvApiQueryParametersRepository.GetQueryParameters(
+            var queryParams = await unitofWork.EvApiQueryParametersRepository.Get(
                 issueType.Id,
                 cts
             );

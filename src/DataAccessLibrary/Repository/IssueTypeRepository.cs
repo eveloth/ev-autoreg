@@ -15,7 +15,7 @@ public class IssueTypeRepository : IIssueTypeRepository
         _db = db;
     }
 
-    public async Task<IssueTypeModel?> GetIssueType(int issueTypeId, CancellationToken cts)
+    public async Task<IssueTypeModel?> Get(int issueTypeId, CancellationToken cts)
     {
         const string sql = @"SELECT * FROM issue_type WHERE issue_type.id = @IssueTypeId";
         var parameters = new DynamicParameters(new { IssueTypeId = issueTypeId });
@@ -23,7 +23,7 @@ public class IssueTypeRepository : IIssueTypeRepository
         return await _db.LoadFirst<IssueTypeModel?>(sql, parameters, cts);
     }
 
-    public async Task<IEnumerable<IssueTypeModel>> GetAllIssueTypes(
+    public async Task<IEnumerable<IssueTypeModel>> GetAll(
         PaginationFilter filter,
         CancellationToken cts
     )
@@ -36,7 +36,7 @@ public class IssueTypeRepository : IIssueTypeRepository
         return await _db.LoadAllData<IssueTypeModel>(sql, cts);
     }
 
-    public async Task<IssueTypeModel> AddIssueType(string issueTypeName, CancellationToken cts)
+    public async Task<IssueTypeModel> Add(string issueTypeName, CancellationToken cts)
     {
         const string sql =
             @"INSERT INTO issue_type (issue_type_name) VALUES (@IssueTypeName) RETURNING *";
@@ -46,7 +46,7 @@ public class IssueTypeRepository : IIssueTypeRepository
         return await _db.SaveData<IssueTypeModel>(sql, parameters, cts);
     }
 
-    public async Task<IssueTypeModel> ChangeIssueTypeName(
+    public async Task<IssueTypeModel> ChangeName(
         int issueTypeId,
         string issueTypeName,
         CancellationToken cts
@@ -62,7 +62,7 @@ public class IssueTypeRepository : IIssueTypeRepository
         return await _db.SaveData<IssueTypeModel>(sql, parameters, cts);
     }
 
-    public async Task<IssueTypeModel> DeleteIssueType(int issueTypeId, CancellationToken cts)
+    public async Task<IssueTypeModel> Delete(int issueTypeId, CancellationToken cts)
     {
         const string sql = @"DELETE FROM issue_type WHERE id = @IssueTypeId RETURNING *";
 
@@ -71,7 +71,7 @@ public class IssueTypeRepository : IIssueTypeRepository
         return await _db.SaveData<IssueTypeModel>(sql, parameters, cts);
     }
 
-    public async Task<bool> DoesIssueTypeExist(int issueTypeId, CancellationToken cts)
+    public async Task<bool> DoesExist(int issueTypeId, CancellationToken cts)
     {
         const string sql = @"SELECT EXISTS (SELECT true FROM issue_type WHERE id = @IssueTypeId)";
 
@@ -80,7 +80,7 @@ public class IssueTypeRepository : IIssueTypeRepository
         return await _db.LoadFirst<bool>(sql, parameters, cts);
     }
 
-    public async Task<bool> DoesIssueTypeExist(string issueTypeName, CancellationToken cts)
+    public async Task<bool> DoesExist(string issueTypeName, CancellationToken cts)
     {
         const string sql =
             @"SELECT EXISTS (SELECT true FROM issue_type WHERE issue_type_name = @IssueTypeName)";

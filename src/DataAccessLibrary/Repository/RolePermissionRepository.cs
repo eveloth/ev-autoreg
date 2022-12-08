@@ -15,7 +15,7 @@ public class RolePermissionRepository : IRolePermissionRepository
         _db = db;
     }
 
-    public async Task<IEnumerable<RolePermissionModel>> GetAllRolePermissions(
+    public async Task<IEnumerable<RolePermissionModel>> GetAll(
         PaginationFilter filter,
         CancellationToken cts
     )
@@ -41,10 +41,7 @@ public class RolePermissionRepository : IRolePermissionRepository
         return await _db.LoadAllData<RolePermissionModel>(sql, cts);
     }
 
-    public async Task<IEnumerable<RolePermissionModel>> GetRolePermissions(
-        int roleId,
-        CancellationToken cts
-    )
+    public async Task<IEnumerable<RolePermissionModel>> GetRole(int roleId, CancellationToken cts)
     {
         const string sql =
             @"SELECT role.id AS role_id, 
@@ -77,12 +74,12 @@ public class RolePermissionRepository : IRolePermissionRepository
 
         roleId = await _db.SaveData<int>(sql, parameters, cts);
 
-        var result = await GetRolePermissions(roleId, cts);
+        var result = await GetRole(roleId, cts);
 
         return result;
     }
 
-    public async Task<IEnumerable<RolePermissionModel>> DeletePermissionFromRole(
+    public async Task<IEnumerable<RolePermissionModel>> RemovePermissionFromRole(
         int roleId,
         int permissionId,
         CancellationToken cts
@@ -98,10 +95,10 @@ public class RolePermissionRepository : IRolePermissionRepository
 
         roleId = await _db.SaveData<int>(sql, parameters, cts);
 
-        return await GetRolePermissions(roleId, cts);
+        return await GetRole(roleId, cts);
     }
 
-    public async Task<bool> DoesRolePermissionCorrecationExist(
+    public async Task<bool> DoesCorrecationExist(
         int roleId,
         int permissionId,
         CancellationToken cts

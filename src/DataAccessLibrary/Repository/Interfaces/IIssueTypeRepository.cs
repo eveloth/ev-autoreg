@@ -5,14 +5,11 @@ namespace DataAccessLibrary.Repository.Interfaces;
 
 public interface IIssueTypeRepository
 {
-    Task<IssueTypeModel?> GetIssueType(int issueTypeId, CancellationToken cts);
-    Task<IEnumerable<IssueTypeModel>> GetAllIssueTypes(
-        PaginationFilter filter,
-        CancellationToken cts
-    );
-    Task<IssueTypeModel> AddIssueType(string issueTypeName, CancellationToken cts);
-    Task<IssueTypeModel> ChangeIssueTypeName(int issueTypeId, string issueTypeName, CancellationToken cts);
-    Task<IssueTypeModel> DeleteIssueType(int issueTypeId, CancellationToken cts);
-    Task<bool> DoesIssueTypeExist(int issueTypeId, CancellationToken cts);
-    Task<bool> DoesIssueTypeExist(string issueTypeName, CancellationToken cts);
+    Task<IssueTypeModel?> Get(int issueTypeId, CancellationToken cts);
+    Task<IEnumerable<IssueTypeModel>> GetAll(PaginationFilter filter, CancellationToken cts);
+    Task<IssueTypeModel> Add(string issueTypeName, CancellationToken cts);
+    Task<IssueTypeModel> ChangeName(int issueTypeId, string issueTypeName, CancellationToken cts);
+    Task<IssueTypeModel> Delete(int issueTypeId, CancellationToken cts);
+    Task<bool> DoesExist(int issueTypeId, CancellationToken cts);
+    Task<bool> DoesExist(string issueTypeName, CancellationToken cts);
 }

@@ -59,7 +59,7 @@ public class AuthenticationService : IAuthenticationService
         if (user.RoleId is not null)
         {
             var rolePermissionModels =
-                await _unitofWork.RolePermissionRepository.GetRolePermissions(
+                await _unitofWork.RolePermissionRepository.GetRole(
                     user.RoleId!.Value,
                     cts
                 );

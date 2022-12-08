@@ -15,7 +15,7 @@ public class IssueRepository : IIssueRepository
         _db = db;
     }
 
-    public async Task<IssueModel?> GetIssue(int issueId, CancellationToken cts)
+    public async Task<IssueModel?> Get(int issueId, CancellationToken cts)
     {
         const string sql = @"SELECT * FROM issue WHERE id = @IssueId";
 
@@ -24,7 +24,7 @@ public class IssueRepository : IIssueRepository
         return await _db.LoadFirst<IssueModel?>(sql, parameters, cts);
     }
 
-    public async Task<IEnumerable<IssueModel>> GetAllIssues(
+    public async Task<IEnumerable<IssueModel>> GetAll(
         PaginationFilter filter,
         CancellationToken cts
     )
@@ -37,7 +37,7 @@ public class IssueRepository : IIssueRepository
         return await _db.LoadAllData<IssueModel>(sql, cts);
     }
 
-    public async Task<IssueModel> UpsertIssue(IssueModel issue, CancellationToken cts)
+    public async Task<IssueModel> Upsert(IssueModel issue, CancellationToken cts)
     {
         const string sql =
             @"INSERT INTO issue
@@ -61,7 +61,7 @@ public class IssueRepository : IIssueRepository
         return await _db.SaveData<IssueModel>(sql, parameters, cts);
     }
 
-    public async Task<IssueModel> DeleteIssue(int issueId, CancellationToken cts)
+    public async Task<IssueModel> Delete(int issueId, CancellationToken cts)
     {
         const string sql = @"DELETE FROM issue WHERE id = @IssueId RETURNING *";
 

@@ -41,11 +41,14 @@ public class AccessControlController : ControllerBase
     )
     {
         var paginationFilter = _mapper.Map<PaginationFilter>(pagination);
-        var roles = await _unitofWork.RoleRepository.GetRoles(paginationFilter, cts);
+        var roles = await _unitofWork.RoleRepository.GetAll(paginationFilter, cts);
 
         await _unitofWork.CommitAsync(cts);
 
-        var response = new PagedResponse<RoleDto>(_mapper.Map<IEnumerable<RoleDto>>(roles), pagination);
+        var response = new PagedResponse<RoleDto>(
+            _mapper.Map<IEnumerable<RoleDto>>(roles),
+            pagination
+        );
 
         return Ok(response);
     }
@@ -55,13 +58,13 @@ public class AccessControlController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> AddRole([FromBody] RoleRequest roleName, CancellationToken cts)
     {
-        var roleExists = await _unitofWork.RoleRepository.DoesRoleExist(roleName.RoleName, cts);
+        var roleExists = await _unitofWork.RoleRepository.DoesExist(roleName.RoleName, cts);
 
         if (roleExists)
         {
             return BadRequest(ErrorCode[3003]);
         }
-        var newRole = await _unitofWork.RoleRepository.AddRole(roleName.RoleName, cts);
+        var newRole = await _unitofWork.RoleRepository.Add(roleName.RoleName, cts);
 
         await _unitofWork.CommitAsync(cts);
 
@@ -87,14 +90,14 @@ public class AccessControlController : ControllerBase
         CancellationToken cts
     )
     {
-        var roleExists = await _unitofWork.RoleRepository.DoesRoleExist(id, cts);
+        var roleExists = await _unitofWork.RoleRepository.DoesExist(id, cts);
 
         if (!roleExists)
         {
             return BadRequest(ErrorCode[3001]);
         }
 
-        var roleNameIsTaken = await _unitofWork.RoleRepository.DoesRoleExist(request.RoleName, cts);
+        var roleNameIsTaken = await _unitofWork.RoleRepository.DoesExist(request.RoleName, cts);
 
         if (roleNameIsTaken)
         {
@@ -103,7 +106,7 @@ public class AccessControlController : ControllerBase
 
         var role = new RoleModel { Id = id, RoleName = request.RoleName.ToLower() };
 
-        var updatedRole = await _unitofWork.RoleRepository.ChangeRoleName(role, cts);
+        var updatedRole = await _unitofWork.RoleRepository.ChangeName(role, cts);
 
         await _unitofWork.CommitAsync(cts);
 
@@ -123,14 +126,14 @@ public class AccessControlController : ControllerBase
     [HttpDelete]
     public async Task<IActionResult> DeleteRole([FromRoute] int id, CancellationToken cts)
     {
-        var roleExists = await _unitofWork.RoleRepository.DoesRoleExist(id, cts);
+        var roleExists = await _unitofWork.RoleRepository.DoesExist(id, cts);
 
         if (!roleExists)
         {
             return BadRequest(ErrorCode[3001]);
         }
 
-        var deletedRole = await _unitofWork.RoleRepository.DeleteRole(id, cts);
+        var deletedRole = await _unitofWork.RoleRepository.Delete(id, cts);
 
         await _unitofWork.CommitAsync(cts);
 
@@ -155,10 +158,7 @@ public class AccessControlController : ControllerBase
     {
         var paginationFilter = _mapper.Map<PaginationFilter>(pagination);
 
-        var permissions = await _unitofWork.PermissionRepository.GetAllPermissions(
-            paginationFilter,
-            cts
-        );
+        var permissions = await _unitofWork.PermissionRepository.GetAll(paginationFilter, cts);
 
         await _unitofWork.CommitAsync(cts);
 
@@ -178,7 +178,7 @@ public class AccessControlController : ControllerBase
         CancellationToken cts
     )
     {
-        var permissionExists = await _unitofWork.PermissionRepository.DoesPermissionExist(
+        var permissionExists = await _unitofWork.PermissionRepository.DoesExist(
             request.PermissionName,
             cts
         );
@@ -194,10 +194,7 @@ public class AccessControlController : ControllerBase
             Description = request.Description
         };
 
-        var addedPermission = await _unitofWork.PermissionRepository.AddPermission(
-            newPermission,
-            cts
-        );
+        var addedPermission = await _unitofWork.PermissionRepository.Add(newPermission, cts);
 
         await _unitofWork.CommitAsync(cts);
 
@@ -217,14 +214,14 @@ public class AccessControlController : ControllerBase
     [HttpDelete]
     public async Task<IActionResult> DeletePermission([FromRoute] int id, CancellationToken cts)
     {
-        var permissionExists = await _unitofWork.PermissionRepository.DoesPermissionExist(id, cts);
+        var permissionExists = await _unitofWork.PermissionRepository.DoesExist(id, cts);
 
         if (!permissionExists)
         {
             return BadRequest(ErrorCode[4002]);
         }
 
-        var deletedPermission = await _unitofWork.PermissionRepository.DeletePermission(id, cts);
+        var deletedPermission = await _unitofWork.PermissionRepository.Delete(id, cts);
 
         await _unitofWork.CommitAsync(cts);
 
@@ -249,12 +246,14 @@ public class AccessControlController : ControllerBase
     {
         var paginationFilter = _mapper.Map<PaginationFilter>(pagination);
 
-        var rolePermissions = await _unitofWork.RolePermissionRepository.GetAllRolePermissions(
+        var rolePermissions = await _unitofWork.RolePermissionRepository.GetAll(
             paginationFilter,
             cts
         );
 
-        var listsOfRolePermissions = rolePermissions.GroupByIntoList(x => new {x.RoleId, x.RoleName});
+        var listsOfRolePermissions = rolePermissions.GroupByIntoList(
+            x => new { x.RoleId, x.RoleName }
+        );
 
         await _unitofWork.CommitAsync(cts);
 
@@ -271,17 +270,14 @@ public class AccessControlController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetRolePermissions([FromRoute] int id, CancellationToken cts)
     {
-        var roleExists = await _unitofWork.RoleRepository.DoesRoleExist(id, cts);
+        var roleExists = await _unitofWork.RoleRepository.DoesExist(id, cts);
 
         if (!roleExists)
         {
             return BadRequest(ErrorCode[3001]);
         }
 
-        var rolePermissions = await _unitofWork.RolePermissionRepository.GetRolePermissions(
-            id,
-            cts
-        );
+        var rolePermissions = await _unitofWork.RolePermissionRepository.GetRole(id, cts);
 
         await _unitofWork.CommitAsync(cts);
 
@@ -301,17 +297,14 @@ public class AccessControlController : ControllerBase
         CancellationToken cts
     )
     {
-        var roleExists = await _unitofWork.RoleRepository.DoesRoleExist(roleId, cts);
+        var roleExists = await _unitofWork.RoleRepository.DoesExist(roleId, cts);
 
         if (!roleExists)
         {
             return BadRequest(ErrorCode[3001]);
         }
 
-        var permissionExists = await _unitofWork.PermissionRepository.DoesPermissionExist(
-            permissionId,
-            cts
-        );
+        var permissionExists = await _unitofWork.PermissionRepository.DoesExist(permissionId, cts);
 
         if (!permissionExists)
         {
@@ -332,7 +325,9 @@ public class AccessControlController : ControllerBase
             roleId
         );
 
-        var response = new Response<RolePermissionDto>(_mapper.Map<RolePermissionDto>(rolePermissions));
+        var response = new Response<RolePermissionDto>(
+            _mapper.Map<RolePermissionDto>(rolePermissions)
+        );
 
         return Ok(response);
     }
@@ -347,7 +342,7 @@ public class AccessControlController : ControllerBase
     )
     {
         var rolePermissionCorerlationExists =
-            await _unitofWork.RolePermissionRepository.DoesRolePermissionCorrecationExist(
+            await _unitofWork.RolePermissionRepository.DoesCorrecationExist(
                 roleId,
                 permissionId,
                 cts
@@ -358,7 +353,7 @@ public class AccessControlController : ControllerBase
             return BadRequest(ErrorCode);
         }
 
-        var rolePermissions = await _unitofWork.RolePermissionRepository.DeletePermissionFromRole(
+        var rolePermissions = await _unitofWork.RolePermissionRepository.RemovePermissionFromRole(
             roleId,
             permissionId,
             cts
@@ -372,7 +367,9 @@ public class AccessControlController : ControllerBase
             roleId
         );
 
-        var response = new Response<RolePermissionDto>(_mapper.Map<RolePermissionDto>(rolePermissions));
+        var response = new Response<RolePermissionDto>(
+            _mapper.Map<RolePermissionDto>(rolePermissions)
+        );
 
         return Ok(response);
     }
@@ -386,14 +383,14 @@ public class AccessControlController : ControllerBase
         CancellationToken cts
     )
     {
-        var userExists = await _unitofWork.UserRepository.DoesUserExist(userId, cts);
+        var userExists = await _unitofWork.UserRepository.DoesExist(userId, cts);
 
         if (!userExists)
         {
             return NotFound(ErrorCode[2001]);
         }
 
-        var roleExists = await _unitofWork.RoleRepository.DoesRoleExist(roleId, cts);
+        var roleExists = await _unitofWork.RoleRepository.DoesExist(roleId, cts);
 
         if (!roleExists)
         {
