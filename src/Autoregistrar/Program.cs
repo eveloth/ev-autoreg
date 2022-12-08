@@ -51,6 +51,7 @@ builder.Services.AddSignalR();
 var app = builder.Build();
 
 app.ConfigureDbToDomainMapping();
+app.ConfigureXmlToModelMapping();
 
 var env = app.Environment;
 
