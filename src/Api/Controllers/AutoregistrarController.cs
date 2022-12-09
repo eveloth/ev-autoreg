@@ -99,6 +99,31 @@ public class AutoregistrarController : ControllerBase
         return Ok(response);
     }
 
+    [Authorize(Policy = "ForceStopRegistrar")]
+    [Route("force-stop")]
+    [HttpPost]
+    public async Task<IActionResult> ForceStopAutoregistrar(CancellationToken cts)
+    {
+        var currentStatus = await _grpcClient.RequestStatusAsync(
+            new Empty(),
+            cancellationToken: cts
+        );
+
+        if (currentStatus.Status != Status.Started)
+        {
+            return BadRequest(ErrorCode[8002]);
+        }
+
+        var statusResponse = await _grpcClient.StopServiceAsync(
+            new StopRequest(),
+            cancellationToken: cts
+        );
+
+        var response = new Response<StatusResponse>(statusResponse);
+
+        return Ok(response);
+    }
+
     [Authorize(Policy = "UseRegistrar")]
     [Route("status")]
     [HttpGet]

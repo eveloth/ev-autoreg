@@ -29,6 +29,11 @@ public static class Permissions
             PermissionName = "ConfigureRegistrar",
             Description = "Can configure registrar service"
         },
+        new()
+        {
+            PermissionName = "ForceStopRegistrar",
+            Description = "Can force stop registrar not being the user who started it"
+        },
     };
 
     public static List<PermissionModel> GetPermissions()
