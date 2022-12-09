@@ -9,18 +9,28 @@ public static class MappingConfig
 {
     public static void ConfigureDbToDomainMapping(this IApplicationBuilder app)
     {
+        TypeAdapterConfig<RuleModel, Rule>
+            .NewConfig()
+            .Map(dest => dest.RuleSubstring, src => src.Rule)
+            .Map(dest => dest.IssueTypeId, src => src.IssueTypeId)
+            .Map(dest => dest.IsNegative, src => src.IsNegative)
+            .Map(dest => dest.IsRegex, src => src.IsRegex)
+            .IgnoreNullValues(true);
+
         TypeAdapterConfig<AutoregstrarSettingsModel, AutoregistrarSettings>
             .NewConfig()
             .Map(dest => dest.ExchangeServerUri, src => src.ExchangeServerUri)
             .Map(dest => dest.ExtraViewUri, src => src.ExtraViewUri)
             .Map(dest => dest.NewIssueRegex, src => new Regex(src.NewIssueRegex))
-            .Map(dest => dest.IssueNoRegex, src => new Regex(src.IssueNoRegex));
+            .Map(dest => dest.IssueNoRegex, src => new Regex(src.IssueNoRegex))
+            .IgnoreNullValues(true);
 
         TypeAdapterConfig<(IssueFieldModel, IEnumerable<RuleModel>), IssueField>
             .NewConfig()
             .Map(dest => dest.Id, src => src.Item1.Id)
             .Map(dest => dest.FieldName, src => src.Item1.FieldName)
-            .Map(dest => dest.Rules, src => src.Item2.Select(x => x.IssueFieldId == src.Item1.Id));
+            .Map(dest => dest.Rules, src => src.Item2.Where(x => x.IssueFieldId == src.Item1.Id))
+            .IgnoreNullValues(true);
 
         TypeAdapterConfig<(IssueTypeModel, IEnumerable<EvApiQueryParametersModel>), IssueType>
             .NewConfig()
@@ -29,7 +39,8 @@ public static class MappingConfig
             .Map(
                 dest => dest.QueryParameters,
                 src => src.Item2.First(x => x.IssueTypeId == src.Item1.Id)
-            );
+            )
+            .IgnoreNullValues(true);
     }
 
     public static void ConfigureXmlToModelMapping(this IApplicationBuilder app)

@@ -8,6 +8,7 @@ using DataAccessLibrary.Models;
 using DataAccessLibrary.Repository.Interfaces;
 using MapsterMapper;
 using Microsoft.AspNetCore.SignalR;
+using Npgsql;
 
 namespace Autoregistrar.Services;
 
@@ -84,6 +85,7 @@ public class IssueProcessor : IIssueProcessor
                 )
                 {
                     await UpdateAndSaveIssue(ruleSet.Key, xmlIssue.Id);
+                    return;
                 }
             }
         }
@@ -99,6 +101,10 @@ public class IssueProcessor : IIssueProcessor
         var queryParameters = StateManager.Settings!.IssueTypes
             .First(x => x.Id == issueType)
             .QueryParameters;
+
+        await _hubContext.Clients.All.ReceiveLog(
+            $"Registering issue as: {StateManager.Settings.IssueTypes.First(x => x.Id == issueType).IssueTypeName}"
+        );
 
         var isSecondUpdateNeeded = queryParameters.InWorkStatus is not null;
 
@@ -127,6 +133,9 @@ public class IssueProcessor : IIssueProcessor
                 issueNo,
                 firstUpdateResponse.Content
             );
+            await _hubContext.Clients.All.ReceiveLog(
+                $"Failed to update issue ID {issueNo}, EV server response was: {firstUpdateResponse.Content}"
+            );
         }
 
         queryString.Remove(queryParameters.RegStatus);
@@ -136,14 +145,25 @@ public class IssueProcessor : IIssueProcessor
 
         if (secondUpdateResponse.StatusCode == HttpStatusCode.OK)
         {
-            await InsertIssueIntoDatabase(issueNo, issueType);
+            try
+            {
+                await InsertIssueIntoDatabase(issueNo, issueType);
+            }
+            catch (NpgsqlException e)
+            {
+                _logger.LogError("Error inserting issue: {ErrorMessage}", e);
+                await _hubContext.Clients.All.ReceiveLog("Unable to insert an issue");
+            }
         }
         else
         {
             _logger.LogError(
                 "Failed to update issue ID {IssueId}, EV server response was: {EvResponse}",
                 issueNo,
-                firstUpdateResponse.Content
+                secondUpdateResponse.Content
+            );
+            await _hubContext.Clients.All.ReceiveLog(
+                $"Failed to update issue ID {issueNo}, EV server response was: {secondUpdateResponse.Content}"
             );
         }
     }
@@ -161,6 +181,8 @@ public class IssueProcessor : IIssueProcessor
             using var scope = _scopeFactory.CreateScope();
             var unitofWork = scope.ServiceProvider.GetService<IUnitofWork>();
             await unitofWork!.IssueRepository.Upsert(issue, CancellationToken.None);
+
+            await unitofWork.CommitAsync(CancellationToken.None);
 
             _logger.LogInformation("Issue ID {IssueId} was updated", issue.Id);
             await _hubContext.Clients.All.ReceiveLog($"Issue ID {issue.Id} was updated");
