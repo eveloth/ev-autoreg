@@ -5,6 +5,8 @@ using Api.Services.Interfaces;
 using DataAccessLibrary.Extensions;
 using Api.Extensions;
 using Api.Mapping;
+using Api.Validators;
+using FluentValidation;
 using MapsterMapper;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Serilog;
@@ -62,6 +64,8 @@ internal static class Program
                     ?? throw new NullConfigurationEntryException("Autoregistrar URI wasn't set")
             );
         });
+
+        builder.Services.AddValidatorsFromAssemblyContaining<UserCredentialsValidator>();
 
         var app = builder.Build();
 

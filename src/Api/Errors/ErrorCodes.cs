@@ -31,8 +31,9 @@ public static class ErrorCodes
             { 8002, new ApiError(8002, "Couldn't stop autoregistar; it is not started.") },
             { 8003, new ApiError(8003, "Only the owner of the current session can terminate it.") },
             { 9001, new ApiError(9001, "Couldn't perform database transaction.") },
-            { 10001, new ApiError(10001, "Service configuration is not valid.") }
-        };
+            { 10001, new ApiError(10001, "Service configuration is not valid.") },
+            { 11001, new ApiError(11001, "Validation error") },
+};
 
-    public static ReadOnlyDictionary<int, ApiError> ErrorCode { get; } = new(ErrorCodeList);
+public static ReadOnlyDictionary<int, ApiError> ErrorCode { get; } = new(ErrorCodeList);
 }

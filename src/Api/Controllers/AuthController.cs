@@ -1,9 +1,13 @@
 using Api.Contracts.Dto;
 using Api.Contracts.Requests;
 using Api.Contracts.Responses;
+using Api.Extensions;
 using Api.Services.Interfaces;
+using Api.Validators;
 using DataAccessLibrary.Models;
 using DataAccessLibrary.Repository.Interfaces;
+using FluentValidation;
+using FluentValidation.Results;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -22,6 +26,7 @@ public class AuthController : ControllerBase
     private readonly IUserRepository _userRepository;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IAuthenticationService _authService;
+    private readonly IValidator<UserCredentialsRequest> _validator;
 
     public AuthController(
         IUserRepository userRepository,
@@ -29,8 +34,7 @@ public class AuthController : ControllerBase
         IAuthenticationService authService,
         ILogger<AuthController> logger,
         IUnitofWork unitofWork,
-        IMapper mapper
-    )
+        IMapper mapper, IValidator<UserCredentialsRequest> validator)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
@@ -38,6 +42,7 @@ public class AuthController : ControllerBase
         _logger = logger;
         _unitofWork = unitofWork;
         _mapper = mapper;
+        _validator = validator;
     }
 
     /// <summary>
@@ -97,14 +102,11 @@ public class AuthController : ControllerBase
         CancellationToken cts
     )
     {
-        if (!_authService.IsEmailValid(request.Email))
-        {
-            return BadRequest(ErrorCode[1001]);
-        }
+        var validationResult = await _validator.ValidateAsync(request, cts);
 
-        if (!_authService.IsPasswordValid(request.Email, request.Password))
+        if (!validationResult.IsValid)
         {
-            return BadRequest(ErrorCode[1002]);
+            return BadRequest(validationResult.ToErrorResponse());
         }
 
         var userExists = await _userRepository.DoesExist(request.Email, cts);

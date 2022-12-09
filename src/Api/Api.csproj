@@ -20,6 +20,8 @@
 
     <ItemGroup>
         <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+        <PackageReference Include="FluentValidation" Version="11.4.0" />
+        <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.4.0" />
         <PackageReference Include="Google.Protobuf" Version="3.21.9" />
         <PackageReference Include="Grpc.Net.Client" Version="2.50.0" />
         <PackageReference Include="Grpc.Net.ClientFactory" Version="2.50.0" />
