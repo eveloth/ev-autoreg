@@ -107,12 +107,12 @@ public class SettingsProvider : ISettingsProvider
         var unitofWork =
             scope.ServiceProvider.GetService<IUnitofWork>() ?? throw new NullReferenceException();
 
-        var areAutoregSettingsSet = await unitofWork.GpRepository.IsTableEmpty(
+        var areAutoregSettingsEmpty = await unitofWork.GpRepository.IsTableEmpty(
             "autoregistrar_settings",
             cts
         );
 
-        if (!areAutoregSettingsSet)
+        if (areAutoregSettingsEmpty)
         {
             return false;
         }
