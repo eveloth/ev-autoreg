@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
+using QueryParametersRepository = DataAccessLibrary.Repository.QueryParametersRepository;
 
 namespace DataAccessLibrary.Extensions;
 
@@ -70,11 +71,11 @@ public static class WebApplicationBuilderDataExtensions
         builder.Services.AddScoped<IIssueTypeRepository, IssueTypeRepository>();
         builder.Services.AddScoped<IIssueRepository, IssueRepository>();
         builder.Services.AddScoped<IRuleRepository, RuleRepository>();
+        builder.Services.AddScoped<IQueryParametersRepository, QueryParametersRepository>();
         builder.Services.AddScoped<
-            IEvApiQueryParametersRepository,
-            EvApiQueryParametersRepository
+            IAutoregistrarSettingsRepository,
+            AutoregistrarSettingsRepository
         >();
-        builder.Services.AddScoped<IAutoregistrarSettingsRepository, AutoregistrarSettingsRepository>();
         builder.Services.AddScoped<IIssueFieldRepository, IssueFieldRepository>();
         builder.Services.AddScoped<IUnitofWork, UnitofWork>();
 

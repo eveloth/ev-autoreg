@@ -1,6 +1,6 @@
 namespace DataAccessLibrary.Models;
 
-public class EvApiQueryParametersModel
+public class QueryParametersModel
 {
 #pragma warning disable CS8618
 

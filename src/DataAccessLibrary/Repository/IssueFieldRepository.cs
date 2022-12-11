@@ -37,12 +37,11 @@ public class IssueFieldRepository : IIssueFieldRepository
         return await _db.LoadAllData<IssueFieldModel>(sql, cts);
     }
 
-    public async Task Add(string issueFieldName, CancellationToken cts)
+    public async Task Add(IssueFieldModel issueField, CancellationToken cts)
     {
-        const string sql =
-            "INSERT INTO issue_field (field_name) VALUES (@IssueFieldName) RETURNING id";
+        const string sql = "INSERT INTO issue_field (field_name) VALUES (@FieldName) RETURNING id";
 
-        var parameters = new DynamicParameters(new { IssueFieldName = issueFieldName });
+        var parameters = new DynamicParameters(issueField);
 
         await _db.SaveData(sql, parameters, cts);
     }

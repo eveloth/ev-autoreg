@@ -8,14 +8,12 @@ public interface IRolePermissionRepository
     Task<IEnumerable<RolePermissionModel>> GetAll(PaginationFilter filter, CancellationToken cts);
     Task<IEnumerable<RolePermissionModel>> GetRole(int roleId, CancellationToken cts);
     Task<IEnumerable<RolePermissionModel>> AddPermissionToRole(
-        int roleId,
-        int permissionId,
+        RolePermissionModel rolePermission,
         CancellationToken cts
     );
     Task<IEnumerable<RolePermissionModel>> RemovePermissionFromRole(
-        int roleId,
-        int permissionId,
+        RolePermissionModel rolePermission,
         CancellationToken cts
     );
-    Task<bool> DoesCorrecationExist(int roleId, int permissionId, CancellationToken cts);
+    Task<bool> DoesCorrelationExist(RolePermissionModel rolePermission, CancellationToken cts);
 }

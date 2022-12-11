@@ -11,7 +11,7 @@ public interface IUnitofWork
     IIssueTypeRepository IssueTypeRepository { get; set; }
     IIssueRepository IssueRepository { get; set; }
     IRuleRepository RuleRepository { get; set; }
-    IEvApiQueryParametersRepository EvApiQueryParametersRepository { get; set; }
+    IQueryParametersRepository QueryParametersRepository { get; set; }
     IAutoregistrarSettingsRepository AutoregistrarSettingsRepository { get; set; }
     IIssueFieldRepository IssueFieldRepository { get; set; }
     Task CommitAsync(CancellationToken cts);

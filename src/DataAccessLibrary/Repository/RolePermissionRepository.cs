@@ -60,19 +60,16 @@ public class RolePermissionRepository : IRolePermissionRepository
     }
 
     public async Task<IEnumerable<RolePermissionModel>> AddPermissionToRole(
-        int roleId,
-        int permissionId,
+        RolePermissionModel rolePermission,
         CancellationToken cts
     )
     {
         const string sql =
             @"INSERT INTO role_permission (role_id, permission_id) VALUES (@RoleId, @PermissionId) RETURNING role_id";
 
-        var parameters = new DynamicParameters(
-            new { RoleId = roleId, PermissionId = permissionId }
-        );
+        var parameters = new DynamicParameters(rolePermission);
 
-        roleId = await _db.SaveData<int>(sql, parameters, cts);
+        var roleId = await _db.SaveData<int>(sql, parameters, cts);
 
         var result = await GetRole(roleId, cts);
 
@@ -80,8 +77,7 @@ public class RolePermissionRepository : IRolePermissionRepository
     }
 
     public async Task<IEnumerable<RolePermissionModel>> RemovePermissionFromRole(
-        int roleId,
-        int permissionId,
+        RolePermissionModel rolePermission,
         CancellationToken cts
     )
     {
@@ -89,27 +85,22 @@ public class RolePermissionRepository : IRolePermissionRepository
             @"DELETE FROM role_permission
                              WHERE role_id = @RoleId and permission_id = @PermissionId RETURNING role_id";
 
-        var parameters = new DynamicParameters(
-            new { RoleId = roleId, PermissionId = permissionId }
-        );
+        var parameters = new DynamicParameters(rolePermission);
 
-        roleId = await _db.SaveData<int>(sql, parameters, cts);
+        var roleId = await _db.SaveData<int>(sql, parameters, cts);
 
         return await GetRole(roleId, cts);
     }
 
-    public async Task<bool> DoesCorrecationExist(
-        int roleId,
-        int permissionId,
+    public async Task<bool> DoesCorrelationExist(
+        RolePermissionModel rolePermission,
         CancellationToken cts
     )
     {
         const string sql =
             @"SELECT EXISTS (SELECT true FROM role_permission WHERE role_id = @RoleId AND permission_id = @PermissionId)";
 
-        var parameters = new DynamicParameters(
-            new { RoleId = roleId, PermissionId = permissionId }
-        );
+        var parameters = new DynamicParameters(rolePermission);
 
         return await _db.LoadFirst<bool>(sql, parameters, cts);
     }

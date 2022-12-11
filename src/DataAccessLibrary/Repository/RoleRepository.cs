@@ -25,11 +25,11 @@ public class RoleRepository : IRoleRepository
         return await _db.LoadAllData<RoleModel>(sql, cts);
     }
 
-    public async Task<RoleModel> Add(string roleName, CancellationToken cts)
+    public async Task<RoleModel> Add(RoleModel role, CancellationToken cts)
     {
         const string sql = @"INSERT INTO role (role_name) VALUES (@RoleName) RETURNING *";
 
-        var parameters = new DynamicParameters(new { RoleName = roleName });
+        var parameters = new DynamicParameters(role);
 
         return await _db.SaveData<RoleModel>(sql, parameters, cts);
     }
@@ -75,7 +75,7 @@ public class RoleRepository : IRoleRepository
         return await _db.LoadFirst<bool>(sql, parameters, cts);
     }
 
-    public async Task<UserProfileModel> SetUserRole(int userId, int roleId, CancellationToken cts)
+    public async Task<UserModel> SetUserRole(int userId, int roleId, CancellationToken cts)
     {
         const string sql =
             @"WITH updated AS
@@ -88,10 +88,10 @@ public class RoleRepository : IRoleRepository
 
         var parameters = new DynamicParameters(new { UserId = userId, RoleId = roleId });
 
-        return await _db.SaveData<UserProfileModel, RoleModel>(sql, parameters, cts);
+        return await _db.SaveData<UserModel, RoleModel>(sql, parameters, cts);
     }
 
-    public async Task<UserProfileModel> RemoveUserFromRole(int userId, CancellationToken cts)
+    public async Task<UserModel> RemoveUserFromRole(int userId, CancellationToken cts)
     {
         const string sql =
             @"WITH updated AS
@@ -104,6 +104,6 @@ public class RoleRepository : IRoleRepository
 
         var parameters = new DynamicParameters(new { UserId = userId });
 
-        return await _db.SaveData<UserProfileModel, RoleModel>(sql, parameters, cts);
+        return await _db.SaveData<UserModel, RoleModel>(sql, parameters, cts);
     }
 }

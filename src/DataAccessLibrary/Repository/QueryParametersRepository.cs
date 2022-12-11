@@ -6,26 +6,26 @@ using DataAccessLibrary.SqlDataAccess;
 
 namespace DataAccessLibrary.Repository;
 
-public class EvApiQueryParametersRepository : IEvApiQueryParametersRepository
+public class QueryParametersRepository : IQueryParametersRepository
 {
     private readonly ISqlDataAccess _db;
 
-    public EvApiQueryParametersRepository(ISqlDataAccess db)
+    public QueryParametersRepository(ISqlDataAccess db)
     {
         _db = db;
     }
 
-    public async Task<EvApiQueryParametersModel?> Get(int issueTypeId, CancellationToken cts)
+    public async Task<QueryParametersModel?> Get(int issueTypeId, CancellationToken cts)
     {
         const string sql =
             @"SELECT * FROM registering_parameters WHERE issue_type_id = @IssueTypeId";
 
         var parameters = new DynamicParameters(new { IssueTypeId = issueTypeId });
 
-        return await _db.LoadFirst<EvApiQueryParametersModel?>(sql, parameters, cts);
+        return await _db.LoadFirst<QueryParametersModel?>(sql, parameters, cts);
     }
 
-    public async Task<IEnumerable<EvApiQueryParametersModel>> GetAll(
+    public async Task<IEnumerable<QueryParametersModel>> GetAll(
         PaginationFilter filter,
         CancellationToken cts
     )
@@ -36,11 +36,11 @@ public class EvApiQueryParametersRepository : IEvApiQueryParametersRepository
         var sql =
             @$"SELECT * FROM registering_parameters ORDER BY issue_type_id LIMIT {take} OFFSET {skip}";
 
-        return await _db.LoadAllData<EvApiQueryParametersModel>(sql, cts);
+        return await _db.LoadAllData<QueryParametersModel>(sql, cts);
     }
 
-    public async Task<EvApiQueryParametersModel> Upsert(
-        EvApiQueryParametersModel queryParameters,
+    public async Task<QueryParametersModel> Upsert(
+        QueryParametersModel queryParameters,
         CancellationToken cts
     )
     {
@@ -62,17 +62,17 @@ public class EvApiQueryParametersRepository : IEvApiQueryParametersRepository
 
         var paratmeters = new DynamicParameters(queryParameters);
 
-        return await _db.SaveData<EvApiQueryParametersModel>(sql, paratmeters, cts);
+        return await _db.SaveData<QueryParametersModel>(sql, paratmeters, cts);
     }
 
-    public async Task<EvApiQueryParametersModel> Delete(int issueTypeId, CancellationToken cts)
+    public async Task<QueryParametersModel> Delete(int issueTypeId, CancellationToken cts)
     {
         const string sql =
             @"DELETE FROM registering_parameters WHERE issue_type_id = @IssueTypeId RETURNING *";
 
         var parameters = new DynamicParameters(new { IssueTypeId = issueTypeId });
 
-        return await _db.SaveData<EvApiQueryParametersModel>(sql, parameters, cts);
+        return await _db.SaveData<QueryParametersModel>(sql, parameters, cts);
     }
 
     public async Task<bool> DoQueryParametersExistFor(int issueTypeId, CancellationToken cts)

@@ -36,28 +36,22 @@ public class IssueTypeRepository : IIssueTypeRepository
         return await _db.LoadAllData<IssueTypeModel>(sql, cts);
     }
 
-    public async Task<IssueTypeModel> Add(string issueTypeName, CancellationToken cts)
+    public async Task<IssueTypeModel> Add(IssueTypeModel issueType, CancellationToken cts)
     {
         const string sql =
             @"INSERT INTO issue_type (issue_type_name) VALUES (@IssueTypeName) RETURNING *";
 
-        var parameters = new DynamicParameters(new { IssueTypeName = issueTypeName });
+        var parameters = new DynamicParameters(issueType);
 
         return await _db.SaveData<IssueTypeModel>(sql, parameters, cts);
     }
 
-    public async Task<IssueTypeModel> ChangeName(
-        int issueTypeId,
-        string issueTypeName,
-        CancellationToken cts
-    )
+    public async Task<IssueTypeModel> ChangeName(IssueTypeModel issueType, CancellationToken cts)
     {
         const string sql =
-            @"UPDATE issue_type SET issue_type_name = @IssueTypeName WHERE id = @IssueTypeId RETURNING *";
+            @"UPDATE issue_type SET issue_type_name = @IssueTypeName WHERE id = @Id RETURNING *";
 
-        var parameters = new DynamicParameters(
-            new { IssueTypeId = issueTypeId, IssueTypeName = issueTypeName }
-        );
+        var parameters = new DynamicParameters(issueType);
 
         return await _db.SaveData<IssueTypeModel>(sql, parameters, cts);
     }
