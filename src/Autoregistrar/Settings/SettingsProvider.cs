@@ -42,7 +42,7 @@ public class SettingsProvider : ISettingsProvider
         );
 
         var queryParams = (
-            await unitofWork.EvApiQueryParametersRepository.GetAll(
+            await unitofWork.QueryParametersRepository.GetAll(
                 new PaginationFilter(1, 1000),
                 cts
             )
@@ -57,7 +57,7 @@ public class SettingsProvider : ISettingsProvider
         {
             var aggregationTable = new ValueTuple<
                 IssueTypeModel,
-                IEnumerable<EvApiQueryParametersModel>
+                IEnumerable<QueryParametersModel>
             >(type, queryParams);
             issueTypes.Add(_mapper.Map<IssueType>(aggregationTable));
         }
@@ -135,7 +135,7 @@ public class SettingsProvider : ISettingsProvider
 
         foreach (var issueType in issueTypes)
         {
-            var queryParams = await unitofWork.EvApiQueryParametersRepository.Get(
+            var queryParams = await unitofWork.QueryParametersRepository.Get(
                 issueType.Id,
                 cts
             );

@@ -32,7 +32,7 @@ public static class MappingConfig
             .Map(dest => dest.Rules, src => src.Item2.Where(x => x.IssueFieldId == src.Item1.Id))
             .IgnoreNullValues(true);
 
-        TypeAdapterConfig<(IssueTypeModel, IEnumerable<EvApiQueryParametersModel>), IssueType>
+        TypeAdapterConfig<(IssueTypeModel, IEnumerable<QueryParametersModel>), IssueType>
             .NewConfig()
             .Map(dest => dest.Id, src => src.Item1.Id)
             .Map(dest => dest.IssueTypeName, src => src.Item1.IssueTypeName)
