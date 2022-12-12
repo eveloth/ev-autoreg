@@ -3,7 +3,7 @@ using FluentValidation;
 
 namespace Api.Validators;
 
-public class QueryParametersValiadtor : AbstractValidator<EvApiQueryParametersRequest>
+public class QueryParametersValiadtor : AbstractValidator<QueryParametersRequest>
 {
     public QueryParametersValiadtor()
     {

@@ -1,4 +1,7 @@
+using Api.Contracts.Responses;
 using Api.Exceptions;
+using Api.Extensions;
+using FluentValidation;
 using Npgsql;
 using static Api.Errors.ErrorCodes;
 
@@ -21,11 +24,29 @@ public class ErrorHandlingMiddleware
         {
             await _next(context);
         }
+        catch (ValidationException e)
+        {
+            var error = e.ToErrorResponse();
+            context.Response.StatusCode = 400;
+            await context.Response.WriteAsJsonAsync(error);
+        }
+        catch (ApiException e)
+        {
+            var error = e.ToErrorResponse();
+
+            context.Response.StatusCode = error is null
+                ? 500
+                : error.ApiError.ErrorCode.ToString().EndsWith('4')
+                    ? 404
+                    : 400;
+
+            await context.Response.WriteAsJsonAsync(error);
+        }
         catch (NpgsqlException e)
         {
             _logger.LogError("An error occured during sql transaction: {ErrorMessage}", e);
             context.Response.StatusCode = 500;
-            var error = ErrorCode[9001];
+            var error = new ErrorResponse { ApiError = ErrorCode[13001] };
             await context.Response.WriteAsJsonAsync(error);
         }
         catch (NullConfigurationEntryException e)
@@ -36,7 +57,7 @@ public class ErrorHandlingMiddleware
                 e
             );
             context.Response.StatusCode = 500;
-            var error = ErrorCode[10001];
+            var error = new ErrorResponse { ApiError = ErrorCode[14001] };
             await context.Response.WriteAsJsonAsync(error);
         }
     }

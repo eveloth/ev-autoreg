@@ -341,19 +341,19 @@ public class AutoregistrarController : ControllerBase
     {
         var paginationFilter = _mapper.Map<PaginationFilter>(pagination);
 
-        var queryParameters = await _unitofWork.EvApiQueryParametersRepository.GetAll(
+        var queryParameters = await _unitofWork.QueryParametersRepository.GetAll(
             paginationFilter,
             cts
         );
 
-        List<ValueTuple<EvApiQueryParametersModel, IssueTypeModel?>> aggregationTable = new();
+        List<ValueTuple<QueryParametersModel, IssueTypeModel?>> aggregationTable = new();
 
         foreach (var parameter in queryParameters)
         {
             var issueType = await _unitofWork.IssueTypeRepository.Get(parameter.IssueTypeId, cts);
 
             aggregationTable.Add(
-                new ValueTuple<EvApiQueryParametersModel, IssueTypeModel?>
+                new ValueTuple<QueryParametersModel, IssueTypeModel?>
                 {
                     Item1 = parameter,
                     Item2 = issueType
@@ -363,8 +363,8 @@ public class AutoregistrarController : ControllerBase
 
         await _unitofWork.CommitAsync(cts);
 
-        var response = new PagedResponse<EvApiQueryParametersDto>(
-            _mapper.Map<IEnumerable<EvApiQueryParametersDto>>(aggregationTable),
+        var response = new PagedResponse<QueryParametersDto>(
+            _mapper.Map<IEnumerable<QueryParametersDto>>(aggregationTable),
             pagination
         );
 
@@ -386,7 +386,7 @@ public class AutoregistrarController : ControllerBase
             return NotFound(ErrorCode[7001]);
         }
 
-        var queryParameters = await _unitofWork.EvApiQueryParametersRepository.Get(id, cts);
+        var queryParameters = await _unitofWork.QueryParametersRepository.Get(id, cts);
 
         if (queryParameters is null)
         {
@@ -397,14 +397,14 @@ public class AutoregistrarController : ControllerBase
 
         await _unitofWork.CommitAsync(cts);
 
-        var aggregationTable = new ValueTuple<EvApiQueryParametersModel, IssueTypeModel?>
+        var aggregationTable = new ValueTuple<QueryParametersModel, IssueTypeModel?>
         {
             Item1 = queryParameters,
             Item2 = issueType
         };
 
-        var response = new Response<EvApiQueryParametersDto>(
-            _mapper.Map<EvApiQueryParametersDto>(aggregationTable)
+        var response = new Response<QueryParametersDto>(
+            _mapper.Map<QueryParametersDto>(aggregationTable)
         );
 
         return Ok(response);
@@ -415,7 +415,7 @@ public class AutoregistrarController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> UpsertEvApiQueryParametersForIssueType(
         [FromRoute] int id,
-        [FromBody] EvApiQueryParametersRequest request,
+        [FromBody] QueryParametersRequest request,
         CancellationToken cts
     )
     {
@@ -426,10 +426,10 @@ public class AutoregistrarController : ControllerBase
             return NotFound(ErrorCode[7001]);
         }
 
-        var queryParameters = _mapper.Map<EvApiQueryParametersModel>(request);
+        var queryParameters = _mapper.Map<QueryParametersModel>(request);
         queryParameters.IssueTypeId = id;
 
-        var addedQueryParameters = await _unitofWork.EvApiQueryParametersRepository.Upsert(
+        var addedQueryParameters = await _unitofWork.QueryParametersRepository.Upsert(
             queryParameters,
             cts
         );
@@ -441,14 +441,14 @@ public class AutoregistrarController : ControllerBase
 
         await _unitofWork.CommitAsync(cts);
 
-        var aggregationTable = new ValueTuple<EvApiQueryParametersModel, IssueTypeModel?>
+        var aggregationTable = new ValueTuple<QueryParametersModel, IssueTypeModel?>
         {
             Item1 = addedQueryParameters,
             Item2 = issueType
         };
 
-        var response = new Response<EvApiQueryParametersDto>(
-            _mapper.Map<EvApiQueryParametersDto>(aggregationTable)
+        var response = new Response<QueryParametersDto>(
+            _mapper.Map<QueryParametersDto>(aggregationTable)
         );
 
         return Ok(response);

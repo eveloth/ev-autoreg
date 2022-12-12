@@ -3,7 +3,7 @@ using FluentValidation;
 
 namespace Api.Validators;
 
-public class EvCredentialsValidator : AbstractValidator<EvCredentialsRequest>
+public class EvCredentialsValidator : AbstractValidator<ExternalCredentialsRequest>
 {
     public EvCredentialsValidator()
     {

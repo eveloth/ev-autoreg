@@ -32,7 +32,7 @@ public class ExternalCredentialsController : ControllerBase
     [Route("ev")]
     [HttpPost]
     public async Task<IActionResult> SaveEvCredentials(
-        [FromBody] EvCredentialsRequest credentials,
+        [FromBody] ExternalCredentialsRequest credentials,
         CancellationToken cts
     )
     {
@@ -60,7 +60,7 @@ public class ExternalCredentialsController : ControllerBase
     [Route("exchange")]
     [HttpPost]
     public async Task<IActionResult> SaveExchangeCredentials(
-        [FromBody] ExchangeCredentialsRequest credentials,
+        [FromBody] ExternalCredentialsRequest credentials,
         CancellationToken cts
     )
     {

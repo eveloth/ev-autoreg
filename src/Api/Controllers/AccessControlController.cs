@@ -342,7 +342,7 @@ public class AccessControlController : ControllerBase
     )
     {
         var rolePermissionCorerlationExists =
-            await _unitofWork.RolePermissionRepository.DoesCorrecationExist(
+            await _unitofWork.RolePermissionRepository.DoesCorrelationExist(
                 roleId,
                 permissionId,
                 cts

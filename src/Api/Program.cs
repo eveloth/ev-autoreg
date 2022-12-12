@@ -69,6 +69,7 @@ internal static class Program
 
         var app = builder.Build();
 
+        app.ConfigureModelToDomainMapping();
         app.ConfigureDomainToDtoMapping();
 
         // Configure the HTTP request pipeline.

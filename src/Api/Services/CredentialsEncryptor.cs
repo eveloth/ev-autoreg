@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Api.Contracts.Dto;
 using Api.Contracts.Requests;
+using Api.Domain;
 using Api.Exceptions;
 using Api.Services.Interfaces;
 using DataAccessLibrary.Models;
@@ -17,7 +18,7 @@ public class CredentialsEncryptor : ICredentialsEncryptor
         _config = config;
     }
 
-    public EvCredentialsModel EncryptEvCredentials(int userId, EvCredentialsRequest credentials)
+    public EvCredentialsModel EncryptEvCredentials(int userId, EvCredentials credentials)
     {
         var encrypfedCredentials = new EvCredentialsModel();
         var key =
@@ -44,7 +45,7 @@ public class CredentialsEncryptor : ICredentialsEncryptor
 
     public ExchangeCredentialsModel EncryptExchangeCredentials(
         int userId,
-        ExchangeCredentialsRequest credentials
+        ExchangeCredentials credentials
     )
     {
         var encrypfedCredentials = new ExchangeCredentialsModel();

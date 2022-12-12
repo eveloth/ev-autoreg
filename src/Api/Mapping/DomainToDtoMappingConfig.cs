@@ -1,5 +1,5 @@
 using Api.Contracts.Dto;
-using DataAccessLibrary.Models;
+using Api.Domain;
 using Mapster;
 
 namespace Api.Mapping;
@@ -8,74 +8,11 @@ public static class DomainToDtoMappingConfig
 {
     public static void ConfigureDomainToDtoMapping(this IApplicationBuilder app)
     {
-        TypeAdapterConfig<List<RolePermissionModel>, RolePermissionDto>
+        TypeAdapterConfig<Issue, IssueDto>
             .NewConfig()
-            .Map(dest => dest.Role.Id, src => src.First().RoleId)
-            .Map(dest => dest.Role.RoleName, src => src.First().RoleName)
-            .Map(
-                dest => dest.Permissions,
-                src =>
-                    src.First().PermissionId == null
-                        ? null
-                        : src.Select(
-                            x =>
-                                new PermissionDto
-                                {
-                                    Id = x.PermissionId!.Value,
-                                    PermissionName = x.PermissionName!,
-                                    Description = x.Description!
-                                }
-                        )
-            );
-
-        //CS8602 is useless in this context because we're ignoring null values
-#pragma warning disable CS8602
-
-        TypeAdapterConfig<(EvApiQueryParametersModel, IssueTypeModel?), EvApiQueryParametersDto>
-            .NewConfig()
-            .Map(dest => dest.IssueType.Id, src => src.Item2.Id)
-            .Map(dest => dest.IssueType.IssueTypeName, src => src.Item2.IssueTypeName)
-            .Map(dest => dest.WorkTime, src => src.Item1.WorkTime)
-            .Map(dest => dest.RegStatus, src => src.Item1.RegStatus)
-            .Map(dest => dest.InWorkStatus, src => src.Item1.InWorkStatus)
-            .Map(dest => dest.AssignedGroup, src => src.Item1.AssignedGroup)
-            .Map(dest => dest.RequestType, src => src.Item1.RequestType)
-            .IgnoreNullValues(true);
-
-        TypeAdapterConfig<(RuleModel, IssueTypeModel?, IssueFieldModel?), RuleDto>
-            .NewConfig()
-            .Map(dest => dest.Id, src => src.Item1.Id)
-            .Map(dest => dest.Rule, src => src.Item1.Rule)
-            .Map(dest => dest.IssueType.Id, src => src.Item2.Id)
-            .Map(dest => dest.IssueType.IssueTypeName, src => src.Item2.IssueTypeName)
-            .Map(dest => dest.IssueField.Id, src => src.Item3.Id)
-            .Map(dest => dest.IssueField.FieldName, src => src.Item3.FieldName)
-            .Map(dest => dest.IsRegex, src => src.Item1.IsRegex)
-            .Map(dest => dest.IsNegative, src => src.Item1.IsNegative)
-            .IgnoreNullValues(true);
-
-        TypeAdapterConfig<(IssueModel, UserProfileModel, IssueTypeModel), IssueDto>
-            .NewConfig()
-            .Map(dest => dest.Id, src => src.Item1.Id)
-            .Map(dest => dest.TimeCreated, src => src.Item1.TimeCreated)
-            .Map(dest => dest.Author, src => src.Item1.Author)
-            .Map(dest => dest.Company, src => src.Item1.Company)
-            .Map(dest => dest.Status, src => src.Item1.Status)
-            .Map(dest => dest.Priority, src => src.Item1.Priority)
-            .Map(dest => dest.AssignedGroup, src => src.Item1.AssignedGroup)
-            .Map(dest => dest.Assignee, src => src.Item1.Assignee)
-            .Map(dest => dest.ShortDescription, src => src.Item1.ShortDescription)
-            .Map(dest => dest.Description, src => src.Item1.Description)
-            .Map(dest => dest.Registrar.Id, src => src.Item2.Id)
-            .Map(dest => dest.Registrar.Email, src => src.Item2.Email)
-            .Map(dest => dest.Registrar.FirstName, src => src.Item2.FirstName)
-            .Map(dest => dest.Registrar.LastName, src => src.Item2.LastName)
-            .Map(dest => dest.Registrar.IsBlocked, src => src.Item2.IsBlocked)
-            .Map(dest => dest.Registrar.IsDeleted, src => src.Item2.IsDeleted)
-            .Map(dest => dest.IssueType.Id, src => src.Item3.Id)
-            .Map(dest => dest.IssueType.IssueTypeName, src => src.Item3.IssueTypeName)
-            .IgnoreNullValues(true);
-
-#pragma warning restore
+            .Map(dest => dest.RegistrarId, src => src.Registrar.Id)
+            .Map(dest => dest.RegistrarFirstName, src => src.Registrar.FirstName)
+            .Map(dest => dest.RegistrarLastName, src => src.Registrar.LastName)
+            .IgnoreNonMapped(false);
     }
 }

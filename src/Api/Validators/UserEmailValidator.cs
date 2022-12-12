@@ -7,6 +7,6 @@ public class UserEmailValidator : AbstractValidator<UserEmailRequest>
 {
     public UserEmailValidator()
     {
-        RuleFor(x => x.NewEmail).NotNull().NotEmpty().EmailAddress();
+        RuleFor(x => x.Email).NotNull().NotEmpty().EmailAddress();
     }
 }

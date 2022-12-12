@@ -87,8 +87,8 @@ public class DatabaseSeeder
             if (userTableIsEmply || roleTableIsEmply || rolePermissionTableIsEmply)
             {
                 _logger.LogInformation(
-                    "Roles, user or role-permission tables are empty. " +
-                    "Seeding data to into all of them to ensure proper behaviour..."
+                    "Roles, user or role-permission tables are empty. "
+                        + "Seeding data to into all of them to ensure proper behaviour..."
                 );
 
                 var role = await SeedDefaultRole(ct);
@@ -101,7 +101,6 @@ public class DatabaseSeeder
             {
                 _logger.LogInformation("Tables are OK");
             }
-
 
             _logger.LogInformation("Finished seeding data");
         }
@@ -134,7 +133,10 @@ public class DatabaseSeeder
 
         foreach (var field in issueFields)
         {
-            await _unitofWork.IssueFieldRepository.Add(field, ct);
+            await _unitofWork.IssueFieldRepository.Add(
+                new IssueFieldModel { FieldName = field },
+                ct
+            );
         }
     }
 
@@ -151,22 +153,20 @@ public class DatabaseSeeder
     {
         const string defaultRoleName = "superadmin";
 
-        return _mapper.Map<RoleDto>(await _unitofWork.RoleRepository.Add(defaultRoleName, ct));
+        return _mapper.Map<RoleDto>(
+            await _unitofWork.RoleRepository.Add(new RoleModel { RoleName = defaultRoleName }, ct)
+        );
     }
 
     private async Task AddPermissionsToDefaultRole(int roleId, CancellationToken ct)
     {
         var paginationDummy = new PaginationFilter(1, 100000);
-        var permissions = await _unitofWork.PermissionRepository.GetAll(
-            paginationDummy,
-            ct
-        );
+        var permissions = await _unitofWork.PermissionRepository.GetAll(paginationDummy, ct);
 
         foreach (var permission in permissions)
         {
             await _unitofWork.RolePermissionRepository.AddPermissionToRole(
-                roleId,
-                permission.Id,
+                new RolePermissionModel { RoleId = roleId, PermissionId = permission.Id },
                 ct
             );
         }
@@ -181,6 +181,9 @@ public class DatabaseSeeder
         var user = new UserModel { Email = "eadmin@vautoreg.org", PasswordHash = passwordHash };
 
         var defaultUser = await _unitofWork.UserRepository.Create(user, ct);
-        await _unitofWork.RoleRepository.SetUserRole(defaultUser.Id, roleId, ct);
+        await _unitofWork.UserRepository.AddUserToRole(
+            new UserModel { Id = defaultUser.Id, RoleId = roleId },
+            ct
+        );
     }
 }

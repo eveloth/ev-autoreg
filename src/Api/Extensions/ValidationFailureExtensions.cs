@@ -1,18 +1,19 @@
 ﻿using Api.Contracts.Responses;
+using FluentValidation;
 using FluentValidation.Results;
 using static Api.Errors.ErrorCodes;
 
 namespace Api.Extensions;
 
-public static class ValidationFailureExtensions
+public static class ValidationExceptiionExtensions
 {
-    public static ErrorResponse ToErrorResponse(this ValidationResult failure)
+    public static ErrorResponse ToErrorResponse(this ValidationException e)
     {
-        var errorList = failure.Errors.Select(x => x.ErrorMessage).ToList();
+        var errorList = e.Errors.Select(x => x.ErrorMessage).ToList();
 
         var response = new ErrorResponse
         {
-            ApiError = ErrorCode[11001],
+            ApiError = ErrorCode[12001],
             Details = errorList
         };
 

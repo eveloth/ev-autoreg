@@ -64,17 +64,17 @@ public class MeController : ControllerBase
             HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
         );
 
-        if (!_authService.IsEmailValid(request.NewEmail))
+        if (!_authService.IsEmailValid(request.Email))
         {
             return BadRequest(ErrorCode[1001]);
         }
 
-        var userProfile = await _unitofWork.UserRepository.UpdateEmail(userId, request.NewEmail, cts);
+        var userProfile = await _unitofWork.UserRepository.UpdateEmail(userId, request.Email, cts);
 
         await _unitofWork.CommitAsync(cts);
 
         _logger.LogInformation(
-            "Email was updated to {NewEmail} for user ID {UserId}",
+            "Email was updated to {Email} for user ID {UserId}",
             userProfile.Email,
             userProfile.Id
         );

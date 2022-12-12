@@ -1,6 +1,6 @@
 namespace Api.Contracts.Requests;
 
-public record UserEmailRequest(string NewEmail)
+public record UserEmailRequest(string Email)
 {
-    public string NewEmail { get; init; } = NewEmail.ToLower();
+    public string Email { get; init; } = Email.ToLower();
 }

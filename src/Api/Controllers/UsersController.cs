@@ -44,7 +44,7 @@ public class UsersController : ControllerBase
     )
     {
         var paginationFilter = _mapper.Map<PaginationFilter>(pagination);
-        var users = await _unitofWork.UserRepository.GetAllUserProfiles(paginationFilter, cts);
+        var users = await _unitofWork.UserRepository.GetAll(paginationFilter, cts);
 
         await _unitofWork.CommitAsync(cts);
 
