@@ -58,6 +58,6 @@ public class AutoregistrarSettingsRepository : IAutoregistrarSettingsRepository
     {
         const string sql = @"SELECT EXISTS (SELECT true FROM autoregistrar_settings WHERE id = 1)";
 
-        return await _db.LoadFirst<bool>(sql, cts);
+        return await _db.LoadSingle<bool>(sql, cts);
     }
 }

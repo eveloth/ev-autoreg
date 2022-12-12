@@ -24,15 +24,15 @@ public interface ISqlDataAccess
         CancellationToken cts
     );
 
-    Task<TModel?> LoadFirst<TModel>(string sql, CancellationToken cts);
+    Task<TModel?> LoadSingle<TModel>(string sql, CancellationToken cts);
 
-    Task<TModel?> LoadFirst<TModel>(
+    Task<TModel?> LoadSingle<TModel>(
         string sql,
         DynamicParameters parameters,
         CancellationToken cts
     );
 
-    Task<TParent?> LoadFirst<TParent, TChild>(
+    Task<TParent?> LoadSingle<TParent, TChild>(
         string sql,
         DynamicParameters parameters,
         CancellationToken cts

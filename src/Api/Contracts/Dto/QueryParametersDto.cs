@@ -1,6 +1,6 @@
 ﻿namespace Api.Contracts.Dto;
 
-public class EvApiQueryParametersDto
+public class QueryParametersDto
 {
     public required IssueTypeDto IssueType { get; set; }
     public required string WorkTime { get; set; }

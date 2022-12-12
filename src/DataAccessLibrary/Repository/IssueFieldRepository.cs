@@ -21,7 +21,7 @@ public class IssueFieldRepository : IIssueFieldRepository
 
         var parameters = new DynamicParameters(new { IssueFieldId = issueFieldId });
 
-        return await _db.LoadFirst<IssueFieldModel?>(sql, parameters, cts);
+        return await _db.LoadSingle<IssueFieldModel?>(sql, parameters, cts);
     }
 
     public async Task<IEnumerable<IssueFieldModel>> GetAll(
@@ -52,6 +52,6 @@ public class IssueFieldRepository : IIssueFieldRepository
 
         var parameters = new DynamicParameters(new { IssueFieldId = issueFieldId });
 
-        return await _db.LoadFirst<bool>(sql, parameters, cts);
+        return await _db.LoadSingle<bool>(sql, parameters, cts);
     }
 }

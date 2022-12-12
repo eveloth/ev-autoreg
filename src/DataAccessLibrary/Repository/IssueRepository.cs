@@ -21,7 +21,7 @@ public class IssueRepository : IIssueRepository
 
         var parameters = new DynamicParameters(new { IssueId = issueId });
 
-        return await _db.LoadFirst<IssueModel?>(sql, parameters, cts);
+        return await _db.LoadSingle<IssueModel?>(sql, parameters, cts);
     }
 
     public async Task<IEnumerable<IssueModel>> GetAll(

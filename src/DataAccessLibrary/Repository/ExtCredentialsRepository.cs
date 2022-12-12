@@ -22,7 +22,7 @@ public class ExtCredentialsRepository : IExtCredentialsRepository
 
         var parameters = new DynamicParameters(new { UserId = userId });
 
-        return await _db.LoadFirst<EvCredentialsModel?>(sql, parameters, cts);
+        return await _db.LoadSingle<EvCredentialsModel?>(sql, parameters, cts);
     }
 
     public async Task<int> SaveEvCredentials(
@@ -58,7 +58,7 @@ public class ExtCredentialsRepository : IExtCredentialsRepository
 
         var parameters = new DynamicParameters(new { UserId = userId });
 
-        return await _db.LoadFirst<ExchangeCredentialsModel?>(sql, parameters, cts);
+        return await _db.LoadSingle<ExchangeCredentialsModel?>(sql, parameters, cts);
     }
 
     public async Task<int> SaveExchangeCredentials(

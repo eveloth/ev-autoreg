@@ -22,7 +22,7 @@ public class QueryParametersRepository : IQueryParametersRepository
 
         var parameters = new DynamicParameters(new { IssueTypeId = issueTypeId });
 
-        return await _db.LoadFirst<QueryParametersModel?>(sql, parameters, cts);
+        return await _db.LoadSingle<QueryParametersModel?>(sql, parameters, cts);
     }
 
     public async Task<IEnumerable<QueryParametersModel>> GetAll(
@@ -82,6 +82,6 @@ public class QueryParametersRepository : IQueryParametersRepository
 
         var parameters = new DynamicParameters(new { IssueTypeId = issueTypeId });
 
-        return await _db.LoadFirst<bool>(sql, parameters, cts);
+        return await _db.LoadSingle<bool>(sql, parameters, cts);
     }
 }

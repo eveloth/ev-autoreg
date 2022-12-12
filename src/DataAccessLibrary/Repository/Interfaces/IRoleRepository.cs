@@ -11,6 +11,4 @@ public interface IRoleRepository
     Task<RoleModel> Delete(int roleId, CancellationToken cts);
     Task<bool> DoesExist(int roleId, CancellationToken cts);
     Task<bool> DoesExist(string roleName, CancellationToken cts);
-    Task<UserModel> SetUserRole(int userId, int roleId, CancellationToken cts);
-    Task<UserModel> RemoveUserFromRole(int userId, CancellationToken cts);
 }

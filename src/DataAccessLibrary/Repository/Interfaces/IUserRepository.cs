@@ -5,7 +5,7 @@ namespace DataAccessLibrary.Repository.Interfaces;
 
 public interface IUserRepository
 {
-    Task<IEnumerable<UserModel>> GetAllUserProfiles(
+    Task<IEnumerable<UserModel>> GetAll(
         PaginationFilter filter,
         CancellationToken cts,
         bool includeDeleted = false
@@ -16,6 +16,8 @@ public interface IUserRepository
     Task<int> UpdatePassword(UserModel user, CancellationToken cts);
     Task<UserModel> UpdateEmail(UserModel user, CancellationToken cts);
     Task<UserModel> UpdateUserProfile(UserModel user, CancellationToken cts);
+    Task<UserModel> AddUserToRole(UserModel user, CancellationToken cts);
+    Task<UserModel> RemoveUserFromRole(int userId, CancellationToken cts);
     Task<UserModel> Block(int userId, CancellationToken cts);
     Task<UserModel> Unblock(int userId, CancellationToken cts);
     Task<UserModel> Delete(int userId, CancellationToken cts);

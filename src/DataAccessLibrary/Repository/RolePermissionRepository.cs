@@ -102,6 +102,6 @@ public class RolePermissionRepository : IRolePermissionRepository
 
         var parameters = new DynamicParameters(rolePermission);
 
-        return await _db.LoadFirst<bool>(sql, parameters, cts);
+        return await _db.LoadSingle<bool>(sql, parameters, cts);
     }
 }

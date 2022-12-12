@@ -21,7 +21,7 @@ public class RuleRepository : IRuleRepository
 
         var parameters = new DynamicParameters(new { RuleId = ruleId, UserId = userId });
 
-        return await _db.LoadFirst<RuleModel?>(sql, parameters, cts);
+        return await _db.LoadSingle<RuleModel?>(sql, parameters, cts);
     }
 
     public async Task<IEnumerable<RuleModel>> GetAll(
@@ -91,6 +91,6 @@ public class RuleRepository : IRuleRepository
 
         var parameters = new DynamicParameters(new { RuleId = ruleId, UserId = userId });
 
-        return await _db.LoadFirst<bool>(sql, parameters, cts);
+        return await _db.LoadSingle<bool>(sql, parameters, cts);
     }
 }

@@ -32,13 +32,11 @@ public class SqlDataAccess : ISqlDataAccess
         CancellationToken cts
     )
     {
-        var result = await _connection.QueryAsync<TParent, TChild, TParent>(
-            new CommandDefinition(sql, cancellationToken: cts, transaction: _transaction),
-            MapNestedObjects,
-            SplitOn
-        );
-
-        return result;
+        return await _connection.QueryAsync<TParent, TChild, TParent>(
+                new CommandDefinition(sql, cancellationToken: cts, transaction: _transaction),
+                MapNestedObjects,
+                SplitOn
+            ) ?? Enumerable.Empty<TParent>();
     }
 
     public async Task<IEnumerable<TModel>> LoadData<TModel>(
@@ -48,8 +46,13 @@ public class SqlDataAccess : ISqlDataAccess
     )
     {
         return await _connection.QueryAsync<TModel>(
-            new CommandDefinition(sql, parameters, cancellationToken: cts)
-        );
+                new CommandDefinition(
+                    sql,
+                    parameters,
+                    cancellationToken: cts,
+                    transaction: _transaction
+                )
+            ) ?? Enumerable.Empty<TModel>();
     }
 
     public async Task<IEnumerable<TParent>> LoadData<TParent, TChild>(
@@ -58,59 +61,77 @@ public class SqlDataAccess : ISqlDataAccess
         CancellationToken cts
     )
     {
-        var result = await _connection.QueryAsync<TParent, TChild, TParent>(
-            new CommandDefinition(sql, parameters, cancellationToken: cts),
-            MapNestedObjects,
-            SplitOn
-        );
-
-        return result;
+        return await _connection.QueryAsync<TParent, TChild, TParent>(
+                new CommandDefinition(
+                    sql,
+                    parameters,
+                    cancellationToken: cts,
+                    transaction: _transaction
+                ),
+                MapNestedObjects,
+                SplitOn
+            ) ?? Enumerable.Empty<TParent>();
     }
 
-    public async Task<TModel?> LoadFirst<TModel>(string sql, CancellationToken cts)
+    public async Task<TModel?> LoadSingle<TModel>(string sql, CancellationToken cts)
     {
-        return await _connection.QueryFirstOrDefaultAsync<TModel?>(
-            new CommandDefinition(sql, cancellationToken: cts)
+        return await _connection.QuerySingleOrDefaultAsync<TModel?>(
+            new CommandDefinition(sql, cancellationToken: cts, transaction: _transaction)
         );
     }
 
-    public async Task<TModel?> LoadFirst<TModel>(
+    public async Task<TModel?> LoadSingle<TModel>(
         string sql,
         DynamicParameters parameters,
         CancellationToken cts
     )
     {
-        return await _connection.QueryFirstOrDefaultAsync<TModel?>(
-            new CommandDefinition(sql, parameters, cancellationToken: cts)
+        return await _connection.QuerySingleOrDefaultAsync<TModel?>(
+            new CommandDefinition(
+                sql,
+                parameters,
+                cancellationToken: cts,
+                transaction: _transaction
+            )
         );
     }
 
-    public async Task<TParent?> LoadFirst<TParent, TChild>(
+    public async Task<TParent?> LoadSingle<TParent, TChild>(
         string sql,
         DynamicParameters parameters,
         CancellationToken cts
     )
     {
         var result = await _connection.QueryAsync<TParent, TChild, TParent>(
-            new CommandDefinition(sql, parameters, cancellationToken: cts),
+            new CommandDefinition(
+                sql,
+                parameters,
+                cancellationToken: cts,
+                transaction: _transaction
+            ),
             MapNestedObjects,
             SplitOn
         );
 
-        return result.FirstOrDefault();
+        return result.SingleOrDefault();
     }
 
     public async Task SaveData(string sql, DynamicParameters parameters, CancellationToken cts)
     {
         await _connection.ExecuteAsync(
-            new CommandDefinition(sql, parameters, cancellationToken: cts)
+            new CommandDefinition(
+                sql,
+                parameters,
+                cancellationToken: cts,
+                transaction: _transaction
+            )
         );
     }
 
     public async Task<TResult> SaveData<TResult>(string sql, CancellationToken cts)
     {
-        return await _connection.QueryFirstAsync<TResult>(
-            new CommandDefinition(sql, cancellationToken: cts)
+        return await _connection.QuerySingleAsync<TResult>(
+            new CommandDefinition(sql, cancellationToken: cts, transaction: _transaction)
         );
     }
 
@@ -120,8 +141,13 @@ public class SqlDataAccess : ISqlDataAccess
         CancellationToken cts
     )
     {
-        return await _connection.QueryFirstAsync<TResult>(
-            new CommandDefinition(sql, parameters, cancellationToken: cts)
+        return await _connection.QuerySingleAsync<TResult>(
+            new CommandDefinition(
+                sql,
+                parameters,
+                cancellationToken: cts,
+                transaction: _transaction
+            )
         );
     }
 
@@ -132,7 +158,12 @@ public class SqlDataAccess : ISqlDataAccess
     )
     {
         var result = await _connection.QueryAsync<TResultParent, TResultChild, TResultParent>(
-            new CommandDefinition(sql, parameters, cancellationToken: cts),
+            new CommandDefinition(
+                sql,
+                parameters,
+                cancellationToken: cts,
+                transaction: _transaction
+            ),
             MapNestedObjects,
             SplitOn
         );

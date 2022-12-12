@@ -1,6 +1,6 @@
 namespace Api.Contracts.Requests;
 
-public record EvApiQueryParametersRequest(
+public record QueryParametersRequest(
     string WorkTime,
     string RegStatus,
     string? InWorkStatus,

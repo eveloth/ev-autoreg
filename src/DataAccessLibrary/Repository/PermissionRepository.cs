@@ -66,7 +66,7 @@ public class PermissionRepository : IPermissionRepository
 
         var parameters = new DynamicParameters(new { PermissionId = permissionId });
 
-        return await _db.LoadFirst<bool>(sql, parameters, cts);
+        return await _db.LoadSingle<bool>(sql, parameters, cts);
     }
 
     public async Task<bool> DoesExist(string permissionName, CancellationToken cts)
@@ -76,6 +76,6 @@ public class PermissionRepository : IPermissionRepository
 
         var parameters = new DynamicParameters(new { PermissionName = permissionName });
 
-        return await _db.LoadFirst<bool>(sql, parameters, cts);
+        return await _db.LoadSingle<bool>(sql, parameters, cts);
     }
 }

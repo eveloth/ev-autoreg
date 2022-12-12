@@ -38,7 +38,7 @@ public class UserRepository : IUserRepository
 
         var parameters = new DynamicParameters(new { UserId = userId });
 
-        return await _db.LoadFirst<UserModel>(resultingSql, parameters, cts);
+        return await _db.LoadSingle<UserModel>(resultingSql, parameters, cts);
     }
 
     public async Task<UserModel?> GetByEmail(
@@ -61,10 +61,10 @@ public class UserRepository : IUserRepository
 
         var parameters = new DynamicParameters(new { Email = email });
 
-        return await _db.LoadFirst<UserModel, RoleModel>(resultingSql, parameters, cts);
+        return await _db.LoadSingle<UserModel, RoleModel>(resultingSql, parameters, cts);
     }
 
-    public async Task<IEnumerable<UserModel>> GetAllUserProfiles(
+    public async Task<IEnumerable<UserModel>> GetAll(
         PaginationFilter filter,
         CancellationToken cts,
         bool includeDeleted = false
@@ -98,12 +98,10 @@ public class UserRepository : IUserRepository
     public async Task<UserModel> Create(UserModel user, CancellationToken cts)
     {
         const string sql =
-            @"WITH inserted AS
-                             (INSERT INTO app_user (email, password_hash)
-                             VALUES (@Email, @PasswordHash)
-                             RETURNING * )
-                             LEFT JOIN role
-                             ON inserted.role_id = role.id";
+            @"INSERT INTO 
+              app_user (email, password_hash)
+              VALUES (@Email, @PasswordHash)
+              RETURNING * ";
 
         var parameters = new DynamicParameters(user);
 
@@ -123,13 +121,9 @@ public class UserRepository : IUserRepository
     public async Task<UserModel> UpdateEmail(UserModel user, CancellationToken cts)
     {
         const string sql =
-            @"WITH updated AS 
-                            (UPDATE app_user SET email = @Email 
-                            WHERE id = @Id
-                            RETURNING * )
-                            SELECT * FROM updated
-                            LEFT JOIN role
-                            ON updated.role_id = role.id";
+            @"UPDATE app_user SET email = @Email 
+              WHERE id = @Id
+              RETURNING * ";
 
         var parameters = new DynamicParameters(user);
 
@@ -139,16 +133,36 @@ public class UserRepository : IUserRepository
     public async Task<UserModel> UpdateUserProfile(UserModel user, CancellationToken cts)
     {
         const string sql =
-            @"WITH updated as 
-                            (UPDATE app_user 
-                            SET first_name = @FirstName, last_name = @LastName 
-                            WHERE id = @Id
-                            RETURNING * )
-                            SELECT * FROM updated
-                            LEFT JOIN role
-                            ON updated.role_id = role.id";
+            @"UPDATE app_user 
+              SET first_name = @FirstName, last_name = @LastName 
+              WHERE id = @Id
+              RETURNING * ";
 
         var parameters = new DynamicParameters(user);
+
+        return await _db.SaveData<UserModel, RoleModel>(sql, parameters, cts);
+    }
+
+    public async Task<UserModel> AddUserToRole(UserModel user, CancellationToken cts)
+    {
+        const string sql =
+            @"UPDATE app_user 
+              SET role_id = @RoleId WHERE id = @Id 
+              RETURNING * ";
+
+        var parameters = new DynamicParameters(user);
+
+        return await _db.SaveData<UserModel, RoleModel>(sql, parameters, cts);
+    }
+
+    public async Task<UserModel> RemoveUserFromRole(int userId, CancellationToken cts)
+    {
+        const string sql =
+            @"UPDATE app_user SET role_id = null 
+              WHERE id = @UserId
+              RETURNING * ";
+
+        var parameters = new DynamicParameters(new { UserId = userId });
 
         return await _db.SaveData<UserModel, RoleModel>(sql, parameters, cts);
     }
@@ -156,14 +170,10 @@ public class UserRepository : IUserRepository
     public async Task<UserModel> Block(int userId, CancellationToken cts)
     {
         const string sql =
-            @"WITH updated as 
-                            (UPDATE app_user 
-                            SET is_blocked = true
-                            WHERE id = @UserId
-                            RETURNING * )
-                            SELECT * FROM updated
-                            LEFT JOIN role
-                            ON updated.role_id = role.id";
+            @"UPDATE app_user 
+              SET is_blocked = true
+              WHERE id = @UserId
+              RETURNING * ";
 
         var parameters = new DynamicParameters(new { UserId = userId });
 
@@ -173,14 +183,10 @@ public class UserRepository : IUserRepository
     public async Task<UserModel> Unblock(int userId, CancellationToken cts)
     {
         const string sql =
-            @"WITH updated as 
-                            (UPDATE app_user 
-                            SET is_blocked = false
-                            WHERE id = @UserId
-                            RETURNING * )
-                            SELECT * FROM updated
-                            LEFT JOIN role
-                            ON updated.role_id = role.id";
+            @"UPDATE app_user 
+              SET is_blocked = false
+              WHERE id = @UserId
+              RETURNING * ";
 
         var parameters = new DynamicParameters(new { UserId = userId });
         return await _db.SaveData<UserModel, RoleModel>(sql, parameters, cts);
@@ -189,14 +195,10 @@ public class UserRepository : IUserRepository
     public async Task<UserModel> Delete(int userId, CancellationToken cts)
     {
         const string sql =
-            @"WITH updated as 
-                            (UPDATE app_user 
-                            SET is_deleted = true
-                            WHERE id = @UserId
-                            RETURNING * )
-                            SELECT * FROM updated
-                            LEFT JOIN role
-                            ON updated.role_id = role.id";
+            @" UPDATE app_user 
+               SET is_deleted = true
+               WHERE id = @UserId
+               RETURNING * ";
 
         var parameters = new DynamicParameters(new { UserId = userId });
 
@@ -206,14 +208,10 @@ public class UserRepository : IUserRepository
     public async Task<UserModel> Restore(int userId, CancellationToken cts)
     {
         const string sql =
-            @"WITH updated as 
-                            (UPDATE app_user 
-                            SET is_deleted = false
-                            WHERE id = @UserId
-                            RETURNING * )
-                            SELECT * FROM updated
-                            LEFT JOIN role
-                            ON updated.role_id = role.id";
+            @"UPDATE app_user 
+              SET is_deleted = false
+              WHERE id = @UserId
+              RETURNING * ";
 
         var parameters = new DynamicParameters(new { UserId = userId });
 
@@ -226,7 +224,7 @@ public class UserRepository : IUserRepository
 
         var parameters = new DynamicParameters(new { UserId = userId });
 
-        return await _db.LoadFirst<bool>(sql, parameters, cts);
+        return await _db.LoadSingle<bool>(sql, parameters, cts);
     }
 
     public async Task<bool> DoesExist(string email, CancellationToken cts)
@@ -235,6 +233,6 @@ public class UserRepository : IUserRepository
 
         var parameters = new DynamicParameters(new { Email = email });
 
-        return await _db.LoadFirst<bool>(sql, parameters, cts);
+        return await _db.LoadSingle<bool>(sql, parameters, cts);
     }
 }

@@ -20,7 +20,7 @@ public class IssueTypeRepository : IIssueTypeRepository
         const string sql = @"SELECT * FROM issue_type WHERE issue_type.id = @IssueTypeId";
         var parameters = new DynamicParameters(new { IssueTypeId = issueTypeId });
 
-        return await _db.LoadFirst<IssueTypeModel?>(sql, parameters, cts);
+        return await _db.LoadSingle<IssueTypeModel?>(sql, parameters, cts);
     }
 
     public async Task<IEnumerable<IssueTypeModel>> GetAll(
@@ -71,7 +71,7 @@ public class IssueTypeRepository : IIssueTypeRepository
 
         var parameters = new DynamicParameters(new { IssueTypeId = issueTypeId });
 
-        return await _db.LoadFirst<bool>(sql, parameters, cts);
+        return await _db.LoadSingle<bool>(sql, parameters, cts);
     }
 
     public async Task<bool> DoesExist(string issueTypeName, CancellationToken cts)
@@ -81,6 +81,6 @@ public class IssueTypeRepository : IIssueTypeRepository
 
         var parameters = new DynamicParameters(new { IssueTypeName = issueTypeName });
 
-        return await _db.LoadFirst<bool>(sql, parameters, cts);
+        return await _db.LoadSingle<bool>(sql, parameters, cts);
     }
 }
