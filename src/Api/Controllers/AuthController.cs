@@ -1,18 +1,13 @@
 using Api.Contracts.Dto;
 using Api.Contracts.Requests;
 using Api.Contracts.Responses;
-using Api.Extensions;
 using Api.Services.Interfaces;
-using Api.Validators;
 using DataAccessLibrary.Models;
-using DataAccessLibrary.Repository.Interfaces;
 using FluentValidation;
-using FluentValidation.Results;
-using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using static Api.Errors.ErrorCodes;
+using Token = Api.Domain.Token;
 
 namespace Api.Controllers;
 
@@ -20,28 +15,15 @@ namespace Api.Controllers;
 [ApiController]
 public class AuthController : ControllerBase
 {
-    private readonly ILogger<AuthController> _logger;
-    private readonly IMapper _mapper;
-    private readonly IUnitofWork _unitofWork;
-    private readonly IUserRepository _userRepository;
-    private readonly IPasswordHasher _passwordHasher;
     private readonly IAuthenticationService _authService;
     private readonly IValidator<UserCredentialsRequest> _validator;
 
     public AuthController(
-        IUserRepository userRepository,
-        IPasswordHasher passwordHasher,
         IAuthenticationService authService,
-        ILogger<AuthController> logger,
-        IUnitofWork unitofWork,
-        IMapper mapper, IValidator<UserCredentialsRequest> validator)
+        IValidator<UserCredentialsRequest> validator
+    )
     {
-        _userRepository = userRepository;
-        _passwordHasher = passwordHasher;
         _authService = authService;
-        _logger = logger;
-        _unitofWork = unitofWork;
-        _mapper = mapper;
         _validator = validator;
     }
 
@@ -63,33 +45,11 @@ public class AuthController : ControllerBase
         CancellationToken cts
     )
     {
-        var existingUser = await _unitofWork.UserRepository.GetByEmail(request.Email, cts);
+        await _validator.ValidateAndThrowAsync(request, cts);
 
-        if (existingUser is null)
-        {
-            return NotFound(ErrorCode[1004]);
-        }
+        var token = await _authService.Login(request.Email, request.Password, cts);
 
-        if (
-            _passwordHasher.VerifyPassword(existingUser.PasswordHash, request.Password)
-            != PasswordVerificationResult.Success
-        )
-        {
-            return Unauthorized(ErrorCode[1005]);
-        }
-
-        if (existingUser.IsBlocked)
-        {
-            return BadRequest(ErrorCode[1006]);
-        }
-
-        var token = await _authService.GenerateToken(existingUser, cts);
-
-        await _unitofWork.CommitAsync(cts);
-
-        _logger.LogInformation("User ID {UserId} was logged in", existingUser.Id);
-
-        var response = new Response<string>(token);
+        var response = new Response<Token>(token);
 
         return Ok(response);
     }
@@ -102,29 +62,11 @@ public class AuthController : ControllerBase
         CancellationToken cts
     )
     {
-        var validationResult = await _validator.ValidateAsync(request, cts);
+        await _validator.ValidateAndThrowAsync(request, cts);
 
-        if (!validationResult.IsValid)
-        {
-            return BadRequest(validationResult.ToErrorResponse());
-        }
+        var token = await _authService.Register(request.Email, request.Password, cts);
 
-        var userExists = await _userRepository.DoesExist(request.Email, cts);
-
-        if (userExists)
-        {
-            return BadRequest(ErrorCode[1003]);
-        }
-
-        var passwordHash = _passwordHasher.HashPassword(request.Password);
-        var newUser = new UserModel { Email = request.Email, PasswordHash = passwordHash };
-
-        var createdUser = await _unitofWork.UserRepository.Create(newUser, cts);
-
-        await _unitofWork.CommitAsync(cts);
-        _logger.LogInformation("User ID {UserId} was registered", createdUser.Id);
-
-        var response = new Response<UserProfileDto>(_mapper.Map<UserProfileDto>(createdUser));
+        var response = new Response<Token>(token);
 
         return Ok(response);
     }

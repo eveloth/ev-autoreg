@@ -7,6 +7,6 @@ public class RuleValidator : AbstractValidator<RuleRequest>
 {
     public RuleValidator()
     {
-        RuleFor(x => x.Rule).NotNull().NotEmpty().MaximumLength(256);
+        RuleFor(x => x.RuleSubstring).NotNull().NotEmpty().MaximumLength(256);
     }
 }

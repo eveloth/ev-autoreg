@@ -47,14 +47,8 @@ public class RulesController : ControllerBase
 
         foreach (var rule in rules)
         {
-            var issueType = await _unitofWork.IssueTypeRepository.Get(
-                rule.IssueTypeId,
-                cts
-            );
-            var issueField = await _unitofWork.IssueFieldRepository.Get(
-                rule.IssueFieldId,
-                cts
-            );
+            var issueType = await _unitofWork.IssueTypeRepository.Get(rule.IssueTypeId, cts);
+            var issueField = await _unitofWork.IssueFieldRepository.Get(rule.IssueFieldId, cts);
 
             aggregationTable.Add(
                 new ValueTuple<RuleModel, IssueTypeModel?, IssueFieldModel?>
@@ -92,10 +86,7 @@ public class RulesController : ControllerBase
         }
 
         var issueType = await _unitofWork.IssueTypeRepository.Get(rule.IssueTypeId, cts);
-        var issueField = await _unitofWork.IssueFieldRepository.Get(
-            rule.IssueFieldId,
-            cts
-        );
+        var issueField = await _unitofWork.IssueFieldRepository.Get(rule.IssueFieldId, cts);
 
         await _unitofWork.CommitAsync(cts);
 
@@ -118,20 +109,14 @@ public class RulesController : ControllerBase
             HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
         );
 
-        var issueType = await _unitofWork.IssueTypeRepository.Get(
-            request.IssueTypeId,
-            cts
-        );
+        var issueType = await _unitofWork.IssueTypeRepository.Get(request.IssueTypeId, cts);
 
         if (issueType is null)
         {
             return NotFound(ErrorCode[7001]);
         }
 
-        var issueField = await _unitofWork.IssueFieldRepository.Get(
-            request.IssueFieldId,
-            cts
-        );
+        var issueField = await _unitofWork.IssueFieldRepository.Get(request.IssueFieldId, cts);
 
         if (issueField is null)
         {
@@ -180,20 +165,14 @@ public class RulesController : ControllerBase
             return NotFound(ErrorCode[6001]);
         }
 
-        var issueType = await _unitofWork.IssueTypeRepository.Get(
-            request.IssueTypeId,
-            cts
-        );
+        var issueType = await _unitofWork.IssueTypeRepository.Get(request.IssueTypeId, cts);
 
         if (issueType is null)
         {
             return NotFound(ErrorCode[7001]);
         }
 
-        var issueField = await _unitofWork.IssueFieldRepository.Get(
-            request.IssueFieldId,
-            cts
-        );
+        var issueField = await _unitofWork.IssueFieldRepository.Get(request.IssueFieldId, cts);
 
         if (issueField is null)
         {
@@ -227,10 +206,7 @@ public class RulesController : ControllerBase
 
     [Route("{id:int}")]
     [HttpDelete]
-    public async Task<IActionResult> DeleteRule(
-        [FromRoute] int id,
-        CancellationToken cts
-    )
+    public async Task<IActionResult> DeleteRule([FromRoute] int id, CancellationToken cts)
     {
         var userId = int.Parse(
             HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
@@ -245,14 +221,8 @@ public class RulesController : ControllerBase
 
         var deletedRule = await _unitofWork.RuleRepository.Delete(id, userId, cts);
 
-        var issueType = await _unitofWork.IssueTypeRepository.Get(
-            deletedRule.IssueTypeId,
-            cts
-        );
-        var issueField = await _unitofWork.IssueFieldRepository.Get(
-            deletedRule.IssueFieldId,
-            cts
-        );
+        var issueType = await _unitofWork.IssueTypeRepository.Get(deletedRule.IssueTypeId, cts);
+        var issueField = await _unitofWork.IssueFieldRepository.Get(deletedRule.IssueFieldId, cts);
 
         await _unitofWork.CommitAsync(cts);
         _logger.LogInformation(

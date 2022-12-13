@@ -12,7 +12,7 @@ public static class ModelToDomainMappingConfig
         //CS8602 is useless in this context because we're ignoring null values
 #pragma warning disable CS8602
 
-        TypeAdapterConfig<(UserModel, RoleModel), UserProfileDto>
+        TypeAdapterConfig<(UserModel, RoleModel), User>
             .NewConfig()
             .TwoWays()
             .Map(dest => dest.Id, src => src.Item1.Id)
@@ -27,7 +27,7 @@ public static class ModelToDomainMappingConfig
 
         TypeAdapterConfig<List<RolePermissionModel>, RolePermission>
             .NewConfig()
-            .TwoWays()
+            //.TwoWays()
             .Map(dest => dest.Role.Id, src => src.First().RoleId)
             .Map(dest => dest.Role.RoleName, src => src.First().RoleName)
             .Map(

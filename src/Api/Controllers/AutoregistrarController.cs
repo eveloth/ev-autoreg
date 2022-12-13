@@ -242,7 +242,10 @@ public class AutoregistrarController : ControllerBase
             return BadRequest(ErrorCode[7004]);
         }
 
-        var newIssueType = await _unitofWork.IssueTypeRepository.Add(request.IssueTypeName, cts);
+        var newIssueType = await _unitofWork.IssueTypeRepository.Add(
+            new IssueTypeModel { IssueTypeName = request.IssueTypeName },
+            cts
+        );
         await _unitofWork.CommitAsync(cts);
         _logger.LogInformation(
             "Added issue type ID {IssueTypeId} with name {IssueTypeName}",
@@ -272,8 +275,7 @@ public class AutoregistrarController : ControllerBase
         }
 
         var changedIssueType = await _unitofWork.IssueTypeRepository.ChangeName(
-            id,
-            request.IssueTypeName,
+            new IssueTypeModel { Id = id, IssueTypeName = request.IssueTypeName },
             cts
         );
 

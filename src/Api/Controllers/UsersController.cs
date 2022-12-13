@@ -3,12 +3,10 @@ using Api.Contracts.Dto;
 using Api.Contracts.Requests;
 using Api.Contracts.Responses;
 using Api.Services.Interfaces;
-using DataAccessLibrary.Filters;
-using DataAccessLibrary.Repository.Interfaces;
+using FluentValidation;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using static Api.Errors.ErrorCodes;
 
 namespace Api.Controllers;
 
@@ -18,22 +16,20 @@ public class UsersController : ControllerBase
 {
     private readonly ILogger<UsersController> _logger;
     private readonly IMapper _mapper;
-    private readonly IUnitofWork _unitofWork;
-    private readonly IAuthenticationService _authService;
-    private readonly IPasswordHasher _passwordHasher;
+    private readonly IUserService _userService;
+    private readonly IValidator<UserPasswordRequest> _validator;
 
     public UsersController(
         ILogger<UsersController> logger,
-        IAuthenticationService authService,
-        IPasswordHasher passwordHasher,
-        IUnitofWork unitofWork, 
-        IMapper mapper)
+        IMapper mapper,
+        IUserService userService,
+        IValidator<UserPasswordRequest> validator
+    )
     {
         _logger = logger;
-        _authService = authService;
-        _passwordHasher = passwordHasher;
-        _unitofWork = unitofWork;
         _mapper = mapper;
+        _userService = userService;
+        _validator = validator;
     }
 
     [Authorize(Policy = "ReadUsers")]
@@ -43,13 +39,10 @@ public class UsersController : ControllerBase
         CancellationToken cts
     )
     {
-        var paginationFilter = _mapper.Map<PaginationFilter>(pagination);
-        var users = await _unitofWork.UserRepository.GetAll(paginationFilter, cts);
+        var users = await _userService.GetAll(pagination, cts);
 
-        await _unitofWork.CommitAsync(cts);
-
-        var response = new PagedResponse<UserProfileDto>(
-            _mapper.Map<IEnumerable<UserProfileDto>>(users),
+        var response = new PagedResponse<UserDto>(
+            _mapper.Map<IEnumerable<UserDto>>(users),
             pagination
         );
 
@@ -61,13 +54,9 @@ public class UsersController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetUser([FromRoute] int id, CancellationToken cts)
     {
-        var user = await _unitofWork.UserRepository.GetUserProfle(id, cts);
+        var user = await _userService.Get(id, cts);
 
-        await _unitofWork.CommitAsync(cts);
-
-        return user is null
-            ? NotFound(ErrorCode[2001])
-            : Ok(new Response<UserProfileDto>(_mapper.Map<UserProfileDto>(user)));
+        return Ok(_mapper.Map<UserDto>(user));
     }
 
     [Authorize(Policy = "ResetUserPasswords")]
@@ -79,31 +68,13 @@ public class UsersController : ControllerBase
         CancellationToken cts
     )
     {
-        var existingUser = await _unitofWork.UserRepository.GetUserProfle(id, cts);
+        await _validator.ValidateAndThrowAsync(request, cts);
 
-        if (existingUser is null)
-        {
-            return NotFound(ErrorCode[2001]);
-        }
+        var updatedUserId = await _userService.ChangePassword(id, request.NewPassword, cts);
 
-        if (!_authService.IsPasswordValid(existingUser.Email, request.NewPassword))
-        {
-            return BadRequest(ErrorCode[1002]);
-        }
+        _logger.LogInformation("Password was reset for user ID {UserId}", updatedUserId);
 
-        var passwordHash = _passwordHasher.HashPassword(request.NewPassword);
-
-        var userWithPassswordReset = await _unitofWork.UserRepository.UpdatePassword(
-            id,
-            passwordHash,
-            cts
-        );
-
-        await _unitofWork.CommitAsync(cts);
-        _logger.LogInformation("Password was reset for user ID {UserId}", userWithPassswordReset);
-
-        var response = new Response<int>(userWithPassswordReset);
-
+        var response = new ResultResponse(true);
         return Ok(response);
     }
 
@@ -112,20 +83,11 @@ public class UsersController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> BlockUser([FromRoute] int id, CancellationToken cts)
     {
-        var existingUser = await _unitofWork.UserRepository.GetUserProfle(id, cts);
+        var updatedUser = await _userService.Block(id, cts);
 
-        if (existingUser is null || existingUser.IsDeleted)
-        {
-            return NotFound(ErrorCode[2001]);
-        }
+        _logger.LogInformation("User ID {UserId} was blocked", updatedUser.Id);
 
-        var blockedUser = await _unitofWork.UserRepository.Block(id, cts);
-
-        await _unitofWork.CommitAsync(cts);
-
-        _logger.LogInformation("User ID {UserId} was blocked", blockedUser.Id);
-        var response = new Response<UserProfileDto>(_mapper.Map<UserProfileDto>(blockedUser));
-
+        var response = new Response<UserDto>(_mapper.Map<UserDto>(updatedUser));
         return Ok(response);
     }
 
@@ -134,20 +96,11 @@ public class UsersController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> UnblockUser([FromRoute] int id, CancellationToken cts)
     {
-        var existingUser = await _unitofWork.UserRepository.GetUserProfle(id, cts);
+        var updatedUser = await _userService.Unblock(id, cts);
 
-        if (existingUser is null || existingUser.IsDeleted)
-        {
-            return NotFound(ErrorCode[2001]);
-        }
+        _logger.LogInformation("User ID {UserId} was unblocked", updatedUser.Id);
 
-        var unblockedUser = await _unitofWork.UserRepository.Unblock(id, cts);
-
-        await _unitofWork.CommitAsync(cts);
-
-        _logger.LogInformation("User ID {UserId} was unblocked", unblockedUser.Id);
-        var response = new Response<UserProfileDto>(_mapper.Map<UserProfileDto>(unblockedUser));
-
+        var response = new Response<UserDto>(_mapper.Map<UserDto>(updatedUser));
         return Ok(response);
     }
 
@@ -156,20 +109,11 @@ public class UsersController : ControllerBase
     [HttpDelete]
     public async Task<IActionResult> DeleteUser([FromRoute] int id, CancellationToken cts)
     {
-        var userExists = await _unitofWork.UserRepository.DoesExist(id, cts);
+        var updatedUser = await _userService.Delete(id, cts);
 
-        if (!userExists)
-        {
-            return NotFound("User not found");
-        }
+        _logger.LogInformation("User ID {UserId} was deleted", updatedUser.Id);
 
-        var deletedUser = await _unitofWork.UserRepository.Delete(id, cts);
-
-        await _unitofWork.CommitAsync(cts);
-        _logger.LogInformation("User ID {UserId} was deleted", deletedUser.Id);
-
-        var response = new Response<UserProfileDto>(_mapper.Map<UserProfileDto>(deletedUser));
-
+        var response = new Response<UserDto>(_mapper.Map<UserDto>(updatedUser));
         return Ok(response);
     }
 
@@ -178,20 +122,11 @@ public class UsersController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> RestoreUser([FromRoute] int id, CancellationToken cts)
     {
-        var userExists = await _unitofWork.UserRepository.DoesExist(id, cts);
+        var updatedUser = await _userService.Restore(id, cts);
 
-        if (!userExists)
-        {
-            return NotFound("User not found");
-        }
+        _logger.LogInformation("User ID {UserId} was restored", updatedUser.Id);
 
-        var restoredUser = await _unitofWork.UserRepository.Restore(id, cts);
-
-        await _unitofWork.CommitAsync(cts);
-        _logger.LogInformation("User ID {UserId} was restored", restoredUser.Id);
-
-        var response = new Response<UserProfileDto>(_mapper.Map<UserProfileDto>(restoredUser));
-
+        var response = new Response<UserDto>(_mapper.Map<UserDto>(updatedUser));
         return Ok(response);
     }
 }

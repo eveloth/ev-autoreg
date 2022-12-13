@@ -23,18 +23,21 @@ public class UserService : IUserService
         _hasher = hasher;
     }
 
-    public async Task<IEnumerable<User>> GetAll(PaginationQuery paginationQuery, CancellationToken cts)
+    public async Task<IEnumerable<User>> GetAll(
+        PaginationQuery paginationQuery,
+        CancellationToken cts
+    )
     {
         var filter = _mapper.Map<PaginationFilter>(paginationQuery);
 
         var users = await _unitofWork.UserRepository.GetAll(filter, cts);
         await _unitofWork.CommitAsync(cts);
 
-        var result = _mapper.Map<IEnumerable<User>>(users);
+        var result = users.Select(x => JoinUserRole(x, cts).Result);
         return result;
     }
 
-    public async Task<User?> Get(int id, CancellationToken cts)
+    public async Task<User> Get(int id, CancellationToken cts)
     {
         var user = await _unitofWork.UserRepository.GetById(id, cts);
 
@@ -45,11 +48,11 @@ public class UserService : IUserService
             throw e;
         }
 
-        var result = _mapper.Map<User>(user);
+        var result = await JoinUserRole(user, cts);
         return result;
     }
 
-    public async Task<User?> Get(string email, CancellationToken cts)
+    public async Task<User> Get(string email, CancellationToken cts)
     {
         var user = await _unitofWork.UserRepository.GetByEmail(email, cts);
         await _unitofWork.CommitAsync(cts);
@@ -61,7 +64,7 @@ public class UserService : IUserService
             throw e;
         }
 
-        var result = _mapper.Map<User>(user);
+        var result = await JoinUserRole(user, cts);
         return result;
     }
 
@@ -77,10 +80,10 @@ public class UserService : IUserService
         }
 
         var userModel = _mapper.Map<UserModel>(user);
-        var updatedUser = _unitofWork.UserRepository.UpdateUserProfile(userModel, cts);
+        var updatedUser = await _unitofWork.UserRepository.UpdateUserProfile(userModel, cts);
         await _unitofWork.CommitAsync(cts);
 
-        var result = _mapper.Map<User>(updatedUser);
+        var result = await JoinUserRole(updatedUser, cts);
         return result;
     }
 
@@ -105,14 +108,14 @@ public class UserService : IUserService
         }
 
         var userModel = _mapper.Map<UserModel>(user);
-        var updatedUser = _unitofWork.UserRepository.UpdateUserProfile(userModel, cts);
+        var updatedUser = await _unitofWork.UserRepository.UpdateUserProfile(userModel, cts);
         await _unitofWork.CommitAsync(cts);
 
-        var result = _mapper.Map<User>(updatedUser);
+        var result = await JoinUserRole(updatedUser, cts);
         return result;
     }
 
-    public async Task<bool> ChangePassword(int id, string password, CancellationToken cts)
+    public async Task<int> ChangePassword(int id, string password, CancellationToken cts)
     {
         var existingUser = await _unitofWork.UserRepository.GetById(id, cts);
 
@@ -123,16 +126,19 @@ public class UserService : IUserService
             throw e;
         }
 
-        var passwordHash = _hasher.HashPassword(password);
-        var userToUpdate = new UserModel
+        if (password == existingUser.Email)
         {
-            Id = id,
-            PasswordHash = passwordHash
-        };
+            var e = new ApiException();
+            e.Data.Add("ApiError", ErrorCode[1002]);
+            throw e;
+        }
+
+        var passwordHash = _hasher.HashPassword(password);
+        var userToUpdate = new UserModel { Id = id, PasswordHash = passwordHash };
         var updatedUserId = await _unitofWork.UserRepository.UpdatePassword(userToUpdate, cts);
         await _unitofWork.CommitAsync(cts);
 
-        return updatedUserId == id;
+        return updatedUserId;
     }
 
     public async Task<User> AddUserToRole(User user, CancellationToken cts)
@@ -157,8 +163,8 @@ public class UserService : IUserService
 
         var userModel = _mapper.Map<UserModel>(user);
         var updatedUser = await _unitofWork.UserRepository.AddUserToRole(userModel, cts);
-        var result = _mapper.Map<User>(updatedUser);
 
+        var result = await JoinUserRole(updatedUser, cts);
         return result;
     }
 
@@ -174,8 +180,8 @@ public class UserService : IUserService
         }
 
         var updatedUser = await _unitofWork.UserRepository.RemoveUserFromRole(id, cts);
-        var result = _mapper.Map<User>(updatedUser);
 
+        var result = await JoinUserRole(updatedUser, cts);
         return result;
     }
 
@@ -191,8 +197,8 @@ public class UserService : IUserService
         }
 
         var updatedUser = await _unitofWork.UserRepository.Block(id, cts);
-        var result = _mapper.Map<User>(updatedUser);
 
+        var result = await JoinUserRole(updatedUser, cts);
         return result;
     }
 
@@ -208,8 +214,8 @@ public class UserService : IUserService
         }
 
         var updatedUser = await _unitofWork.UserRepository.Unblock(id, cts);
-        var result = _mapper.Map<User>(updatedUser);
 
+        var result = await JoinUserRole(updatedUser, cts);
         return result;
     }
 
@@ -225,8 +231,8 @@ public class UserService : IUserService
         }
 
         var updatedUser = await _unitofWork.UserRepository.Delete(id, cts);
-        var result = _mapper.Map<User>(updatedUser);
 
+        var result = await JoinUserRole(updatedUser, cts);
         return result;
     }
 
@@ -242,8 +248,21 @@ public class UserService : IUserService
         }
 
         var updatedUser = await _unitofWork.UserRepository.Restore(id, cts);
-        var result = _mapper.Map<User>(updatedUser);
 
+        var result = await JoinUserRole(updatedUser, cts);
         return result;
+    }
+
+    private async Task<User> JoinUserRole(UserModel userModel, CancellationToken cts)
+    {
+        if (userModel.RoleId is null)
+        {
+            return _mapper.Map<User>(userModel);
+        }
+
+        var roleModel = await _unitofWork.RoleRepository.Get(userModel.RoleId.Value, cts);
+
+        var aggregationTable = new ValueTuple<UserModel, RoleModel>(userModel, roleModel!);
+        return _mapper.Map<User>(aggregationTable);
     }
 }

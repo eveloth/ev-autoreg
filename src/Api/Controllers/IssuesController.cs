@@ -41,21 +41,18 @@ public class IssuesController : ControllerBase
         var issues = await _unitofWork.IssueRepository.GetAll(paginationFilter, cts);
 
         var aggregationTable =
-            new List<ValueTuple<IssueModel, UserProfileModel?, IssueTypeModel?>>();
+            new List<ValueTuple<IssueModel, UserModel?, IssueTypeModel?>>();
 
         foreach (var issue in issues)
         {
-            var registrar = await _unitofWork.UserRepository.GetUserProfle(
-                issue.RegistrarId!.Value,
-                cts
-            );
+            var registrar = await _unitofWork.UserRepository.GetById(issue.RegistrarId!.Value, cts);
             var issueType = await _unitofWork.IssueTypeRepository.Get(
                 issue.IssueTypeId!.Value,
                 cts
             );
 
             aggregationTable.Add(
-                new ValueTuple<IssueModel, UserProfileModel?, IssueTypeModel?>
+                new ValueTuple<IssueModel, UserModel?, IssueTypeModel?>
                 {
                     Item1 = issue,
                     Item2 = registrar ?? null,

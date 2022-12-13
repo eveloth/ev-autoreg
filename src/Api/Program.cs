@@ -50,8 +50,10 @@ internal static class Program
             .AddDapperSnakeCaseConvention()
             .AddRepositories();
 
-        builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
+
+        builder.Services.AddScoped<IUserService, UserService>();
         builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+        builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
         builder.Services.AddScoped<ICredentialsEncryptor, CredentialsEncryptor>();
 
         builder.Services.AddTransient<DatabaseSeeder>();
@@ -61,7 +63,7 @@ internal static class Program
         {
             options.Address = new Uri(
                 builder.Configuration["AutoregistrarUri"]
-                    ?? throw new NullConfigurationEntryException("Autoregistrar URI wasn't set")
+                ?? throw new NullConfigurationEntryException("Autoregistrar URI wasn't set")
             );
         });
 

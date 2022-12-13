@@ -64,7 +64,10 @@ public class AccessControlController : ControllerBase
         {
             return BadRequest(ErrorCode[3003]);
         }
-        var newRole = await _unitofWork.RoleRepository.Add(roleName.RoleName, cts);
+        var newRole = await _unitofWork.RoleRepository.Add(
+            new RoleModel { RoleName = roleName.RoleName },
+            cts
+        );
 
         await _unitofWork.CommitAsync(cts);
 
@@ -277,7 +280,7 @@ public class AccessControlController : ControllerBase
             return BadRequest(ErrorCode[3001]);
         }
 
-        var rolePermissions = await _unitofWork.RolePermissionRepository.GetRole(id, cts);
+        var rolePermissions = await _unitofWork.RolePermissionRepository.Get(id, cts);
 
         await _unitofWork.CommitAsync(cts);
 
@@ -297,6 +300,8 @@ public class AccessControlController : ControllerBase
         CancellationToken cts
     )
     {
+        var rpModel = new RolePermissionModel { RoleId = roleId, PermissionId = permissionId };
+
         var roleExists = await _unitofWork.RoleRepository.DoesExist(roleId, cts);
 
         if (!roleExists)
@@ -312,8 +317,7 @@ public class AccessControlController : ControllerBase
         }
 
         var rolePermissions = await _unitofWork.RolePermissionRepository.AddPermissionToRole(
-            roleId,
-            permissionId,
+            rpModel,
             cts
         );
 
@@ -341,12 +345,9 @@ public class AccessControlController : ControllerBase
         CancellationToken cts
     )
     {
+        var rpModel = new RolePermissionModel { RoleId = roleId, PermissionId = permissionId };
         var rolePermissionCorerlationExists =
-            await _unitofWork.RolePermissionRepository.DoesCorrelationExist(
-                roleId,
-                permissionId,
-                cts
-            );
+            await _unitofWork.RolePermissionRepository.DoesCorrelationExist(rpModel, cts);
 
         if (!rolePermissionCorerlationExists)
         {
@@ -354,8 +355,7 @@ public class AccessControlController : ControllerBase
         }
 
         var rolePermissions = await _unitofWork.RolePermissionRepository.RemovePermissionFromRole(
-            roleId,
-            permissionId,
+            rpModel,
             cts
         );
 
@@ -397,17 +397,19 @@ public class AccessControlController : ControllerBase
             return NotFound(ErrorCode[3001]);
         }
 
-        var updatedUser = await _unitofWork.RoleRepository.SetUserRole(userId, roleId, cts);
+        var user = new UserModel { Id = userId, RoleId = roleId };
+
+        var updatedUser = await _unitofWork.UserRepository.AddUserToRole(user, cts);
 
         await _unitofWork.CommitAsync(cts);
 
         _logger.LogInformation(
             "User ID {UserId} was added to role ID {RoleId}",
             updatedUser.Id,
-            updatedUser.Role!.Id
+            updatedUser.RoleId
         );
 
-        var response = new Response<UserProfileDto>(_mapper.Map<UserProfileDto>(updatedUser));
+        var response = new Response<UserDto>(_mapper.Map<UserDto>(updatedUser));
 
         return Ok(response);
     }
@@ -417,31 +419,31 @@ public class AccessControlController : ControllerBase
     [HttpDelete]
     public async Task<IActionResult> RemoveUserFromRole([FromRoute] int id, CancellationToken cts)
     {
-        var existingUser = await _unitofWork.UserRepository.GetUserProfle(id, cts);
+        var existingUser = await _unitofWork.UserRepository.GetById(id, cts);
 
         if (existingUser is null)
         {
             return NotFound(ErrorCode[2001]);
         }
 
-        var isInAnyRole = existingUser.Role is not null;
+        var isInAnyRole = existingUser.RoleId is not null;
 
         if (!isInAnyRole)
         {
             return BadRequest(ErrorCode[3002]);
         }
 
-        var updatedUser = await _unitofWork.RoleRepository.RemoveUserFromRole(id, cts);
+        var updatedUser = await _unitofWork.UserRepository.RemoveUserFromRole(id, cts);
 
         await _unitofWork.CommitAsync(cts);
 
         _logger.LogInformation(
             "User ID {UserId} was removed from role ID {RoleId}",
             updatedUser.Id,
-            existingUser.Role!.Id
+            existingUser.RoleId
         );
 
-        var response = new Response<UserProfileDto>(_mapper.Map<UserProfileDto>(updatedUser));
+        var response = new Response<UserDto>(_mapper.Map<UserDto>(updatedUser));
 
         return Ok(response);
     }

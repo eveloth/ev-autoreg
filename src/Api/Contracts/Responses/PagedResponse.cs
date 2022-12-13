@@ -1,6 +1,6 @@
 namespace Api.Contracts.Responses;
 
-public class PagedResponse<T>
+public record PagedResponse<T>
 {
     public PagedResponse(IEnumerable<T> data, PaginationQuery pagination)
     {

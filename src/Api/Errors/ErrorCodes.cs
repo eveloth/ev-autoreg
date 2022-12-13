@@ -8,8 +8,10 @@ public static class ErrorCodes
         new()
         {
             { 1001, new ApiError(1001, "Provided email is already taken.") },
+            { 1002, new ApiError(1002, "Password can not be the same as the email.") },
             { 1003, new ApiError(1003, "User was blocked.") },
             { 1004, new ApiError(1004, "User not found") },
+            { 1005, new ApiError(1005, "Authentication failed.") },
             { 2001, new ApiError(2001, "Role name is already taken.") },
             { 2002, new ApiError(2002, "User in not assigned to any role.") },
             { 2004, new ApiError(2004, "Role not found.") },

@@ -1,13 +1,14 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Api.Contracts.Dto;
 using Api.Contracts.Requests;
 using Api.Contracts.Responses;
+using Api.Domain;
 using Api.Services.Interfaces;
-using DataAccessLibrary.Repository.Interfaces;
+using FluentValidation;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using static Api.Errors.ErrorCodes;
 
 namespace Api.Controllers;
 
@@ -18,38 +19,40 @@ public class MeController : ControllerBase
 {
     private readonly ILogger<MeController> _logger;
     private readonly IMapper _mapper;
-    private readonly IUnitofWork _unitofWork;
-    private readonly IAuthenticationService _authService;
-    private readonly IPasswordHasher _passwordHasher;
+    private readonly IUserService _userService;
+    private readonly IValidator<UserEmailRequest> _emailValidator;
+    private readonly IValidator<UserPasswordRequest> _passwordValidator;
+    private readonly IValidator<UserProfileRequest> _profileValidator;
 
     public MeController(
         ILogger<MeController> logger,
-        IUnitofWork unitofWork,
-        IAuthenticationService authService,
-        IPasswordHasher passwordHasher,
-        IMapper mapper
+        IMapper mapper,
+        IUserService userService,
+        IValidator<UserEmailRequest> emailValidator,
+        IValidator<UserPasswordRequest> passwordValidator,
+        IValidator<UserProfileRequest> profileValidator
     )
     {
         _logger = logger;
-        _unitofWork = unitofWork;
-        _authService = authService;
-        _passwordHasher = passwordHasher;
         _mapper = mapper;
+        _userService = userService;
+        _emailValidator = emailValidator;
+        _passwordValidator = passwordValidator;
+        _profileValidator = profileValidator;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetMyProfile(CancellationToken cts)
     {
         var userId = int.Parse(
-            HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
+            HttpContext.User.Claims
+                .FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)!
+                .Value
         );
 
-        var me = await _unitofWork.UserRepository.GetUserProfle(userId, cts);
+        var me = await _userService.Get(userId, cts);
 
-        await _unitofWork.CommitAsync(cts);
-
-        var response = new Response<UserProfileDto>(_mapper.Map<UserProfileDto>(me!));
-
+        var response = new Response<UserDto>(_mapper.Map<UserDto>(me));
         return Ok(response);
     }
 
@@ -60,27 +63,23 @@ public class MeController : ControllerBase
         CancellationToken cts
     )
     {
+        await _emailValidator.ValidateAndThrowAsync(request, cts);
+
         var userId = int.Parse(
             HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
         );
 
-        if (!_authService.IsEmailValid(request.Email))
-        {
-            return BadRequest(ErrorCode[1001]);
-        }
+        var user = new User { Id = userId, Email = request.Email };
 
-        var userProfile = await _unitofWork.UserRepository.UpdateEmail(userId, request.Email, cts);
-
-        await _unitofWork.CommitAsync(cts);
+        var updatedUser = await _userService.ChangeEmail(user, cts);
 
         _logger.LogInformation(
             "Email was updated to {Email} for user ID {UserId}",
-            userProfile.Email,
-            userProfile.Id
+            updatedUser.Email,
+            updatedUser.Id
         );
 
-        var response = new Response<UserProfileDto>(_mapper.Map<UserProfileDto>(userProfile));
-
+        var response = new Response<UserDto>(_mapper.Map<UserDto>(updatedUser));
         return Ok(response);
     }
 
@@ -91,34 +90,17 @@ public class MeController : ControllerBase
         CancellationToken cts
     )
     {
+        await _passwordValidator.ValidateAndThrowAsync(request, cts);
+
         var userId = int.Parse(
             HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
         );
 
-        var user = await _unitofWork.UserRepository.GetById(userId, cts);
-        var email = user!.Email;
+        var updatedUserId = await _userService.ChangePassword(userId, request.NewPassword, cts);
 
-        if (!_authService.IsPasswordValid(email, request.NewPassword))
-        {
-            return BadRequest(ErrorCode[1002]);
-        }
+        _logger.LogInformation("Password was changed for user ID {UserId}", updatedUserId);
 
-        var passwordHash = _passwordHasher.HashPassword(request.NewPassword);
-
-        var userWithChangedPassword = await _unitofWork.UserRepository.UpdatePassword(
-            userId,
-            passwordHash,
-            cts
-        );
-
-        await _unitofWork.CommitAsync(cts);
-        _logger.LogInformation(
-            "Password was changed for user ID {UserId}",
-            userWithChangedPassword
-        );
-
-        var response = new Response<int>(userWithChangedPassword);
-
+        var response = new ResultResponse(true);
         return Ok(response);
     }
 
@@ -128,23 +110,24 @@ public class MeController : ControllerBase
         CancellationToken cts
     )
     {
+        await _profileValidator.ValidateAndThrowAsync(request, cts);
+
         var userId = int.Parse(
             HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
         );
 
-        var user = await _unitofWork.UserRepository.UpdateUserProfile(
-            userId,
-            request.FisrtName,
-            request.LastName,
-            cts
-        );
+        var user = new User
+        {
+            Id = userId,
+            FirstName = request.FisrtName,
+            LastName = request.LastName
+        };
 
-        await _unitofWork.CommitAsync(cts);
+        var updatedUser = await _userService.UpdateProfile(user, cts);
 
-        _logger.LogInformation("User profile was updated for user ID {UserId}", userId);
+        _logger.LogInformation("User profile was updated for user ID {UserId}", updatedUser.Id);
 
-        var response = new Response<UserProfileDto>(_mapper.Map<UserProfileDto>(user));
-
+        var response = new Response<UserDto>(_mapper.Map<UserDto>(updatedUser));
         return Ok(response);
     }
 }

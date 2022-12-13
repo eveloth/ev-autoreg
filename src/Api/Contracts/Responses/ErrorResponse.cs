@@ -2,8 +2,8 @@
 
 namespace Api.Contracts.Responses;
 
-public class ErrorResponse
+public record ErrorResponse
 {
-    public ApiError ApiError { get; set; }
-    public List<string> Details { get; set; } = new();
+    public required ApiError ApiError { get; init; }
+    public List<string> Details { get; init; } = new();
 }
