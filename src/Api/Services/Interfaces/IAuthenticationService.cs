@@ -1,10 +1,11 @@
+using Api.Domain;
 using DataAccessLibrary.Models;
 
 namespace Api.Services.Interfaces;
 
 public interface IAuthenticationService
 {
-    bool IsEmailValid(string email);
-    bool IsPasswordValid(string email, string password);
-    Task<string> GenerateToken(UserModel user, CancellationToken cts);
+    Task<Token> Register(string email, string password, CancellationToken cts);
+    Task<Token> Login(string email, string password, CancellationToken cts);
+    Task<Token> RefreshToken(RefreshToken token, CancellationToken cts);
 }
