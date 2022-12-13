@@ -34,7 +34,7 @@ public sealed class UnitofWork : IUnitofWork
         IIssueTypeRepository issueTypeRepository,
         IIssueRepository issueRepository,
         IRuleRepository ruleRepository,
-        QueryParametersRepository queryParametersRepository,
+        IQueryParametersRepository queryParametersRepository,
         IAutoregistrarSettingsRepository mailAnalysisRulesRepository,
         IIssueFieldRepository issueFieldRepository
     )

@@ -25,6 +25,15 @@ public class RoleRepository : IRoleRepository
         return await _db.LoadAllData<RoleModel>(sql, cts);
     }
 
+    public async Task<RoleModel?> Get(int id, CancellationToken cts)
+    {
+        const string sql = @"SELECT * FROM role WHERE id = @RoleId";
+
+        var parameters = new DynamicParameters(new { RoleId = id });
+
+        return await _db.LoadSingle<RoleModel?>(sql, parameters, cts);
+    }
+
     public async Task<RoleModel> Add(RoleModel role, CancellationToken cts)
     {
         const string sql = @"INSERT INTO role (role_name) VALUES (@RoleName) RETURNING *";

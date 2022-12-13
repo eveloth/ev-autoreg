@@ -41,7 +41,7 @@ public class RolePermissionRepository : IRolePermissionRepository
         return await _db.LoadAllData<RolePermissionModel>(sql, cts);
     }
 
-    public async Task<IEnumerable<RolePermissionModel>> GetRole(int roleId, CancellationToken cts)
+    public async Task<IEnumerable<RolePermissionModel>> Get(int roleId, CancellationToken cts)
     {
         const string sql =
             @"SELECT role.id AS role_id, 
@@ -71,7 +71,7 @@ public class RolePermissionRepository : IRolePermissionRepository
 
         var roleId = await _db.SaveData<int>(sql, parameters, cts);
 
-        var result = await GetRole(roleId, cts);
+        var result = await Get(roleId, cts);
 
         return result;
     }
@@ -89,7 +89,7 @@ public class RolePermissionRepository : IRolePermissionRepository
 
         var roleId = await _db.SaveData<int>(sql, parameters, cts);
 
-        return await GetRole(roleId, cts);
+        return await Get(roleId, cts);
     }
 
     public async Task<bool> DoesCorrelationExist(

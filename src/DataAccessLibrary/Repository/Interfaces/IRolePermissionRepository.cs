@@ -6,7 +6,7 @@ namespace DataAccessLibrary.Repository.Interfaces;
 public interface IRolePermissionRepository
 {
     Task<IEnumerable<RolePermissionModel>> GetAll(PaginationFilter filter, CancellationToken cts);
-    Task<IEnumerable<RolePermissionModel>> GetRole(int roleId, CancellationToken cts);
+    Task<IEnumerable<RolePermissionModel>> Get(int roleId, CancellationToken cts);
     Task<IEnumerable<RolePermissionModel>> AddPermissionToRole(
         RolePermissionModel rolePermission,
         CancellationToken cts
