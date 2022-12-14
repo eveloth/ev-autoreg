@@ -50,11 +50,23 @@ internal static class Program
             .AddDapperSnakeCaseConvention()
             .AddRepositories();
 
-
         builder.Services.AddScoped<IUserService, UserService>();
         builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+        builder.Services.AddScoped<IRoleService, RoleService>();
+        builder.Services.AddScoped<IPermissionService, PermissionService>();
+        builder.Services.AddScoped<IRolePermissionService, RolePermissionService>();
+        builder.Services.AddScoped<IExtCredentialsService, ExtCredentialsService>();
+        builder.Services.AddScoped<IAutoregistrarSettingsService, AutoregistrarSettingsService>();
+        builder.Services.AddScoped<IIssueTypeService, IssueTypeService>();
+        builder.Services.AddScoped<IIssueFieldService, IssueFieldService>();
+        builder.Services.AddScoped<IRuleService, RuleService>();
+        builder.Services.AddScoped<IIssueService, IssueService>();
+        builder.Services.AddScoped<IQueryParametersService, QueryParametersService>();
+
         builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
         builder.Services.AddScoped<ICredentialsEncryptor, CredentialsEncryptor>();
+
+        builder.Services.AddScoped<IMappingHelper, MappingHelper>();
 
         builder.Services.AddTransient<DatabaseSeeder>();
 
@@ -72,6 +84,7 @@ internal static class Program
         var app = builder.Build();
 
         app.ConfigureModelToDomainMapping();
+        app.ConfigureDomainToModelMapping();
         app.ConfigureDomainToDtoMapping();
 
         // Configure the HTTP request pipeline.

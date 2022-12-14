@@ -1,6 +1,7 @@
 using Api.Contracts;
 using Api.Domain;
 using Api.Exceptions;
+using Api.Mapping;
 using Api.Services.Interfaces;
 using DataAccessLibrary.Filters;
 using DataAccessLibrary.Models;
@@ -13,14 +14,21 @@ namespace Api.Services;
 public class UserService : IUserService
 {
     private readonly IMapper _mapper;
+    private readonly IMappingHelper _mappingHelper;
     private readonly IUnitofWork _unitofWork;
     private readonly IPasswordHasher _hasher;
 
-    public UserService(IMapper mapper, IUnitofWork unitofWork, IPasswordHasher hasher)
+    public UserService(
+        IMapper mapper,
+        IUnitofWork unitofWork,
+        IPasswordHasher hasher,
+        IMappingHelper mappingHelper
+    )
     {
         _mapper = mapper;
         _unitofWork = unitofWork;
         _hasher = hasher;
+        _mappingHelper = mappingHelper;
     }
 
     public async Task<IEnumerable<User>> GetAll(
@@ -33,13 +41,14 @@ public class UserService : IUserService
         var users = await _unitofWork.UserRepository.GetAll(filter, cts);
         await _unitofWork.CommitAsync(cts);
 
-        var result = users.Select(x => JoinUserRole(x, cts).Result);
+        var result = users.Select(x => _mappingHelper.JoinUserRole(x, cts).Result);
         return result;
     }
 
     public async Task<User> Get(int id, CancellationToken cts)
     {
         var user = await _unitofWork.UserRepository.GetById(id, cts);
+        await _unitofWork.CommitAsync(cts);
 
         if (user is null)
         {
@@ -48,7 +57,7 @@ public class UserService : IUserService
             throw e;
         }
 
-        var result = await JoinUserRole(user, cts);
+        var result = await _mappingHelper.JoinUserRole(user, cts);
         return result;
     }
 
@@ -64,7 +73,7 @@ public class UserService : IUserService
             throw e;
         }
 
-        var result = await JoinUserRole(user, cts);
+        var result = await _mappingHelper.JoinUserRole(user, cts);
         return result;
     }
 
@@ -83,7 +92,7 @@ public class UserService : IUserService
         var updatedUser = await _unitofWork.UserRepository.UpdateUserProfile(userModel, cts);
         await _unitofWork.CommitAsync(cts);
 
-        var result = await JoinUserRole(updatedUser, cts);
+        var result = await _mappingHelper.JoinUserRole(updatedUser, cts);
         return result;
     }
 
@@ -111,7 +120,7 @@ public class UserService : IUserService
         var updatedUser = await _unitofWork.UserRepository.UpdateUserProfile(userModel, cts);
         await _unitofWork.CommitAsync(cts);
 
-        var result = await JoinUserRole(updatedUser, cts);
+        var result = await _mappingHelper.JoinUserRole(updatedUser, cts);
         return result;
     }
 
@@ -143,6 +152,7 @@ public class UserService : IUserService
 
     public async Task<User> AddUserToRole(User user, CancellationToken cts)
     {
+        //TODO: Check if user is already in the scecified role
         var existingUser = await _unitofWork.UserRepository.GetById(user.Id, cts);
 
         if (existingUser is null)
@@ -164,12 +174,13 @@ public class UserService : IUserService
         var userModel = _mapper.Map<UserModel>(user);
         var updatedUser = await _unitofWork.UserRepository.AddUserToRole(userModel, cts);
 
-        var result = await JoinUserRole(updatedUser, cts);
+        var result = await _mappingHelper.JoinUserRole(updatedUser, cts);
         return result;
     }
 
     public async Task<User> RemoveUserFromRole(int id, CancellationToken cts)
     {
+        //TODO: Check if user doesn't have any role
         var existingUser = await _unitofWork.UserRepository.GetById(id, cts);
 
         if (existingUser is null)
@@ -180,8 +191,9 @@ public class UserService : IUserService
         }
 
         var updatedUser = await _unitofWork.UserRepository.RemoveUserFromRole(id, cts);
+        await _unitofWork.CommitAsync(cts);
 
-        var result = await JoinUserRole(updatedUser, cts);
+        var result = await _mappingHelper.JoinUserRole(updatedUser, cts);
         return result;
     }
 
@@ -198,7 +210,7 @@ public class UserService : IUserService
 
         var updatedUser = await _unitofWork.UserRepository.Block(id, cts);
 
-        var result = await JoinUserRole(updatedUser, cts);
+        var result = await _mappingHelper.JoinUserRole(updatedUser, cts);
         return result;
     }
 
@@ -215,7 +227,7 @@ public class UserService : IUserService
 
         var updatedUser = await _unitofWork.UserRepository.Unblock(id, cts);
 
-        var result = await JoinUserRole(updatedUser, cts);
+        var result = await _mappingHelper.JoinUserRole(updatedUser, cts);
         return result;
     }
 
@@ -232,7 +244,7 @@ public class UserService : IUserService
 
         var updatedUser = await _unitofWork.UserRepository.Delete(id, cts);
 
-        var result = await JoinUserRole(updatedUser, cts);
+        var result = await _mappingHelper.JoinUserRole(updatedUser, cts);
         return result;
     }
 
@@ -249,20 +261,7 @@ public class UserService : IUserService
 
         var updatedUser = await _unitofWork.UserRepository.Restore(id, cts);
 
-        var result = await JoinUserRole(updatedUser, cts);
+        var result = await _mappingHelper.JoinUserRole(updatedUser, cts);
         return result;
-    }
-
-    private async Task<User> JoinUserRole(UserModel userModel, CancellationToken cts)
-    {
-        if (userModel.RoleId is null)
-        {
-            return _mapper.Map<User>(userModel);
-        }
-
-        var roleModel = await _unitofWork.RoleRepository.Get(userModel.RoleId.Value, cts);
-
-        var aggregationTable = new ValueTuple<UserModel, RoleModel>(userModel, roleModel!);
-        return _mapper.Map<User>(aggregationTable);
     }
 }

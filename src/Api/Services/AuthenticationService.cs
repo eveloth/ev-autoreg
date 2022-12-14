@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Text;
 using Api.Domain;
 using Api.Exceptions;
+using Api.Mapping;
 using Api.Services.Interfaces;
 using DataAccessLibrary.Models;
 using DataAccessLibrary.Repository.Interfaces;
@@ -18,6 +19,7 @@ public class AuthenticationService : IAuthenticationService
     private readonly ILogger<AuthenticationService> _logger;
     private readonly IConfiguration _config;
     private readonly IMapper _mapper;
+    private readonly IMappingHelper _mappingHelper;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IUnitofWork _unitofWork;
 
@@ -25,13 +27,17 @@ public class AuthenticationService : IAuthenticationService
         IMapper mapper,
         IPasswordHasher passwordHasher,
         IUnitofWork unitofWork,
-        IConfiguration config, ILogger<AuthenticationService> logger)
+        IConfiguration config,
+        ILogger<AuthenticationService> logger,
+        IMappingHelper mappingHelper
+    )
     {
         _mapper = mapper;
         _passwordHasher = passwordHasher;
         _unitofWork = unitofWork;
         _config = config;
         _logger = logger;
+        _mappingHelper = mappingHelper;
     }
 
     public async Task<Token> Register(string email, string password, CancellationToken cts)
@@ -55,7 +61,7 @@ public class AuthenticationService : IAuthenticationService
         var passwordHash = _passwordHasher.HashPassword(password);
         var newUser = new UserModel { Email = email, PasswordHash = passwordHash };
         var createdUser = await _unitofWork.UserRepository.Create(newUser, cts);
-        var result = await JoinUserRole(createdUser, cts);
+        var result = await _mappingHelper.JoinUserRole(createdUser, cts);
 
         await _unitofWork.CommitAsync(cts);
 
@@ -90,7 +96,7 @@ public class AuthenticationService : IAuthenticationService
             throw e;
         }
 
-        var user = await JoinUserRole(existingUser, cts);
+        var user = await _mappingHelper.JoinUserRole(existingUser, cts);
         return await GenerateToken(user, cts);
     }
 
@@ -149,18 +155,5 @@ public class AuthenticationService : IAuthenticationService
         _logger.LogInformation("User ID {UserId} was successfully logged in", user.Id);
 
         return new Token { JwtToken = handler.WriteToken(token) };
-    }
-
-    private async Task<User> JoinUserRole(UserModel userModel, CancellationToken cts)
-    {
-        if (userModel.RoleId is null)
-        {
-            return _mapper.Map<User>(userModel);
-        }
-
-        var roleModel = await _unitofWork.RoleRepository.Get(userModel.RoleId.Value, cts);
-
-        var aggregationTable = new ValueTuple<UserModel, RoleModel>(userModel, roleModel!);
-        return _mapper.Map<User>(aggregationTable);
     }
 }

@@ -9,5 +9,5 @@ public class User
     public string? LastName { get; set; }
     public bool IsBlocked { get; set; }
     public bool IsDeleted { get; set; }
-    public Role? Role { get; set; } = null;
+    public Role? Role { get; set; }
 }

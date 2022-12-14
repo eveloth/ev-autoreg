@@ -72,7 +72,7 @@ public static class ModelToDomainMappingConfig
             .Map(dest => dest.IsNegative, src => src.Item1.IsNegative)
             .IgnoreNullValues(true);
 
-        TypeAdapterConfig<(IssueModel, UserProfileModel, IssueTypeModel), Issue>
+        TypeAdapterConfig<(IssueModel, UserModel, IssueTypeModel), Issue>
             .NewConfig()
             .TwoWays()
             .Map(dest => dest.Id, src => src.Item1.Id)

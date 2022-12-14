@@ -3,13 +3,12 @@ using Api.Contracts;
 using Api.Contracts.Dto;
 using Api.Contracts.Requests;
 using Api.Contracts.Responses;
-using DataAccessLibrary.Filters;
-using DataAccessLibrary.Models;
-using DataAccessLibrary.Repository.Interfaces;
+using Api.Domain;
+using Api.Services.Interfaces;
+using FluentValidation;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using static Api.Errors.ErrorCodes;
 
 namespace Api.Controllers;
 
@@ -20,13 +19,20 @@ public class RulesController : ControllerBase
 {
     private readonly ILogger<RulesController> _logger;
     private readonly IMapper _mapper;
-    private readonly IUnitofWork _unitofWork;
+    private readonly IRuleService _ruleService;
+    private readonly IValidator<RuleRequest> _validator;
 
-    public RulesController(ILogger<RulesController> logger, IMapper mapper, IUnitofWork unitofWork)
+    public RulesController(
+        ILogger<RulesController> logger,
+        IMapper mapper,
+        IRuleService ruleService,
+        IValidator<RuleRequest> validator
+    )
     {
         _logger = logger;
         _mapper = mapper;
-        _unitofWork = unitofWork;
+        _ruleService = ruleService;
+        _validator = validator;
     }
 
     [HttpGet]
@@ -39,34 +45,12 @@ public class RulesController : ControllerBase
             HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
         );
 
-        var paginationFilter = _mapper.Map<PaginationFilter>(pagination);
-
-        var rules = await _unitofWork.RuleRepository.GetAll(userId, paginationFilter, cts);
-
-        List<(RuleModel, IssueTypeModel?, IssueFieldModel?)> aggregationTable = new();
-
-        foreach (var rule in rules)
-        {
-            var issueType = await _unitofWork.IssueTypeRepository.Get(rule.IssueTypeId, cts);
-            var issueField = await _unitofWork.IssueFieldRepository.Get(rule.IssueFieldId, cts);
-
-            aggregationTable.Add(
-                new ValueTuple<RuleModel, IssueTypeModel?, IssueFieldModel?>
-                {
-                    Item1 = rule,
-                    Item2 = issueType ?? null,
-                    Item3 = issueField ?? null
-                }
-            );
-        }
-
-        await _unitofWork.CommitAsync(cts);
+        var rules = await _ruleService.GetAll(userId, pagination, cts);
 
         var response = new PagedResponse<RuleDto>(
-            _mapper.Map<IEnumerable<RuleDto>>(aggregationTable),
+            _mapper.Map<IEnumerable<RuleDto>>(rules),
             pagination
         );
-
         return Ok(response);
     }
 
@@ -78,71 +62,33 @@ public class RulesController : ControllerBase
             HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
         );
 
-        var rule = await _unitofWork.RuleRepository.Get(id, userId, cts);
+        var rule = await _ruleService.Get(id, userId, cts);
 
-        if (rule is null)
-        {
-            return NotFound(ErrorCode[6001]);
-        }
-
-        var issueType = await _unitofWork.IssueTypeRepository.Get(rule.IssueTypeId, cts);
-        var issueField = await _unitofWork.IssueFieldRepository.Get(rule.IssueFieldId, cts);
-
-        await _unitofWork.CommitAsync(cts);
-
-        var aggregationTable = new ValueTuple<RuleModel, IssueTypeModel?, IssueFieldModel?>
-        {
-            Item1 = rule,
-            Item2 = issueType ?? null,
-            Item3 = issueField ?? null
-        };
-
-        var response = new Response<RuleDto>(_mapper.Map<RuleDto>(aggregationTable));
-
+        var response = new Response<RuleDto>(_mapper.Map<RuleDto>(rule));
         return Ok(response);
     }
 
     [HttpPost]
     public async Task<IActionResult> AddRule([FromBody] RuleRequest request, CancellationToken cts)
     {
+        await _validator.ValidateAndThrowAsync(request, cts);
+
         var userId = int.Parse(
             HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
         );
 
-        var issueType = await _unitofWork.IssueTypeRepository.Get(request.IssueTypeId, cts);
+        var rule = _mapper.Map<Rule>(request);
+        rule.OwnerUserId = userId;
 
-        if (issueType is null)
-        {
-            return NotFound(ErrorCode[7001]);
-        }
+        var createdRule = await _ruleService.Add(rule, cts);
 
-        var issueField = await _unitofWork.IssueFieldRepository.Get(request.IssueFieldId, cts);
-
-        if (issueField is null)
-        {
-            return NotFound(ErrorCode[7002]);
-        }
-
-        var newRule = _mapper.Map<RuleModel>(request);
-        newRule.OwnerUserId = userId;
-
-        var addedRule = await _unitofWork.RuleRepository.Add(newRule, cts);
-        await _unitofWork.CommitAsync(cts);
         _logger.LogInformation(
             "Rule ID {RuleId} was added for user ID {UserId}",
-            addedRule.Id,
-            addedRule.OwnerUserId
+            createdRule.Id,
+            createdRule.OwnerUserId
         );
 
-        var aggregationTable = new ValueTuple<RuleModel, IssueTypeModel?, IssueFieldModel?>
-        {
-            Item1 = addedRule,
-            Item2 = issueType,
-            Item3 = issueField
-        };
-
-        var response = new Response<RuleDto>(_mapper.Map<RuleDto>(aggregationTable));
-
+        var response = new Response<RuleDto>(_mapper.Map<RuleDto>(createdRule));
         return Ok(response);
     }
 
@@ -154,37 +100,17 @@ public class RulesController : ControllerBase
         CancellationToken cts
     )
     {
+        await _validator.ValidateAndThrowAsync(request, cts);
+
         var userId = int.Parse(
             HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
         );
 
-        var ruleExist = await _unitofWork.RuleRepository.DoesExist(id, userId, cts);
-
-        if (!ruleExist)
-        {
-            return NotFound(ErrorCode[6001]);
-        }
-
-        var issueType = await _unitofWork.IssueTypeRepository.Get(request.IssueTypeId, cts);
-
-        if (issueType is null)
-        {
-            return NotFound(ErrorCode[7001]);
-        }
-
-        var issueField = await _unitofWork.IssueFieldRepository.Get(request.IssueFieldId, cts);
-
-        if (issueField is null)
-        {
-            return NotFound(ErrorCode[7002]);
-        }
-
-        var rule = _mapper.Map<RuleModel>(request);
+        var rule = _mapper.Map<Rule>(request);
         rule.Id = id;
         rule.OwnerUserId = userId;
 
-        var updatedRule = await _unitofWork.RuleRepository.Update(rule, cts);
-        await _unitofWork.CommitAsync(cts);
+        var updatedRule = await _ruleService.Update(rule, cts);
 
         _logger.LogInformation(
             "Rule ID {RuleId} was updated for user ID {UserId}",
@@ -192,15 +118,7 @@ public class RulesController : ControllerBase
             updatedRule.OwnerUserId
         );
 
-        var aggregationTable = new ValueTuple<RuleModel, IssueTypeModel?, IssueFieldModel?>
-        {
-            Item1 = updatedRule,
-            Item2 = issueType,
-            Item3 = issueField
-        };
-
-        var response = new Response<RuleDto>(_mapper.Map<RuleDto>(aggregationTable));
-
+        var response = new Response<RuleDto>(_mapper.Map<RuleDto>(updatedRule));
         return Ok(response);
     }
 
@@ -212,34 +130,15 @@ public class RulesController : ControllerBase
             HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
         );
 
-        var ruleExist = await _unitofWork.RuleRepository.DoesExist(id, userId, cts);
+        var deletedRule = await _ruleService.Delete(id, userId, cts);
 
-        if (!ruleExist)
-        {
-            return NotFound(ErrorCode[6001]);
-        }
-
-        var deletedRule = await _unitofWork.RuleRepository.Delete(id, userId, cts);
-
-        var issueType = await _unitofWork.IssueTypeRepository.Get(deletedRule.IssueTypeId, cts);
-        var issueField = await _unitofWork.IssueFieldRepository.Get(deletedRule.IssueFieldId, cts);
-
-        await _unitofWork.CommitAsync(cts);
         _logger.LogInformation(
             "Rule ID {RuleId} was updated for user ID {UserId}",
             deletedRule.Id,
             deletedRule.OwnerUserId
         );
 
-        var aggregationTable = new ValueTuple<RuleModel, IssueTypeModel?, IssueFieldModel?>
-        {
-            Item1 = deletedRule,
-            Item2 = issueType ?? null,
-            Item3 = issueField ?? null
-        };
-
-        var response = new Response<RuleDto>(_mapper.Map<RuleDto>(aggregationTable));
-
+        var response = new Response<RuleDto>(_mapper.Map<RuleDto>(deletedRule));
         return Ok(response);
     }
 }

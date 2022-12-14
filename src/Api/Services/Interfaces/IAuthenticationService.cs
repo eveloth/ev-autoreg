@@ -1,5 +1,4 @@
 using Api.Domain;
-using DataAccessLibrary.Models;
 
 namespace Api.Services.Interfaces;
 

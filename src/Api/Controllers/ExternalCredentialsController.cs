@@ -3,7 +3,7 @@ using Api.Contracts.Requests;
 using Api.Contracts.Responses;
 using Api.Domain;
 using Api.Services.Interfaces;
-using DataAccessLibrary.Repository.Interfaces;
+using FluentValidation;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,52 +16,21 @@ namespace Api.Controllers;
 public class ExternalCredentialsController : ControllerBase
 {
     private readonly ILogger<ExternalCredentialsController> _logger;
-    private readonly IUnitofWork _unitofWork;
-    private readonly ICredentialsEncryptor _credentialsEncryptor;
     private readonly IMapper _mapper;
+    private readonly IExtCredentialsService _extCredentialsService;
+    private readonly IValidator<ExternalCredentialsRequest> _extCredentialsValidator;
 
     public ExternalCredentialsController(
         ILogger<ExternalCredentialsController> logger,
-        IUnitofWork unitofWork,
-        ICredentialsEncryptor credentialsEncryptor,
-        IMapper mapper
+        IMapper mapper,
+        IExtCredentialsService extCredentialsService,
+        IValidator<ExternalCredentialsRequest> extCredentialsValidator
     )
     {
         _logger = logger;
-        _unitofWork = unitofWork;
-        _credentialsEncryptor = credentialsEncryptor;
         _mapper = mapper;
-    }
-
-    [Authorize(Policy = "UseRegistrar")]
-    [Route("ev")]
-    [HttpPost]
-    public async Task<IActionResult> SaveEvCredentials(
-        [FromBody] ExternalCredentialsRequest credentials,
-        CancellationToken cts
-    )
-    {
-        var userId = int.Parse(
-            HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
-        );
-
-        var cypheredCredentials = _credentialsEncryptor.EncryptEvCredentials(
-            userId,
-            _mapper.Map<EvCredentials>(credentials)
-        );
-
-        var evCredentialsUpdatedForId =
-            await _unitofWork.ExtCredentialsRepository.SaveEvCredentials(cypheredCredentials, cts);
-
-        await _unitofWork.CommitAsync(cts);
-        _logger.LogInformation(
-            "EV Credentials were updated for user ID {UserId}",
-            evCredentialsUpdatedForId
-        );
-
-        var response = new Response<int>(evCredentialsUpdatedForId);
-
-        return Ok(response);
+        _extCredentialsService = extCredentialsService;
+        _extCredentialsValidator = extCredentialsValidator;
     }
 
     [Authorize(Policy = "UseRegistrar")]
@@ -72,29 +41,53 @@ public class ExternalCredentialsController : ControllerBase
         CancellationToken cts
     )
     {
+        await _extCredentialsValidator.ValidateAndThrowAsync(credentials, cts);
+
         var userId = int.Parse(
             HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
         );
 
-        var cypheredCredentials = _credentialsEncryptor.EncryptExchangeCredentials(
+        var updatedForUserId = await _extCredentialsService.SaveExchangeCredentials(
             userId,
-            _mapper.Map<ExchangeCredentials>(credentials)
+            _mapper.Map<ExchangeCredentials>(credentials),
+            cts
         );
 
-        var exchangeCredentialsUpdatedForId =
-            await _unitofWork.ExtCredentialsRepository.SaveExchangeCredentials(
-                cypheredCredentials,
-                cts
-            );
-
-        await _unitofWork.CommitAsync(cts);
         _logger.LogInformation(
             "EV Credentials were updated for user ID {UserId}",
-            exchangeCredentialsUpdatedForId
+            updatedForUserId
         );
 
-        var response = new Response<int>(exchangeCredentialsUpdatedForId);
+        var response = new SuccessResponse(true);
+        return Ok(response);
+    }
 
+    [Authorize(Policy = "UseRegistrar")]
+    [Route("ev")]
+    [HttpPost]
+    public async Task<IActionResult> SaveEvCredentials(
+        [FromBody] ExternalCredentialsRequest credentials,
+        CancellationToken cts
+    )
+    {
+        await _extCredentialsValidator.ValidateAndThrowAsync(credentials, cts);
+
+        var userId = int.Parse(
+            HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
+        );
+
+        var updatedForUserId = await _extCredentialsService.SaveEvCredentials(
+            userId,
+            _mapper.Map<EvCredentials>(credentials),
+            cts
+        );
+
+        _logger.LogInformation(
+            "EV Credentials were updated for user ID {UserId}",
+            updatedForUserId
+        );
+
+        var response = new SuccessResponse(true);
         return Ok(response);
     }
 }

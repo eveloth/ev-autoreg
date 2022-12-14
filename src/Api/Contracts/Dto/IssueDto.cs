@@ -12,8 +12,8 @@ public class IssueDto
     public string? Assignee { get; set; }
     public required string ShortDescription { get; set; }
     public required string Description { get; set; }
-    public required int RegistrarId { get; set; }
-    public required string RegistrarFirstName { get; set; }
-    public required string RegistrarLastName { get; set; }
+    public int? RegistrarId { get; set; }
+    public string? RegistrarFirstName { get; set; }
+    public string? RegistrarLastName { get; set; }
     public IssueTypeDto? IssueType { get; set; }
 }

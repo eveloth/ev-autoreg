@@ -1,12 +1,9 @@
-using Api.Contracts.Dto;
 using Api.Contracts.Requests;
 using Api.Contracts.Responses;
 using Api.Services.Interfaces;
-using DataAccessLibrary.Models;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using static Api.Errors.ErrorCodes;
 using Token = Api.Domain.Token;
 
 namespace Api.Controllers;

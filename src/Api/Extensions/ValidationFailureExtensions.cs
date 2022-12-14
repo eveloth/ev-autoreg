@@ -1,6 +1,5 @@
 ﻿using Api.Contracts.Responses;
 using FluentValidation;
-using FluentValidation.Results;
 using static Api.Errors.ErrorCodes;
 
 namespace Api.Extensions;

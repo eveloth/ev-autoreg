@@ -13,6 +13,13 @@ public static class DomainToDtoMappingConfig
             .Map(dest => dest.RegistrarId, src => src.Registrar.Id)
             .Map(dest => dest.RegistrarFirstName, src => src.Registrar.FirstName)
             .Map(dest => dest.RegistrarLastName, src => src.Registrar.LastName)
-            .IgnoreNonMapped(false);
+            .IgnoreNonMapped(false)
+            .IgnoreNullValues(true);
+
+        TypeAdapterConfig<Rule, RuleDto>
+            .NewConfig()
+            .Map(dest => dest.Rule, src => src.RuleSubstring)
+            .IgnoreNonMapped(false)
+            .IgnoreNullValues(true);
     }
 }

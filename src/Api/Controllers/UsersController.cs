@@ -74,7 +74,7 @@ public class UsersController : ControllerBase
 
         _logger.LogInformation("Password was reset for user ID {UserId}", updatedUserId);
 
-        var response = new ResultResponse(true);
+        var response = new SuccessResponse(true);
         return Ok(response);
     }
 

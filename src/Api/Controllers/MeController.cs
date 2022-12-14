@@ -1,4 +1,3 @@
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Api.Contracts.Dto;
 using Api.Contracts.Requests;
@@ -45,9 +44,7 @@ public class MeController : ControllerBase
     public async Task<IActionResult> GetMyProfile(CancellationToken cts)
     {
         var userId = int.Parse(
-            HttpContext.User.Claims
-                .FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)!
-                .Value
+            HttpContext.User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value
         );
 
         var me = await _userService.Get(userId, cts);
@@ -66,7 +63,7 @@ public class MeController : ControllerBase
         await _emailValidator.ValidateAndThrowAsync(request, cts);
 
         var userId = int.Parse(
-            HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
+            HttpContext.User.Claims.First(n => n.Type == ClaimTypes.NameIdentifier).Value
         );
 
         var user = new User { Id = userId, Email = request.Email };
@@ -93,14 +90,14 @@ public class MeController : ControllerBase
         await _passwordValidator.ValidateAndThrowAsync(request, cts);
 
         var userId = int.Parse(
-            HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
+            HttpContext.User.Claims.First(n => n.Type == ClaimTypes.NameIdentifier).Value
         );
 
         var updatedUserId = await _userService.ChangePassword(userId, request.NewPassword, cts);
 
         _logger.LogInformation("Password was changed for user ID {UserId}", updatedUserId);
 
-        var response = new ResultResponse(true);
+        var response = new SuccessResponse(true);
         return Ok(response);
     }
 
@@ -113,7 +110,7 @@ public class MeController : ControllerBase
         await _profileValidator.ValidateAndThrowAsync(request, cts);
 
         var userId = int.Parse(
-            HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
+            HttpContext.User.Claims.First(n => n.Type == ClaimTypes.NameIdentifier).Value
         );
 
         var user = new User

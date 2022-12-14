@@ -1,5 +1,4 @@
 using Api.Contracts.Dto;
-using Api.Contracts.Requests;
 using Api.Domain;
 using DataAccessLibrary.Models;
 

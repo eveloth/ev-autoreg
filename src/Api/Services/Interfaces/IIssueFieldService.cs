@@ -5,5 +5,5 @@ namespace Api.Services.Interfaces;
 
 public interface IIssueFieldService
 {
-    Task<IEnumerable<IssueField>> GetAll(PaginationQuery query, CancellationToken cts);
+    Task<IEnumerable<IssueField>> GetAll(PaginationQuery paginationQuery, CancellationToken cts);
 }

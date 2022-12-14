@@ -1,7 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
 using Api.Contracts.Dto;
-using Api.Contracts.Requests;
 using Api.Domain;
 using Api.Exceptions;
 using Api.Services.Interfaces;

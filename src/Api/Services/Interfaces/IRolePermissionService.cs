@@ -9,7 +9,7 @@ public interface IRolePermissionService
         PaginationQuery paginationQuery,
         CancellationToken cts
     );
-    Task<RolePermission?> Get(PaginationQuery paginationQuery, CancellationToken cts);
+    Task<RolePermission> Get(int id, CancellationToken cts);
     Task<RolePermission> AddPermissionToRole(RolePermission rolePermission, CancellationToken cts);
     Task<RolePermission> RemovePermissionFromRole(
         RolePermission rolePermission,

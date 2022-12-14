@@ -3,9 +3,9 @@ using Api.Contracts;
 using Api.Contracts.Dto;
 using Api.Contracts.Requests;
 using Api.Contracts.Responses;
-using DataAccessLibrary.Filters;
-using DataAccessLibrary.Models;
-using DataAccessLibrary.Repository.Interfaces;
+using Api.Domain;
+using Api.Services.Interfaces;
+using FluentValidation;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,20 +20,38 @@ public class AutoregistrarController : ControllerBase
 {
     private readonly ILogger<AutoregistrarController> _logger;
     private readonly IMapper _mapper;
-    private readonly IUnitofWork _unitofWork;
     private readonly Autoregistrar.AutoregistrarClient _grpcClient;
+    private readonly IAutoregistrarSettingsService _autoregSettingsService;
+    private readonly IIssueTypeService _issueTypeService;
+    private readonly IIssueFieldService _issueFieldService;
+    private readonly IQueryParametersService _queryParametersService;
+    private readonly IValidator<AutoregistrarSettingsRequest> _auoregSettingsValidator;
+    private readonly IValidator<IssueTypeRequest> _issueTypeValidator;
+    private readonly IValidator<QueryParametersRequest> _queryParametersValidator;
 
     public AutoregistrarController(
         ILogger<AutoregistrarController> logger,
         IMapper mapper,
-        IUnitofWork unitofWork,
-        Autoregistrar.AutoregistrarClient grpcClient
+        Autoregistrar.AutoregistrarClient grpcClient,
+        IAutoregistrarSettingsService autoregSettingsService,
+        IIssueTypeService issueTypeService,
+        IIssueFieldService issueFieldService,
+        IValidator<AutoregistrarSettingsRequest> auoregSettingsValidator,
+        IValidator<IssueTypeRequest> issueTypeValidator,
+        IValidator<QueryParametersRequest> queryParametersValidator,
+        IQueryParametersService queryParametersService
     )
     {
         _logger = logger;
         _mapper = mapper;
-        _unitofWork = unitofWork;
         _grpcClient = grpcClient;
+        _autoregSettingsService = autoregSettingsService;
+        _issueTypeService = issueTypeService;
+        _issueFieldService = issueFieldService;
+        _auoregSettingsValidator = auoregSettingsValidator;
+        _issueTypeValidator = issueTypeValidator;
+        _queryParametersValidator = queryParametersValidator;
+        _queryParametersService = queryParametersService;
     }
 
     [Authorize(Policy = "UseRegistrar")]
@@ -144,19 +162,11 @@ public class AutoregistrarController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAutoregistrarSettings(CancellationToken cts)
     {
-        var settings = await _unitofWork.AutoregistrarSettingsRepository.Get(cts);
-
-        await _unitofWork.CommitAsync(cts);
-
-        if (settings is null)
-        {
-            return NotFound(ErrorCode[7003]);
-        }
+        var settings = await _autoregSettingsService.Get(cts);
 
         var response = new Response<AutoregistrarSettingsDto>(
             _mapper.Map<AutoregistrarSettingsDto>(settings)
         );
-
         return Ok(response);
     }
 
@@ -168,19 +178,16 @@ public class AutoregistrarController : ControllerBase
         CancellationToken cts
     )
     {
-        var settings = _mapper.Map<AutoregstrarSettingsModel>(request);
-        var insertedSettings = await _unitofWork.AutoregistrarSettingsRepository.Upsert(
-            settings,
-            cts
-        );
+        await _auoregSettingsValidator.ValidateAndThrowAsync(request, cts);
 
-        await _unitofWork.CommitAsync(cts);
+        var settings = _mapper.Map<AutoregistrarSettings>(request);
+        var insertedSettings = await _autoregSettingsService.Add(settings, cts);
+
         _logger.LogInformation("Autoregistrar settings were set");
 
         var response = new Response<AutoregistrarSettingsDto>(
             _mapper.Map<AutoregistrarSettingsDto>(insertedSettings)
         );
-
         return Ok(response);
     }
 
@@ -192,17 +199,12 @@ public class AutoregistrarController : ControllerBase
         CancellationToken cts
     )
     {
-        var paginationFilter = _mapper.Map<PaginationFilter>(pagination);
-
-        var issueTypes = await _unitofWork.IssueTypeRepository.GetAll(paginationFilter, cts);
-
-        await _unitofWork.CommitAsync(cts);
+        var issueTypes = await _issueTypeService.GetAll(pagination, cts);
 
         var response = new PagedResponse<IssueTypeDto>(
             _mapper.Map<IEnumerable<IssueTypeDto>>(issueTypes),
             pagination
         );
-
         return Ok(response);
     }
 
@@ -211,16 +213,9 @@ public class AutoregistrarController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetIssueType([FromRoute] int id, CancellationToken cts)
     {
-        var issueType = await _unitofWork.IssueTypeRepository.Get(id, cts);
-        await _unitofWork.CommitAsync(cts);
-
-        if (issueType is null)
-        {
-            return NotFound(ErrorCode[7001]);
-        }
+        var issueType = await _issueTypeService.Get(id, cts);
 
         var response = new Response<IssueTypeDto>(_mapper.Map<IssueTypeDto>(issueType));
-
         return Ok(response);
     }
 
@@ -232,29 +227,19 @@ public class AutoregistrarController : ControllerBase
         CancellationToken cts
     )
     {
-        var issueTypeExists = await _unitofWork.IssueTypeRepository.DoesExist(
-            request.IssueTypeName,
-            cts
-        );
+        await _issueTypeValidator.ValidateAndThrowAsync(request, cts);
 
-        if (issueTypeExists)
-        {
-            return BadRequest(ErrorCode[7004]);
-        }
+        var issueType = _mapper.Map<IssueType>(request);
 
-        var newIssueType = await _unitofWork.IssueTypeRepository.Add(
-            new IssueTypeModel { IssueTypeName = request.IssueTypeName },
-            cts
-        );
-        await _unitofWork.CommitAsync(cts);
+        var createdIssueType = await _issueTypeService.Add(issueType, cts);
+
         _logger.LogInformation(
             "Added issue type ID {IssueTypeId} with name {IssueTypeName}",
-            newIssueType.Id,
-            newIssueType.IssueTypeName
+            createdIssueType.Id,
+            createdIssueType.IssueTypeName
         );
 
-        var response = new Response<IssueTypeDto>(_mapper.Map<IssueTypeDto>(newIssueType));
-
+        var response = new Response<IssueTypeDto>(_mapper.Map<IssueTypeDto>(createdIssueType));
         return Ok(response);
     }
 
@@ -267,19 +252,13 @@ public class AutoregistrarController : ControllerBase
         CancellationToken cts
     )
     {
-        var issueTypeExists = await _unitofWork.IssueTypeRepository.DoesExist(id, cts);
+        await _issueTypeValidator.ValidateAndThrowAsync(request, cts);
 
-        if (!issueTypeExists)
-        {
-            return NotFound(ErrorCode[7001]);
-        }
+        var issueType = _mapper.Map<IssueType>(request);
+        issueType.Id = id;
 
-        var changedIssueType = await _unitofWork.IssueTypeRepository.ChangeName(
-            new IssueTypeModel { Id = id, IssueTypeName = request.IssueTypeName },
-            cts
-        );
+        var changedIssueType = await _issueTypeService.Rename(issueType, cts);
 
-        await _unitofWork.CommitAsync(cts);
         _logger.LogInformation(
             "Issue type ID {IssueTypeId} name changed to {IssueTypeName}",
             changedIssueType.Id,
@@ -287,7 +266,6 @@ public class AutoregistrarController : ControllerBase
         );
 
         var response = new Response<IssueTypeDto>(_mapper.Map<IssueTypeDto>(changedIssueType));
-
         return Ok(response);
     }
 
@@ -296,19 +274,11 @@ public class AutoregistrarController : ControllerBase
     [HttpDelete]
     public async Task<IActionResult> DeleteIssueType([FromRoute] int id, CancellationToken cts)
     {
-        var issueTypeExists = await _unitofWork.IssueTypeRepository.DoesExist(id, cts);
+        var deletedIssueType = await _issueTypeService.Delete(id, cts);
 
-        if (!issueTypeExists)
-        {
-            return NotFound(ErrorCode[7001]);
-        }
-
-        var deletedIssueType = await _unitofWork.IssueTypeRepository.Delete(id, cts);
-        await _unitofWork.CommitAsync(cts);
         _logger.LogInformation("Issue type ID {IssueTypeId} was deleted", deletedIssueType.Id);
 
         var response = new Response<IssueTypeDto>(_mapper.Map<IssueTypeDto>(deletedIssueType));
-
         return Ok(response);
     }
 
@@ -320,16 +290,12 @@ public class AutoregistrarController : ControllerBase
         CancellationToken cts
     )
     {
-        var paginationFilter = _mapper.Map<PaginationFilter>(pagination);
-
-        var issueFields = await _unitofWork.IssueFieldRepository.GetAll(paginationFilter, cts);
-        await _unitofWork.CommitAsync(cts);
+        var issueFields = await _issueFieldService.GetAll(pagination, cts);
 
         var response = new PagedResponse<IssueFieldDto>(
             _mapper.Map<IEnumerable<IssueFieldDto>>(issueFields),
             pagination
         );
-
         return Ok(response);
     }
 
@@ -341,35 +307,12 @@ public class AutoregistrarController : ControllerBase
         CancellationToken cts
     )
     {
-        var paginationFilter = _mapper.Map<PaginationFilter>(pagination);
-
-        var queryParameters = await _unitofWork.QueryParametersRepository.GetAll(
-            paginationFilter,
-            cts
-        );
-
-        List<ValueTuple<QueryParametersModel, IssueTypeModel?>> aggregationTable = new();
-
-        foreach (var parameter in queryParameters)
-        {
-            var issueType = await _unitofWork.IssueTypeRepository.Get(parameter.IssueTypeId, cts);
-
-            aggregationTable.Add(
-                new ValueTuple<QueryParametersModel, IssueTypeModel?>
-                {
-                    Item1 = parameter,
-                    Item2 = issueType
-                }
-            );
-        }
-
-        await _unitofWork.CommitAsync(cts);
+        var queryParameters = await _queryParametersService.GetAll(pagination, cts);
 
         var response = new PagedResponse<QueryParametersDto>(
-            _mapper.Map<IEnumerable<QueryParametersDto>>(aggregationTable),
+            _mapper.Map<IEnumerable<QueryParametersDto>>(queryParameters),
             pagination
         );
-
         return Ok(response);
     }
 
@@ -381,34 +324,11 @@ public class AutoregistrarController : ControllerBase
         CancellationToken cts
     )
     {
-        var issueTypeExists = await _unitofWork.IssueTypeRepository.DoesExist(id, cts);
-
-        if (!issueTypeExists)
-        {
-            return NotFound(ErrorCode[7001]);
-        }
-
-        var queryParameters = await _unitofWork.QueryParametersRepository.Get(id, cts);
-
-        if (queryParameters is null)
-        {
-            return NotFound(ErrorCode[7005]);
-        }
-
-        var issueType = await _unitofWork.IssueTypeRepository.Get(queryParameters.IssueTypeId, cts);
-
-        await _unitofWork.CommitAsync(cts);
-
-        var aggregationTable = new ValueTuple<QueryParametersModel, IssueTypeModel?>
-        {
-            Item1 = queryParameters,
-            Item2 = issueType
-        };
+        var queryParameters = await _queryParametersService.Get(id, cts);
 
         var response = new Response<QueryParametersDto>(
-            _mapper.Map<QueryParametersDto>(aggregationTable)
+            _mapper.Map<QueryParametersDto>(queryParameters)
         );
-
         return Ok(response);
     }
 
@@ -421,38 +341,16 @@ public class AutoregistrarController : ControllerBase
         CancellationToken cts
     )
     {
-        var issueTypeExists = await _unitofWork.IssueTypeRepository.DoesExist(id, cts);
+        await _queryParametersValidator.ValidateAndThrowAsync(request, cts);
 
-        if (!issueTypeExists)
-        {
-            return NotFound(ErrorCode[7001]);
-        }
+        var queryParameters = _mapper.Map<QueryParameters>(request);
+        queryParameters.IssueType.Id = id;
 
-        var queryParameters = _mapper.Map<QueryParametersModel>(request);
-        queryParameters.IssueTypeId = id;
-
-        var addedQueryParameters = await _unitofWork.QueryParametersRepository.Upsert(
-            queryParameters,
-            cts
-        );
-
-        var issueType = await _unitofWork.IssueTypeRepository.Get(
-            addedQueryParameters.IssueTypeId,
-            cts
-        );
-
-        await _unitofWork.CommitAsync(cts);
-
-        var aggregationTable = new ValueTuple<QueryParametersModel, IssueTypeModel?>
-        {
-            Item1 = addedQueryParameters,
-            Item2 = issueType
-        };
+        var createdQueryParameters = await _queryParametersService.Upsert(queryParameters, cts);
 
         var response = new Response<QueryParametersDto>(
-            _mapper.Map<QueryParametersDto>(aggregationTable)
+            _mapper.Map<QueryParametersDto>(createdQueryParameters)
         );
-
         return Ok(response);
     }
 }
