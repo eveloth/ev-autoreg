@@ -36,6 +36,7 @@
         <PackageReference Include="Serilog.AspNetCore" Version="6.1.0-dev-00285" />
         <PackageReference Include="Serilog.Settings.Configuration" Version="3.5.0-dev-00359" />
         <PackageReference Include="Serilog.Sinks.Seq" Version="5.2.3-dev-00257" />
+        <PackageReference Include="StackExchange.Redis" Version="2.6.86" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
     </ItemGroup>
 

@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using System.Text;
 using Api.Exceptions;
+using Api.Options;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -55,6 +56,33 @@ public static class WebApplicationBuilderExtensions
 
     public static WebApplicationBuilder AddJwtAuthentication(this WebApplicationBuilder builder)
     {
+        var jwt = new JwtOptions();
+        builder.Configuration.Bind(nameof(jwt), jwt);
+        builder.Services.AddSingleton(jwt);
+
+        var tokenValidationParameters = new TokenValidationParameters
+        {
+            ValidIssuer =
+                builder.Configuration["Jwt:Issuer"]
+                ?? throw new NullConfigurationEntryException(
+                    "Could not read configuration for JWT"
+                ),
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(
+                    builder.Configuration["Jwt:Key"]
+                    ?? throw new NullConfigurationEntryException(
+                        "Could not read configuration for JWT"
+                    )
+                )
+            ),
+            ValidateIssuer = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidateAudience = false,
+            RequireExpirationTime = false
+        };
+
+        builder.Services.AddSingleton(tokenValidationParameters);
 
         builder.Services
             .AddAuthentication(options =>
@@ -65,26 +93,7 @@ public static class WebApplicationBuilderExtensions
             })
             .AddJwtBearer(t =>
             {
-                t.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidIssuer =
-                        builder.Configuration["Jwt:Issuer"]
-                        ?? throw new NullConfigurationEntryException(
-                            "Could not read configuration for JWT"
-                        ),
-                    IssuerSigningKey = new SymmetricSecurityKey(
-                        Encoding.UTF8.GetBytes(
-                            builder.Configuration["Jwt:Key"]
-                            ?? throw new NullConfigurationEntryException(
-                                "Could not read configuration for JWT"
-                            )
-                        )
-                    ),
-                    ValidateIssuer = true,
-                    ValidateAudience = false,
-                    ValidateLifetime = false,
-                    ValidateIssuerSigningKey = true
-                };
+                t.TokenValidationParameters = tokenValidationParameters;
             });
 
         return builder;

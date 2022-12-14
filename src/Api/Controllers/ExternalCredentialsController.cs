@@ -1,12 +1,13 @@
-using System.Security.Claims;
 using Api.Contracts.Requests;
 using Api.Contracts.Responses;
 using Api.Domain;
+using Api.Extensions;
 using Api.Services.Interfaces;
 using FluentValidation;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ExchangeCredentials = Api.Domain.ExchangeCredentials;
 
 namespace Api.Controllers;
 
@@ -43,9 +44,7 @@ public class ExternalCredentialsController : ControllerBase
     {
         await _extCredentialsValidator.ValidateAndThrowAsync(credentials, cts);
 
-        var userId = int.Parse(
-            HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
-        );
+        var userId = HttpContext.GetUserId();
 
         var updatedForUserId = await _extCredentialsService.SaveExchangeCredentials(
             userId,
@@ -72,9 +71,7 @@ public class ExternalCredentialsController : ControllerBase
     {
         await _extCredentialsValidator.ValidateAndThrowAsync(credentials, cts);
 
-        var userId = int.Parse(
-            HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
-        );
+        var userId = HttpContext.GetUserId();
 
         var updatedForUserId = await _extCredentialsService.SaveEvCredentials(
             userId,

@@ -5,11 +5,14 @@ using Api.Services.Interfaces;
 using DataAccessLibrary.Extensions;
 using Api.Extensions;
 using Api.Mapping;
+using Api.Options;
+using Api.Redis;
 using Api.Validators;
 using FluentValidation;
 using MapsterMapper;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Serilog;
+using StackExchange.Redis;
 
 namespace Api;
 
@@ -20,6 +23,12 @@ internal static class Program
         var builder = WebApplication.CreateBuilder(args);
 
         // Add services to the container.
+        var redisCs = builder.Configuration.GetConnectionString("Redis") ?? throw new NullConfigurationEntryException();
+        var redis = await ConnectionMultiplexer.ConnectAsync(redisCs);
+        builder.Services.AddSingleton(redis);
+        var redisOptions = new RedisOptions();
+        builder.Configuration.Bind(nameof(redisOptions), redisOptions);
+        builder.Services.AddSingleton(redisOptions);
 
         var logger = new LoggerConfiguration().ReadFrom
             .Configuration(builder.Configuration)
@@ -80,6 +89,8 @@ internal static class Program
         });
 
         builder.Services.AddValidatorsFromAssemblyContaining<UserCredentialsValidator>();
+
+        builder.Services.AddScoped<ITokenDb, TokenDb>();
 
         var app = builder.Build();
 

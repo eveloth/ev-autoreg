@@ -1,14 +1,14 @@
-using System.Security.Claims;
 using Api.Contracts;
 using Api.Contracts.Dto;
 using Api.Contracts.Requests;
 using Api.Contracts.Responses;
-using Api.Domain;
+using Api.Extensions;
 using Api.Services.Interfaces;
 using FluentValidation;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Rule = Api.Domain.Rule;
 
 namespace Api.Controllers;
 
@@ -41,9 +41,7 @@ public class RulesController : ControllerBase
         CancellationToken cts
     )
     {
-        var userId = int.Parse(
-            HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
-        );
+        var userId = HttpContext.GetUserId();
 
         var rules = await _ruleService.GetAll(userId, pagination, cts);
 
@@ -58,9 +56,7 @@ public class RulesController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetRule([FromRoute] int id, CancellationToken cts)
     {
-        var userId = int.Parse(
-            HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
-        );
+        var userId = HttpContext.GetUserId();
 
         var rule = await _ruleService.Get(id, userId, cts);
 
@@ -73,9 +69,7 @@ public class RulesController : ControllerBase
     {
         await _validator.ValidateAndThrowAsync(request, cts);
 
-        var userId = int.Parse(
-            HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
-        );
+        var userId = HttpContext.GetUserId();
 
         var rule = _mapper.Map<Rule>(request);
         rule.OwnerUserId = userId;
@@ -102,9 +96,7 @@ public class RulesController : ControllerBase
     {
         await _validator.ValidateAndThrowAsync(request, cts);
 
-        var userId = int.Parse(
-            HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
-        );
+        var userId = HttpContext.GetUserId();
 
         var rule = _mapper.Map<Rule>(request);
         rule.Id = id;
@@ -126,9 +118,7 @@ public class RulesController : ControllerBase
     [HttpDelete]
     public async Task<IActionResult> DeleteRule([FromRoute] int id, CancellationToken cts)
     {
-        var userId = int.Parse(
-            HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
-        );
+        var userId = HttpContext.GetUserId();
 
         var deletedRule = await _ruleService.Delete(id, userId, cts);
 

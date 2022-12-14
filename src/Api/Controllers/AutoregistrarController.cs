@@ -4,6 +4,7 @@ using Api.Contracts.Dto;
 using Api.Contracts.Requests;
 using Api.Contracts.Responses;
 using Api.Domain;
+using Api.Extensions;
 using Api.Services.Interfaces;
 using FluentValidation;
 using MapsterMapper;
@@ -59,9 +60,7 @@ public class AutoregistrarController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> StartAutoregistrar(CancellationToken cts)
     {
-        var userId = int.Parse(
-            HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
-        );
+        var userId = HttpContext.GetUserId();
 
         var currentStatus = await _grpcClient.RequestStatusAsync(
             new Empty(),
@@ -88,9 +87,7 @@ public class AutoregistrarController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> StopAutoregistar(CancellationToken cts)
     {
-        var userId = int.Parse(
-            HttpContext.User.Claims.FirstOrDefault(n => n.Type == ClaimTypes.NameIdentifier)!.Value
-        );
+        var userId = HttpContext.GetUserId();
 
         var currentStatus = await _grpcClient.RequestStatusAsync(
             new Empty(),

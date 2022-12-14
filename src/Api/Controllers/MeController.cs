@@ -1,8 +1,8 @@
-using System.Security.Claims;
 using Api.Contracts.Dto;
 using Api.Contracts.Requests;
 using Api.Contracts.Responses;
 using Api.Domain;
+using Api.Extensions;
 using Api.Services.Interfaces;
 using FluentValidation;
 using MapsterMapper;
@@ -43,9 +43,7 @@ public class MeController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetMyProfile(CancellationToken cts)
     {
-        var userId = int.Parse(
-            HttpContext.User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value
-        );
+        var userId = HttpContext.GetUserId();
 
         var me = await _userService.Get(userId, cts);
 
@@ -62,9 +60,7 @@ public class MeController : ControllerBase
     {
         await _emailValidator.ValidateAndThrowAsync(request, cts);
 
-        var userId = int.Parse(
-            HttpContext.User.Claims.First(n => n.Type == ClaimTypes.NameIdentifier).Value
-        );
+        var userId = HttpContext.GetUserId();
 
         var user = new User { Id = userId, Email = request.Email };
 
@@ -89,9 +85,7 @@ public class MeController : ControllerBase
     {
         await _passwordValidator.ValidateAndThrowAsync(request, cts);
 
-        var userId = int.Parse(
-            HttpContext.User.Claims.First(n => n.Type == ClaimTypes.NameIdentifier).Value
-        );
+        var userId = HttpContext.GetUserId();
 
         var updatedUserId = await _userService.ChangePassword(userId, request.NewPassword, cts);
 
@@ -109,9 +103,7 @@ public class MeController : ControllerBase
     {
         await _profileValidator.ValidateAndThrowAsync(request, cts);
 
-        var userId = int.Parse(
-            HttpContext.User.Claims.First(n => n.Type == ClaimTypes.NameIdentifier).Value
-        );
+        var userId = HttpContext.GetUserId();
 
         var user = new User
         {
