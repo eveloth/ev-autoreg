@@ -105,7 +105,7 @@ public class UserRepository : IUserRepository
 
         var parameters = new DynamicParameters(user);
 
-        return await _db.SaveData<UserModel, RoleModel>(sql, parameters, cts);
+        return await _db.SaveData<UserModel>(sql, parameters, cts);
     }
 
     public async Task<int> UpdatePassword(UserModel user, CancellationToken cts)
@@ -127,7 +127,7 @@ public class UserRepository : IUserRepository
 
         var parameters = new DynamicParameters(user);
 
-        return await _db.SaveData<UserModel, RoleModel>(sql, parameters, cts);
+        return await _db.SaveData<UserModel>(sql, parameters, cts);
     }
 
     public async Task<UserModel> UpdateUserProfile(UserModel user, CancellationToken cts)
@@ -140,7 +140,7 @@ public class UserRepository : IUserRepository
 
         var parameters = new DynamicParameters(user);
 
-        return await _db.SaveData<UserModel, RoleModel>(sql, parameters, cts);
+        return await _db.SaveData<UserModel>(sql, parameters, cts);
     }
 
     public async Task<UserModel> AddUserToRole(UserModel user, CancellationToken cts)
@@ -152,7 +152,7 @@ public class UserRepository : IUserRepository
 
         var parameters = new DynamicParameters(user);
 
-        return await _db.SaveData<UserModel, RoleModel>(sql, parameters, cts);
+        return await _db.SaveData<UserModel>(sql, parameters, cts);
     }
 
     public async Task<UserModel> RemoveUserFromRole(int userId, CancellationToken cts)
@@ -164,7 +164,7 @@ public class UserRepository : IUserRepository
 
         var parameters = new DynamicParameters(new { UserId = userId });
 
-        return await _db.SaveData<UserModel, RoleModel>(sql, parameters, cts);
+        return await _db.SaveData<UserModel>(sql, parameters, cts);
     }
 
     public async Task<UserModel> Block(int userId, CancellationToken cts)
@@ -177,7 +177,7 @@ public class UserRepository : IUserRepository
 
         var parameters = new DynamicParameters(new { UserId = userId });
 
-        return await _db.SaveData<UserModel, RoleModel>(sql, parameters, cts);
+        return await _db.SaveData<UserModel>(sql, parameters, cts);
     }
 
     public async Task<UserModel> Unblock(int userId, CancellationToken cts)
@@ -189,7 +189,7 @@ public class UserRepository : IUserRepository
               RETURNING * ";
 
         var parameters = new DynamicParameters(new { UserId = userId });
-        return await _db.SaveData<UserModel, RoleModel>(sql, parameters, cts);
+        return await _db.SaveData<UserModel>(sql, parameters, cts);
     }
 
     public async Task<UserModel> Delete(int userId, CancellationToken cts)
@@ -202,7 +202,7 @@ public class UserRepository : IUserRepository
 
         var parameters = new DynamicParameters(new { UserId = userId });
 
-        return await _db.SaveData<UserModel, RoleModel>(sql, parameters, cts);
+        return await _db.SaveData<UserModel>(sql, parameters, cts);
     }
 
     public async Task<UserModel> Restore(int userId, CancellationToken cts)
@@ -215,7 +215,7 @@ public class UserRepository : IUserRepository
 
         var parameters = new DynamicParameters(new { UserId = userId });
 
-        return await _db.SaveData<UserModel, RoleModel>(sql, parameters, cts);
+        return await _db.SaveData<UserModel>(sql, parameters, cts);
     }
 
     public async Task<bool> DoesExist(int userId, CancellationToken cts)
