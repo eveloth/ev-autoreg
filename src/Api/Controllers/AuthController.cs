@@ -2,6 +2,7 @@ using Api.Contracts.Requests;
 using Api.Contracts.Responses;
 using Api.Services.Interfaces;
 using FluentValidation;
+using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Token = Api.Domain.Token;
@@ -13,15 +14,18 @@ namespace Api.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IAuthenticationService _authService;
+    private readonly IMapper _mapper;
     private readonly IValidator<UserCredentialsRequest> _validator;
 
     public AuthController(
         IAuthenticationService authService,
-        IValidator<UserCredentialsRequest> validator
+        IValidator<UserCredentialsRequest> validator,
+        IMapper mapper
     )
     {
         _authService = authService;
         _validator = validator;
+        _mapper = mapper;
     }
 
     /// <summary>
@@ -66,6 +70,20 @@ public class AuthController : ControllerBase
         var response = new Response<Token>(token);
 
         return Ok(response);
+    }
+
+    [AllowAnonymous]
+    [Route("refresh")]
+    [HttpPost]
+    public async Task<IActionResult> RefreshToken(
+        [FromBody] RefreshTokenRequest request,
+        CancellationToken cts
+    )
+    {
+        var token = _mapper.Map<Token>(request);
+        var refreshedToken = await _authService.RefreshToken(token, cts);
+        var result = _mapper.Map<TokenResponse>(refreshedToken);
+        return Ok(result);
     }
 
     [Authorize]

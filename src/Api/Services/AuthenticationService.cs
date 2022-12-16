@@ -6,6 +6,8 @@ using Api.Errors;
 using Api.Exceptions;
 using Api.Mapping;
 using Api.Options;
+using Api.Redis;
+using Api.Redis.Entities;
 using Api.Services.Interfaces;
 using DataAccessLibrary.Models;
 using DataAccessLibrary.Repository.Interfaces;
@@ -27,6 +29,7 @@ public class AuthenticationService : IAuthenticationService
     private readonly IUnitofWork _unitofWork;
     private readonly JwtOptions _jwtOptions;
     private readonly TokenValidationParameters _tokenValidationParameters;
+    private readonly ITokenDb _tokenDb;
 
     public AuthenticationService(
         IMapper mapper,
@@ -35,7 +38,8 @@ public class AuthenticationService : IAuthenticationService
         ILogger<AuthenticationService> logger,
         IMappingHelper mappingHelper,
         JwtOptions jwtOptions,
-        TokenValidationParameters tokenValidationParameters
+        TokenValidationParameters tokenValidationParameters,
+        ITokenDb tokenDb
     )
     {
         _mapper = mapper;
@@ -45,6 +49,7 @@ public class AuthenticationService : IAuthenticationService
         _mappingHelper = mappingHelper;
         _jwtOptions = jwtOptions;
         _tokenValidationParameters = tokenValidationParameters;
+        _tokenDb = tokenDb;
     }
 
     public async Task<Token> Register(string email, string password, CancellationToken cts)
@@ -129,9 +134,43 @@ public class AuthenticationService : IAuthenticationService
         }
 
         var jti = validatedToken.Claims.Single(x => x.Type == JwtRegisteredClaimNames.Jti).Value;
+        var storedToken = await _tokenDb.GetRefreshToken(token.RefreshToken);
 
-        //placeholder
-        return new Token();
+        if (storedToken is null)
+        {
+            Thrower.ThrowApiException(ErrorCode[1009]);
+        }
+
+        if (DateTime.UtcNow > storedToken!.TokenInfo!.ExpiryDate)
+        {
+            Thrower.ThrowApiException(ErrorCode[1006]);
+        }
+
+        if (storedToken.TokenInfo.Invalidated)
+        {
+            Thrower.ThrowApiException(ErrorCode[1010]);
+        }
+
+        if (storedToken.TokenInfo.Used)
+        {
+            Thrower.ThrowApiException(ErrorCode[1011]);
+        }
+
+        if (storedToken.TokenInfo.Jti != jti)
+        {
+            Thrower.ThrowApiException(ErrorCode[1012]);
+        }
+
+        storedToken.TokenInfo.Used = true;
+        await _tokenDb.SaveRefreshToken(storedToken);
+
+        var userId = int.Parse(
+            validatedToken.Claims.Single(x => x.Type == ClaimTypes.NameIdentifier).Value
+        );
+        var userModel = await _unitofWork.UserRepository.GetById(userId, cts);
+        var user = _mapper.Map<User>(userModel!);
+
+        return await GenerateToken(user, cts);
     }
 
     private async Task<Token> GenerateToken(User user, CancellationToken cts)
@@ -178,9 +217,26 @@ public class AuthenticationService : IAuthenticationService
 
         var token = handler.CreateToken(descriptor);
 
+        var resfreshTokenInfo = new TokenInfo
+        {
+            UserId = user.Id,
+            Jti = token.Id,
+            CreationDate = DateTime.UtcNow,
+            ExpiryDate = DateTime.UtcNow.AddMonths(6),
+            Invalidated = false,
+            Used = false
+        };
+        var refreshToken = new RefreshToken(resfreshTokenInfo);
+
+        await _tokenDb.SaveRefreshToken(refreshToken);
+
         _logger.LogInformation("User ID {UserId} was successfully logged in", user.Id);
 
-        return new Token { JwtToken = handler.WriteToken(token) };
+        return new Token
+        {
+            JwtToken = handler.WriteToken(token),
+            RefreshToken = refreshToken.Token
+        };
     }
 
     private ClaimsPrincipal? GetPrincipalFromToken(string jwtToken)

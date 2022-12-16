@@ -20,29 +20,25 @@ public class TokenDb : ITokenDb
     public async Task SaveRefreshToken(RefreshToken token)
     {
         var db = _redis.GetDatabase(_redisOptions.RefreshTokenDb);
-        await db.StringSetAsync(token.Token, token.TokenInfo.ToJson());
+        await db.StringSetAsync(token.Token, JsonConvert.SerializeObject(token.TokenInfo));
     }
 
     public async Task<RefreshToken?> GetRefreshToken(string key)
     {
         var db = _redis.GetDatabase(_redisOptions.RefreshTokenDb);
         var value = await db.StringGetAsync(key);
-        var tokenInfo = JsonConvert.DeserializeObject<TokenInfo>(value.ToJson());
+
+        if (!value.HasValue)
+        {
+            return null;
+        }
+
+        var tokenInfo = JsonConvert.DeserializeObject<TokenInfo>(value!);
 
         return new RefreshToken
         {
             Token = key,
-            TokenInfo = tokenInfo
+            TokenInfo = tokenInfo!
         };
-    }
-
-    public async Task<string?> TestRedis(string key, string value)
-    {
-        var db = _redis.GetDatabase(_redisOptions.RefreshTokenDb);
-        db.StringSet(key, value);
-
-        var result = await db.StringGetAsync(key);
-        Console.WriteLine(result);
-        return result;
     }
 }

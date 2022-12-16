@@ -1,6 +1,6 @@
 ﻿namespace Api.Redis.Entities;
 
-public record RefreshToken
+public class RefreshToken
 {
     public RefreshToken()
     {
@@ -11,6 +11,6 @@ public record RefreshToken
         Token = Guid.NewGuid().ToString();
         TokenInfo = tokenInfo;
     }
-    public string? Token { get; init; }
-    public TokenInfo? TokenInfo { get; init; }
+    public string Token { get; set; }
+    public TokenInfo TokenInfo { get; set; }
 }
