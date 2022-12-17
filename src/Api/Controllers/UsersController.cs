@@ -2,11 +2,14 @@ using Api.Contracts;
 using Api.Contracts.Dto;
 using Api.Contracts.Requests;
 using Api.Contracts.Responses;
+using Api.Exceptions;
+using Api.Extensions;
 using Api.Services.Interfaces;
 using FluentValidation;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using static Api.Errors.ErrorCodes;
 
 namespace Api.Controllers;
 
@@ -83,6 +86,13 @@ public class UsersController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> BlockUser([FromRoute] int id, CancellationToken cts)
     {
+        var userId = HttpContext.GetUserId();
+
+        if (userId == id)
+        {
+            Thrower.ThrowApiException(ErrorCode[1013]);
+        }
+
         var updatedUser = await _userService.Block(id, cts);
 
         _logger.LogInformation("User ID {UserId} was blocked", updatedUser.Id);
@@ -96,6 +106,13 @@ public class UsersController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> UnblockUser([FromRoute] int id, CancellationToken cts)
     {
+        var userId = HttpContext.GetUserId();
+
+        if (userId == id)
+        {
+            Thrower.ThrowApiException(ErrorCode[1013]);
+        }
+
         var updatedUser = await _userService.Unblock(id, cts);
 
         _logger.LogInformation("User ID {UserId} was unblocked", updatedUser.Id);
@@ -109,6 +126,13 @@ public class UsersController : ControllerBase
     [HttpDelete]
     public async Task<IActionResult> DeleteUser([FromRoute] int id, CancellationToken cts)
     {
+        var userId = HttpContext.GetUserId();
+
+        if (userId == id)
+        {
+            Thrower.ThrowApiException(ErrorCode[1013]);
+        }
+
         var updatedUser = await _userService.Delete(id, cts);
 
         _logger.LogInformation("User ID {UserId} was deleted", updatedUser.Id);
@@ -122,6 +146,13 @@ public class UsersController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> RestoreUser([FromRoute] int id, CancellationToken cts)
     {
+        var userId = HttpContext.GetUserId();
+
+        if (userId == id)
+        {
+            Thrower.ThrowApiException(ErrorCode[1013]);
+        }
+
         var updatedUser = await _userService.Restore(id, cts);
 
         _logger.LogInformation("User ID {UserId} was restored", updatedUser.Id);

@@ -19,6 +19,7 @@ public static class ErrorCodes
             { 1010, new ApiError(1010, "Refresh token has been invalidated.") },
             { 1011, new ApiError(1011, "Refresh token has been used.") },
             { 1012, new ApiError(1012, "Refresh token does not match jwt.") },
+            { 1013, new ApiError(1013, "You cannot block or delete your own account.") },
             { 2001, new ApiError(2001, "Role name is already taken.") },
             { 2002, new ApiError(2002, "User is not assigned to any role.") },
             { 2004, new ApiError(2004, "Role not found.") },
