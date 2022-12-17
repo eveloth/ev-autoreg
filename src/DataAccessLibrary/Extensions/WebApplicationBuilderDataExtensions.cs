@@ -1,9 +1,12 @@
 ﻿using System.Data;
 using System.Data.Common;
+using System.Runtime.CompilerServices;
+using Api.Migrations;
 using Dapper;
 using DataAccessLibrary.Repository;
 using DataAccessLibrary.Repository.Interfaces;
 using DataAccessLibrary.SqlDataAccess;
+using FluentMigrator.Runner;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -78,6 +81,17 @@ public static class WebApplicationBuilderDataExtensions
         >();
         builder.Services.AddScoped<IIssueFieldRepository, IssueFieldRepository>();
         builder.Services.AddScoped<IUnitofWork, UnitofWork>();
+
+        return builder;
+    }
+
+    public static WebApplicationBuilder AddMigrations(this WebApplicationBuilder builder)
+    {
+        builder.Services.AddFluentMigratorCore().ConfigureRunner(r => r
+                .AddPostgres()
+                .WithGlobalConnectionString(builder.Configuration.GetConnectionString("Default"))
+                .ScanIn(typeof(MigrationSeed).Assembly).For.Migrations())
+            .AddLogging(l => l.AddFluentMigratorConsole());
 
         return builder;
     }

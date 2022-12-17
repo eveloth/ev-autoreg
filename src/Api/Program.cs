@@ -8,6 +8,7 @@ using Api.Mapping;
 using Api.Options;
 using Api.Redis;
 using Api.Validators;
+using FluentMigrator.Runner;
 using FluentValidation;
 using MapsterMapper;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
@@ -23,12 +24,17 @@ internal static class Program
         var builder = WebApplication.CreateBuilder(args);
 
         // Add services to the container.
+
+        #region Redis
+
         var redisCs = builder.Configuration.GetConnectionString("Redis") ?? throw new NullConfigurationEntryException();
         var redis = await ConnectionMultiplexer.ConnectAsync(redisCs);
         builder.Services.AddSingleton(redis);
         var redisOptions = new RedisOptions();
         builder.Configuration.Bind(nameof(redisOptions), redisOptions);
         builder.Services.AddSingleton(redisOptions);
+
+        #endregion
 
         var logger = new LoggerConfiguration().ReadFrom
             .Configuration(builder.Configuration)
@@ -47,8 +53,8 @@ internal static class Program
 
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
-
         builder.AddSwagger();
+
         builder.Services.AddRouting(options => options.LowercaseUrls = true);
 
         builder.AddJwtAuthentication().AddPolicyBasedAuthorization();
@@ -57,7 +63,10 @@ internal static class Program
             .AddNpgsql()
             .UseAffixForModelMapping("Model")
             .AddDapperSnakeCaseConvention()
-            .AddRepositories();
+            .AddRepositories()
+            .AddMigrations();
+
+        #region DbServices
 
         builder.Services.AddScoped<IUserService, UserService>();
         builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
@@ -72,14 +81,16 @@ internal static class Program
         builder.Services.AddScoped<IIssueService, IssueService>();
         builder.Services.AddScoped<IQueryParametersService, QueryParametersService>();
 
+        #endregion
+
         builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
         builder.Services.AddScoped<ICredentialsEncryptor, CredentialsEncryptor>();
-
-        builder.Services.AddScoped<IMappingHelper, MappingHelper>();
 
         builder.Services.AddTransient<DatabaseSeeder>();
 
         builder.Services.AddSingleton<IMapper, Mapper>();
+        builder.Services.AddScoped<IMappingHelper, MappingHelper>();
+
         builder.Services.AddGrpcClient<Autoregistrar.AutoregistrarClient>(options =>
         {
             options.Address = new Uri(
@@ -116,6 +127,10 @@ internal static class Program
 
         using (var scope = app.Services.CreateScope())
         {
+            var runner = scope.ServiceProvider.GetService<IMigrationRunner>();
+
+            runner!.MigrateUp();
+
             var seeder = scope.ServiceProvider.GetService<DatabaseSeeder>();
 
             if (seeder is null)
