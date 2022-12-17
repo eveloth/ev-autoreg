@@ -2,6 +2,7 @@ using Api.Contracts;
 using Api.Domain;
 using Api.Exceptions;
 using Api.Mapping;
+using Api.Redis;
 using Api.Services.Interfaces;
 using DataAccessLibrary.Filters;
 using DataAccessLibrary.Models;
@@ -17,18 +18,21 @@ public class UserService : IUserService
     private readonly IMappingHelper _mappingHelper;
     private readonly IUnitofWork _unitofWork;
     private readonly IPasswordHasher _hasher;
+    private readonly ITokenDb _tokenDb;
 
     public UserService(
         IMapper mapper,
         IUnitofWork unitofWork,
         IPasswordHasher hasher,
-        IMappingHelper mappingHelper
+        IMappingHelper mappingHelper,
+        ITokenDb tokenDb
     )
     {
         _mapper = mapper;
         _unitofWork = unitofWork;
         _hasher = hasher;
         _mappingHelper = mappingHelper;
+        _tokenDb = tokenDb;
     }
 
     public async Task<IEnumerable<User>> GetAll(
@@ -209,6 +213,7 @@ public class UserService : IUserService
         }
 
         var updatedUser = await _unitofWork.UserRepository.Block(id, cts);
+        await _tokenDb.InvalidateRefreshToken(updatedUser.Id);
 
         var result = await _mappingHelper.JoinUserRole(updatedUser, cts);
         return result;
@@ -243,6 +248,7 @@ public class UserService : IUserService
         }
 
         var updatedUser = await _unitofWork.UserRepository.Delete(id, cts);
+        await _tokenDb.InvalidateRefreshToken(updatedUser.Id);
 
         var result = await _mappingHelper.JoinUserRole(updatedUser, cts);
         return result;

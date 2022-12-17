@@ -37,7 +37,7 @@ public static class ErrorCodes
             { 11002, new ApiError(11002, "Couldn't stop autoregistar; it is not started.") },
             { 11003, new ApiError(11003, "Only the owner of the current session can terminate it.") },
             { 12001, new ApiError(12001, "Validation error") },
-            { 13001, new ApiError(13001, "Couldn't perform database transaction.") },
+            { 13001, new ApiError(13001, "Internal error. Consult the service administrator.") },
             { 14001, new ApiError(14001, "Configuration file is not valid, check entries.") },
         };
 

@@ -4,6 +4,7 @@ namespace Api.Redis;
 
 public interface ITokenDb
 {
-    Task SaveRefreshToken(RefreshToken token);
-    Task<RefreshToken?> GetRefreshToken(string key);
+    Task SaveRefreshToken(int userId, RefreshToken token);
+    Task<RefreshToken?> GetRefreshToken(string tokenString);
+    Task InvalidateRefreshToken(int userId);
 }

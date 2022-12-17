@@ -2,7 +2,6 @@
 
 public class TokenInfo
 {
-    public int UserId { get; set; }
     public string Jti { get; set; }
     public DateTime CreationDate { get; set; }
     public DateTime ExpiryDate { get; set; }

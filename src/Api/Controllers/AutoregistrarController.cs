@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Api.Contracts;
 using Api.Contracts.Dto;
 using Api.Contracts.Requests;

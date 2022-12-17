@@ -50,7 +50,7 @@ public class AuthController : ControllerBase
 
         var token = await _authService.Login(request.Email, request.Password, cts);
 
-        var response = new Response<Token>(token);
+        var response = _mapper.Map<TokenResponse>(token);
 
         return Ok(response);
     }
@@ -67,8 +67,7 @@ public class AuthController : ControllerBase
 
         var token = await _authService.Register(request.Email, request.Password, cts);
 
-        var response = new Response<Token>(token);
-
+        var response = _mapper.Map<TokenResponse>(token);
         return Ok(response);
     }
 
@@ -82,8 +81,8 @@ public class AuthController : ControllerBase
     {
         var token = _mapper.Map<Token>(request);
         var refreshedToken = await _authService.RefreshToken(token, cts);
-        var result = _mapper.Map<TokenResponse>(refreshedToken);
-        return Ok(result);
+        var response = _mapper.Map<TokenResponse>(refreshedToken);
+        return Ok(response);
     }
 
     [Authorize]
@@ -96,7 +95,6 @@ public class AuthController : ControllerBase
         var userPermissions = claims.Select(claim => claim.Type + ": " + claim.Value).ToList();
 
         var response = new Response<IEnumerable<string>>(userPermissions);
-
         return Ok(response);
     }
 }

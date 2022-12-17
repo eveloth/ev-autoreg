@@ -3,6 +3,7 @@ using Api.Exceptions;
 using Api.Extensions;
 using FluentValidation;
 using Npgsql;
+using StackExchange.Redis;
 using static Api.Errors.ErrorCodes;
 
 namespace Api.Middleware;
@@ -46,18 +47,25 @@ public class ErrorHandlingMiddleware
         {
             _logger.LogError("An error occured during sql transaction: {ErrorMessage}", e);
             context.Response.StatusCode = 500;
-            var error = new ErrorResponse { ApiError = ErrorCode[13001] };
+            var error = new ErrorResponse {ApiError = ErrorCode[13001]};
             await context.Response.WriteAsJsonAsync(error);
         }
         catch (NullConfigurationEntryException e)
         {
             _logger.LogCritical(
                 "An error occured while reading configuration file, service might not be operational! "
-                    + "Error Message: {ErrorMessage}",
+                + "Error Message: {ErrorMessage}",
                 e
             );
             context.Response.StatusCode = 500;
-            var error = new ErrorResponse { ApiError = ErrorCode[14001] };
+            var error = new ErrorResponse {ApiError = ErrorCode[14001]};
+            await context.Response.WriteAsJsonAsync(error);
+        }
+        catch (RedisTimeoutException e)
+        {
+            _logger.LogError("An error occured while trying to communicate with redis: {Error}", e);
+            context.Response.StatusCode = 500;
+            var error = new ErrorResponse {ApiError = ErrorCode[13001]};
             await context.Response.WriteAsJsonAsync(error);
         }
     }

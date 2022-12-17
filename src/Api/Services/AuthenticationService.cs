@@ -2,7 +2,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Api.Domain;
-using Api.Errors;
 using Api.Exceptions;
 using Api.Mapping;
 using Api.Options;
@@ -11,10 +10,8 @@ using Api.Redis.Entities;
 using Api.Services.Interfaces;
 using DataAccessLibrary.Models;
 using DataAccessLibrary.Repository.Interfaces;
-using Grpc.Core;
 using MapsterMapper;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.CodeAnalysis;
 using Microsoft.IdentityModel.Tokens;
 using static Api.Errors.ErrorCodes;
 
@@ -162,13 +159,14 @@ public class AuthenticationService : IAuthenticationService
         }
 
         storedToken.TokenInfo.Used = true;
-        await _tokenDb.SaveRefreshToken(storedToken);
 
         var userId = int.Parse(
             validatedToken.Claims.Single(x => x.Type == ClaimTypes.NameIdentifier).Value
         );
         var userModel = await _unitofWork.UserRepository.GetById(userId, cts);
-        var user = _mapper.Map<User>(userModel!);
+        var user = await  _mappingHelper.JoinUserRole(userModel!, cts);
+
+        await _tokenDb.SaveRefreshToken(user.Id, storedToken);
 
         return await GenerateToken(user, cts);
     }
@@ -219,16 +217,15 @@ public class AuthenticationService : IAuthenticationService
 
         var resfreshTokenInfo = new TokenInfo
         {
-            UserId = user.Id,
             Jti = token.Id,
             CreationDate = DateTime.UtcNow,
-            ExpiryDate = DateTime.UtcNow.AddMonths(6),
+            ExpiryDate = DateTime.UtcNow.Add(_jwtOptions.RefreshTokenLifetime),
             Invalidated = false,
             Used = false
         };
         var refreshToken = new RefreshToken(resfreshTokenInfo);
 
-        await _tokenDb.SaveRefreshToken(refreshToken);
+        await _tokenDb.SaveRefreshToken(user.Id, refreshToken);
 
         _logger.LogInformation("User ID {UserId} was successfully logged in", user.Id);
 
@@ -259,12 +256,12 @@ public class AuthenticationService : IAuthenticationService
         }
     }
 
-    private bool IsValidSecurityAlgorythm(SecurityToken token)
+    private static bool IsValidSecurityAlgorythm(SecurityToken token)
     {
         return token is JwtSecurityToken securityToken
-            && securityToken.Header.Alg.Equals(
-                SecurityAlgorithms.HmacSha256,
-                StringComparison.InvariantCultureIgnoreCase
-            );
+               && securityToken.Header.Alg.Equals(
+                   SecurityAlgorithms.HmacSha256,
+                   StringComparison.InvariantCultureIgnoreCase
+               );
     }
 }
