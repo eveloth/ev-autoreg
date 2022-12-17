@@ -8,6 +8,7 @@ using DataAccessLibrary.Filters;
 using DataAccessLibrary.Models;
 using DataAccessLibrary.Repository.Interfaces;
 using MapsterMapper;
+using Microsoft.VisualBasic.CompilerServices;
 using static Api.Errors.ErrorCodes;
 
 namespace Api.Services;
@@ -122,6 +123,7 @@ public class UserService : IUserService
 
         var userModel = _mapper.Map<UserModel>(user);
         var updatedUser = await _unitofWork.UserRepository.UpdateUserProfile(userModel, cts);
+        await _tokenDb.InvalidateRefreshToken(updatedUser.Id);
         await _unitofWork.CommitAsync(cts);
 
         var result = await _mappingHelper.JoinUserRole(updatedUser, cts);
@@ -149,6 +151,7 @@ public class UserService : IUserService
         var passwordHash = _hasher.HashPassword(password);
         var userToUpdate = new UserModel { Id = id, PasswordHash = passwordHash };
         var updatedUserId = await _unitofWork.UserRepository.UpdatePassword(userToUpdate, cts);
+        await _tokenDb.InvalidateRefreshToken(updatedUserId);
         await _unitofWork.CommitAsync(cts);
 
         return updatedUserId;
@@ -156,7 +159,6 @@ public class UserService : IUserService
 
     public async Task<User> AddUserToRole(User user, CancellationToken cts)
     {
-        //TODO: Check if user is already in the scecified role
         var existingUser = await _unitofWork.UserRepository.GetById(user.Id, cts);
 
         if (existingUser is null)
@@ -175,6 +177,11 @@ public class UserService : IUserService
             throw e;
         }
 
+        if (existingUser.RoleId is not null && existingUser.RoleId == user.Role.Id)
+        {
+            return await _mappingHelper.JoinUserRole(existingUser, cts);
+        }
+
         var userModel = _mapper.Map<UserModel>(user);
         var updatedUser = await _unitofWork.UserRepository.AddUserToRole(userModel, cts);
 
@@ -184,7 +191,6 @@ public class UserService : IUserService
 
     public async Task<User> RemoveUserFromRole(int id, CancellationToken cts)
     {
-        //TODO: Check if user doesn't have any role
         var existingUser = await _unitofWork.UserRepository.GetById(id, cts);
 
         if (existingUser is null)
@@ -192,6 +198,11 @@ public class UserService : IUserService
             var e = new ApiException();
             e.Data.Add("ApiError", ErrorCode[1004]);
             throw e;
+        }
+
+        if (existingUser.RoleId is null)
+        {
+            return _mapper.Map<User>(existingUser);
         }
 
         var updatedUser = await _unitofWork.UserRepository.RemoveUserFromRole(id, cts);
@@ -212,6 +223,11 @@ public class UserService : IUserService
             throw e;
         }
 
+        if (existingUser.IsBlocked)
+        {
+            return await _mappingHelper.JoinUserRole(existingUser, cts);
+        }
+
         var updatedUser = await _unitofWork.UserRepository.Block(id, cts);
         await _tokenDb.InvalidateRefreshToken(updatedUser.Id);
 
@@ -228,6 +244,11 @@ public class UserService : IUserService
             var e = new ApiException();
             e.Data.Add("ApiError", ErrorCode[1004]);
             throw e;
+        }
+
+        if (!existingUser.IsBlocked)
+        {
+            return await _mappingHelper.JoinUserRole(existingUser, cts);
         }
 
         var updatedUser = await _unitofWork.UserRepository.Unblock(id, cts);
@@ -263,6 +284,11 @@ public class UserService : IUserService
             var e = new ApiException();
             e.Data.Add("ApiError", ErrorCode[1004]);
             throw e;
+        }
+
+        if (!existingUser.IsDeleted)
+        {
+            return await _mappingHelper.JoinUserRole(existingUser, cts);
         }
 
         var updatedUser = await _unitofWork.UserRepository.Restore(id, cts);
