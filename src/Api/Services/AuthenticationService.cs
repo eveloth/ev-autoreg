@@ -209,6 +209,7 @@ public class AuthenticationService : IAuthenticationService
         {
             Subject = new ClaimsIdentity(claims.ToArray()),
             Issuer = issuer,
+            IssuedAt = DateTime.UtcNow,
             Expires = DateTime.UtcNow.Add(lifetime),
             SigningCredentials = credentials
         };
@@ -240,6 +241,10 @@ public class AuthenticationService : IAuthenticationService
     {
         var handler = new JwtSecurityTokenHandler();
 
+        //Token validation will always fail if the token is expired,
+        //hence we need to disable it for this check to be able to refresh the token after it's expiration
+        _tokenValidationParameters.ValidateLifetime = false;
+
         try
         {
             var principal = handler.ValidateToken(
@@ -248,10 +253,13 @@ public class AuthenticationService : IAuthenticationService
                 out var validatedToken
             );
 
+            _tokenValidationParameters.ValidateLifetime = true;
+
             return !IsValidSecurityAlgorythm(validatedToken) ? null : principal;
         }
         catch (Exception e)
         {
+            _tokenValidationParameters.ValidateLifetime = true;
             return null;
         }
     }
