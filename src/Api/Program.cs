@@ -1,3 +1,5 @@
+using System.Text.Json;
+using Api.Cache;
 using Api.Exceptions;
 using Api.Middleware;
 using Api.Services;
@@ -27,12 +29,31 @@ internal static class Program
 
         #region Redis
 
-        var redisCs = builder.Configuration.GetConnectionString("Redis") ?? throw new NullConfigurationEntryException();
+        var redisCs =
+            builder.Configuration.GetConnectionString("Redis")
+            ?? throw new NullConfigurationEntryException();
         var redis = await ConnectionMultiplexer.ConnectAsync(redisCs);
         builder.Services.AddSingleton(redis);
         var redisOptions = new RedisOptions();
         builder.Configuration.Bind(nameof(redisOptions), redisOptions);
         builder.Services.AddSingleton(redisOptions);
+
+        #endregion
+
+        #region Cahcing
+
+        var redisCacheOptions = new RedisCacheOptions();
+        builder.Configuration.Bind(nameof(redisCacheOptions), redisCacheOptions);
+        builder.Services.AddSingleton(redisCacheOptions);
+
+        if (redisCacheOptions.Enabled)
+        {
+            builder.Services.AddStackExchangeRedisCache(
+                options =>
+                    options.Configuration = builder.Configuration.GetConnectionString("RedisCache")
+            );
+            builder.Services.AddSingleton<IResponseCacheService, ResponseCacheService>();
+        }
 
         #endregion
 
@@ -95,7 +116,7 @@ internal static class Program
         {
             options.Address = new Uri(
                 builder.Configuration["AutoregistrarUri"]
-                ?? throw new NullConfigurationEntryException("Autoregistrar URI wasn't set")
+                    ?? throw new NullConfigurationEntryException("Autoregistrar URI wasn't set")
             );
         });
 
@@ -129,7 +150,8 @@ internal static class Program
         {
             var runner = scope.ServiceProvider.GetService<IMigrationRunner>();
 
-            runner!.MigrateUp();
+            //runner!.MigrateUp();
+            Console.WriteLine("MIGRATIONS SECTION");
 
             var seeder = scope.ServiceProvider.GetService<DatabaseSeeder>();
 

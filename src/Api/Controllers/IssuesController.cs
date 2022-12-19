@@ -1,3 +1,4 @@
+using Api.Cache;
 using Api.Contracts;
 using Api.Contracts.Dto;
 using Api.Contracts.Responses;
@@ -22,6 +23,7 @@ public class IssuesController : ControllerBase
         _issueService = issueService;
     }
 
+    [Cached(300)]
     [HttpGet]
     public async Task<IActionResult> GetAllIssues(
         [FromQuery] PaginationQuery pagination,

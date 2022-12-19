@@ -1,3 +1,4 @@
+using Api.Cache;
 using Api.Contracts;
 using Api.Contracts.Dto;
 using Api.Contracts.Requests;
@@ -35,6 +36,7 @@ public class UsersController : ControllerBase
         _validator = validator;
     }
 
+    [Cached(300)]
     [Authorize(Policy = "ReadUsers")]
     [HttpGet]
     public async Task<IActionResult> GetAllUsers(
@@ -52,6 +54,7 @@ public class UsersController : ControllerBase
         return Ok(response);
     }
 
+    [Cached(300)]
     [Authorize]
     [Route("{id:int}")]
     [HttpGet]

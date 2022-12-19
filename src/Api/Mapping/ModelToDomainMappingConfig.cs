@@ -17,7 +17,7 @@ public static class ModelToDomainMappingConfig
             .TwoWays()
             .Map(dest => dest.Id, src => src.Item1.Id)
             .Map(dest => dest.Email, src => src.Item1.Email)
-            .Map(dest => dest.FirstName, src => src.Item1.LastName)
+            .Map(dest => dest.FirstName, src => src.Item1.FirstName)
             .Map(dest => dest.LastName, src => src.Item1.LastName)
             .Map(dest => dest.IsBlocked, src => src.Item1.IsBlocked)
             .Map(dest => dest.IsDeleted, src => src.Item1.IsDeleted)
