@@ -118,53 +118,20 @@ public class AuthenticationService : IAuthenticationService
             Thrower.ThrowApiException(ErrorCode[1006]);
         }
 
-        var expiryDateUnix = long.Parse(
-            validatedToken!.Claims.Single(x => x.Type == JwtRegisteredClaimNames.Exp).Value
-        );
-        var expiryDateUtc = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(
-            expiryDateUnix
-        );
-
-        if (expiryDateUtc > DateTime.UtcNow)
-        {
-            Thrower.ThrowApiException(ErrorCode[1008]);
-        }
-
-        var jti = validatedToken.Claims.Single(x => x.Type == JwtRegisteredClaimNames.Jti).Value;
-        var storedToken = await _tokenDb.GetRefreshToken(token.RefreshToken);
+        var storedToken = await ChallengeToken(validatedToken!, token.RefreshToken);
 
         if (storedToken is null)
-        {
-            Thrower.ThrowApiException(ErrorCode[1009]);
-        }
-
-        if (DateTime.UtcNow > storedToken!.TokenInfo!.ExpiryDate)
         {
             Thrower.ThrowApiException(ErrorCode[1006]);
         }
 
-        if (storedToken.TokenInfo.Invalidated)
-        {
-            Thrower.ThrowApiException(ErrorCode[1010]);
-        }
-
-        if (storedToken.TokenInfo.Used)
-        {
-            Thrower.ThrowApiException(ErrorCode[1011]);
-        }
-
-        if (storedToken.TokenInfo.Jti != jti)
-        {
-            Thrower.ThrowApiException(ErrorCode[1012]);
-        }
-
-        storedToken.TokenInfo.Used = true;
+        storedToken!.TokenInfo.Used = true;
 
         var userId = int.Parse(
-            validatedToken.Claims.Single(x => x.Type == ClaimTypes.NameIdentifier).Value
+            validatedToken!.Claims.Single(x => x.Type == ClaimTypes.NameIdentifier).Value
         );
         var userModel = await _unitofWork.UserRepository.GetById(userId, cts);
-        var user = await  _mappingHelper.JoinUserRole(userModel!, cts);
+        var user = await _mappingHelper.JoinUserRole(userModel!, cts);
 
         await _tokenDb.SaveRefreshToken(user.Id, storedToken);
 
@@ -267,9 +234,50 @@ public class AuthenticationService : IAuthenticationService
     private static bool IsValidSecurityAlgorythm(SecurityToken token)
     {
         return token is JwtSecurityToken securityToken
-               && securityToken.Header.Alg.Equals(
-                   SecurityAlgorithms.HmacSha256,
-                   StringComparison.InvariantCultureIgnoreCase
-               );
+            && securityToken.Header.Alg.Equals(
+                SecurityAlgorithms.HmacSha256,
+                StringComparison.InvariantCultureIgnoreCase
+            );
+    }
+
+    private static DateTime GetExpiryDateUtc(ClaimsPrincipal validatedToken)
+    {
+        var expiryDateUnix = long.Parse(
+            validatedToken!.Claims.Single(x => x.Type == JwtRegisteredClaimNames.Exp).Value
+        );
+        return new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(expiryDateUnix);
+    }
+
+    private async Task<RefreshToken?> ChallengeToken(
+        ClaimsPrincipal validatedToken,
+        string refreshToken
+    )
+    {
+        var storedToken = await _tokenDb.GetRefreshToken(refreshToken);
+
+        if (storedToken is null)
+        {
+            return null;
+        }
+
+        var jwtHasNotExpired = GetExpiryDateUtc(validatedToken) > DateTime.UtcNow;
+        var jti = validatedToken!.Claims.Single(x => x.Type == JwtRegisteredClaimNames.Jti).Value;
+        var isInvalidated = storedToken.TokenInfo.Invalidated;
+        var hasBeenUsed = storedToken.TokenInfo.Used;
+        var refreshTokenHasExpired = DateTime.UtcNow > storedToken.TokenInfo.ExpiryDate;
+        var isInvalidJti = storedToken.TokenInfo.Jti == jti;
+
+        if (
+            jwtHasNotExpired
+            || refreshTokenHasExpired
+            || isInvalidated
+            || isInvalidJti
+            || hasBeenUsed
+        )
+        {
+            return null;
+        }
+
+        return storedToken;
     }
 }
