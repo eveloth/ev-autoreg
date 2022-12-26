@@ -38,4 +38,15 @@ public class IssuesController : ControllerBase
         );
         return Ok(response);
     }
+
+    [Cached(300)]
+    [HttpGet]
+    [Route("{id:int}")]
+    public async Task<IActionResult> GetIssue([FromRoute] int id, CancellationToken cts)
+    {
+        var issue = await _issueService.Get(id, cts);
+
+        var response = new Response<IssueDto>(_mapper.Map<IssueDto>(issue));
+        return Ok(response);
+    }
 }
