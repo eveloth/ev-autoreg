@@ -27,6 +27,7 @@ public class ExtCredentialsService : IExtCredentialsService
             encryptedCredentials,
             cts
         );
+        await _unitofWork.CommitAsync(cts);
 
         return updatedForUserId;
     }
@@ -40,6 +41,7 @@ public class ExtCredentialsService : IExtCredentialsService
         var encryptedCredentials = _encryptor.EncryptEvCredentials(id, credentials);
 
         var updatedForUserId = await _unitofWork.ExtCredentialsRepository.SaveEvCredentials(encryptedCredentials, cts);
+        await _unitofWork.CommitAsync(cts);
 
         return updatedForUserId;
     }
