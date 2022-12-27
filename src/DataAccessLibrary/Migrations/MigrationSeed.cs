@@ -1,6 +1,6 @@
 ﻿using FluentMigrator;
 
-namespace Api.Migrations;
+namespace DataAccessLibrary.Migrations;
 
 [Migration(202212180100)]
 public class MigrationSeed : Migration

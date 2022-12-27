@@ -1,8 +1,7 @@
 ﻿using System.Data;
 using System.Data.Common;
-using System.Runtime.CompilerServices;
-using Api.Migrations;
 using Dapper;
+using DataAccessLibrary.Migrations;
 using DataAccessLibrary.Repository;
 using DataAccessLibrary.Repository.Interfaces;
 using DataAccessLibrary.SqlDataAccess;
@@ -11,7 +10,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
-using QueryParametersRepository = DataAccessLibrary.Repository.QueryParametersRepository;
 
 namespace DataAccessLibrary.Extensions;
 
