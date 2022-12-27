@@ -1,6 +1,7 @@
 using Autoregistrar.Apis;
 using Autoregistrar.GrpcServices;
 using Autoregistrar.Hubs;
+using Autoregistrar.Installers;
 using Autoregistrar.Mapping;
 using Autoregistrar.Services;
 using Autoregistrar.Settings;
@@ -22,6 +23,15 @@ builder.Logging.AddSerilog(logger);
 // For instructions on how to configure Kestrel and gRPC clients on macOS, visit https://go.microsoft.com/fwlink/?linkid=2099682
 
 // Add services to the container.
+
+builder.AddJwtAuthentication();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("UseRegistrar", policy =>
+        policy.RequireClaim("Permission", "UseRegistrar"));
+    options.AddPolicy("ForceStopRegistrar", policy =>
+        policy.RequireClaim("Permission", "ForceStopRegistrar"));
+});
 
 builder
     .AddNpgsql()
@@ -58,6 +68,9 @@ app.ConfigureXmlToModelMapping();
 
 var env = app.Environment;
 
+app.UseAuthentication();
+app.UseAuthorization();
+
 // Configure the HTTP request pipeline.
 app.MapGrpcService<AutoregistrarService>();
 
@@ -65,12 +78,6 @@ if (env.IsDevelopment())
 {
     app.MapGrpcReflectionService();
 }
-
-app.MapGet(
-    "/",
-    () =>
-        "Communication with gRPC endpoints must be made through a gRPC client. To learn how to create a client, visit: https://go.microsoft.com/fwlink/?linkid=2086909"
-);
 
 app.MapHub<AutoregistrarHub>("/log");
 

@@ -9,7 +9,6 @@ using FluentValidation;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using static Api.Errors.ErrorCodes;
 
 namespace Api.Controllers;
 
@@ -19,32 +18,31 @@ namespace Api.Controllers;
 public class AutoregistrarController : ControllerBase
 {
     private readonly ILogger<AutoregistrarController> _logger;
+    private readonly IValidator<AutoregistrarSettingsRequest> _auoregSettingsValidator;
+    private readonly IValidator<IssueTypeRequest> _issueTypeValidator;
+    private readonly IValidator<QueryParametersRequest> _queryParametersValidator;
     private readonly IMapper _mapper;
-    private readonly Autoregistrar.AutoregistrarClient _grpcClient;
+    private readonly IAutoregistrarCallerService _autoregistrarCallerService;
     private readonly IAutoregistrarSettingsService _autoregSettingsService;
     private readonly IIssueTypeService _issueTypeService;
     private readonly IIssueFieldService _issueFieldService;
     private readonly IQueryParametersService _queryParametersService;
-    private readonly IValidator<AutoregistrarSettingsRequest> _auoregSettingsValidator;
-    private readonly IValidator<IssueTypeRequest> _issueTypeValidator;
-    private readonly IValidator<QueryParametersRequest> _queryParametersValidator;
 
     public AutoregistrarController(
         ILogger<AutoregistrarController> logger,
         IMapper mapper,
-        Autoregistrar.AutoregistrarClient grpcClient,
         IAutoregistrarSettingsService autoregSettingsService,
         IIssueTypeService issueTypeService,
         IIssueFieldService issueFieldService,
         IValidator<AutoregistrarSettingsRequest> auoregSettingsValidator,
         IValidator<IssueTypeRequest> issueTypeValidator,
         IValidator<QueryParametersRequest> queryParametersValidator,
-        IQueryParametersService queryParametersService
+        IQueryParametersService queryParametersService,
+        IAutoregistrarCallerService autoregistrarCallerService
     )
     {
         _logger = logger;
         _mapper = mapper;
-        _grpcClient = grpcClient;
         _autoregSettingsService = autoregSettingsService;
         _issueTypeService = issueTypeService;
         _issueFieldService = issueFieldService;
@@ -52,6 +50,7 @@ public class AutoregistrarController : ControllerBase
         _issueTypeValidator = issueTypeValidator;
         _queryParametersValidator = queryParametersValidator;
         _queryParametersService = queryParametersService;
+        _autoregistrarCallerService = autoregistrarCallerService;
     }
 
     [Authorize(Policy = "UseRegistrar")]
@@ -60,24 +59,10 @@ public class AutoregistrarController : ControllerBase
     public async Task<IActionResult> StartAutoregistrar(CancellationToken cts)
     {
         var userId = HttpContext.GetUserId();
-
-        var currentStatus = await _grpcClient.RequestStatusAsync(
-            new Empty(),
-            cancellationToken: cts
-        );
-
-        if (currentStatus.Status != Status.Stopped)
-        {
-            return BadRequest(ErrorCode[8001]);
-        }
-
-        var statusResponse = await _grpcClient.StartServiceAsync(
-            new StartRequest { UserId = userId },
-            cancellationToken: cts
-        );
+        var statusResponse = await _autoregistrarCallerService.Start(userId, cts);
+        _logger.LogInformation("User ID {UserId} initiated autoregistrar start request", userId);
 
         var response = new Response<StatusResponse>(statusResponse);
-
         return Ok(response);
     }
 
@@ -87,29 +72,10 @@ public class AutoregistrarController : ControllerBase
     public async Task<IActionResult> StopAutoregistar(CancellationToken cts)
     {
         var userId = HttpContext.GetUserId();
-
-        var currentStatus = await _grpcClient.RequestStatusAsync(
-            new Empty(),
-            cancellationToken: cts
-        );
-
-        if (currentStatus.Status != Status.Started)
-        {
-            return BadRequest(ErrorCode[8002]);
-        }
-
-        if (currentStatus.UserId != userId)
-        {
-            return BadRequest(ErrorCode[8003]);
-        }
-
-        var statusResponse = await _grpcClient.StopServiceAsync(
-            new StopRequest { UserId = userId },
-            cancellationToken: cts
-        );
+        var statusResponse = await _autoregistrarCallerService.Stop(userId, cts);
+        _logger.LogInformation("User ID {UserId} initiated autoregistrar stop request", userId);
 
         var response = new Response<StatusResponse>(statusResponse);
-
         return Ok(response);
     }
 
@@ -118,23 +84,13 @@ public class AutoregistrarController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> ForceStopAutoregistrar(CancellationToken cts)
     {
-        var currentStatus = await _grpcClient.RequestStatusAsync(
-            new Empty(),
-            cancellationToken: cts
-        );
-
-        if (currentStatus.Status != Status.Started)
-        {
-            return BadRequest(ErrorCode[8002]);
-        }
-
-        var statusResponse = await _grpcClient.StopServiceAsync(
-            new StopRequest(),
-            cancellationToken: cts
+        var statusResponse = await _autoregistrarCallerService.ForceStop(cts);
+        _logger.LogInformation(
+            "User ID {UserId} initiated autoregistrar force stop request",
+            HttpContext.GetUserId()
         );
 
         var response = new Response<StatusResponse>(statusResponse);
-
         return Ok(response);
     }
 
@@ -143,13 +99,8 @@ public class AutoregistrarController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAutoregistrarStatus(CancellationToken cts)
     {
-        var currentStatus = await _grpcClient.RequestStatusAsync(
-            new Empty(),
-            cancellationToken: cts
-        );
-
+        var currentStatus = await _autoregistrarCallerService.GetStatus(cts);
         var response = new Response<StatusResponse>(currentStatus);
-
         return Ok(response);
     }
 

@@ -14,6 +14,7 @@ using FluentMigrator.Runner;
 using FluentValidation;
 using MapsterMapper;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
+using Microsoft.CodeAnalysis;
 using Serilog;
 using StackExchange.Redis;
 
@@ -106,19 +107,20 @@ internal static class Program
 
         builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
         builder.Services.AddScoped<ICredentialsEncryptor, CredentialsEncryptor>();
-
-        builder.Services.AddTransient<DatabaseSeeder>();
-
         builder.Services.AddSingleton<IMapper, Mapper>();
         builder.Services.AddScoped<IMappingHelper, MappingHelper>();
+
+        builder.Services.AddTransient<DatabaseSeeder>();
 
         builder.Services.AddGrpcClient<Autoregistrar.AutoregistrarClient>(options =>
         {
             options.Address = new Uri(
                 builder.Configuration["AutoregistrarUri"]
-                    ?? throw new NullConfigurationEntryException("Autoregistrar URI wasn't set")
+                ?? throw new NullConfigurationEntryException("Autoregistrar URI wasn't set")
             );
         });
+        builder.Services.AddHttpContextAccessor();
+        builder.Services.AddScoped<IAutoregistrarCallerService, AutoregistrarCallerService>();
 
         builder.Services.AddValidatorsFromAssemblyContaining<UserCredentialsValidator>();
 

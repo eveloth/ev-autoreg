@@ -2,6 +2,7 @@
 using Autoregistrar.Services;
 using Autoregistrar.Settings;
 using Grpc.Core;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Task = System.Threading.Tasks.Task;
 
@@ -27,6 +28,7 @@ public class AutoregistrarService : Autoregistrar.AutoregistrarBase
         _logger = logger;
     }
 
+    [Authorize("UseRegistrar")]
     public override async Task<StatusResponse> StartService(
         StartRequest request,
         ServerCallContext context
@@ -82,6 +84,7 @@ public class AutoregistrarService : Autoregistrar.AutoregistrarBase
         };
     }
 
+    [Authorize("UseRegistrar")]
     public override async Task<StatusResponse> StopService(StopRequest request, ServerCallContext context)
     {
         StateManager.Status = Status.Pending;
@@ -102,6 +105,28 @@ public class AutoregistrarService : Autoregistrar.AutoregistrarBase
         return new StatusResponse { Status = StateManager.Status };
     }
 
+    [Authorize("ForceStopAutoregistrar")]
+    public override async Task<StatusResponse> ForceStopService(ForceStopRequest request, ServerCallContext context)
+    {
+        StateManager.Status = Status.Pending;
+
+        _settingsProvider.Clear(StateManager.StartedForUserId);
+        _listener.CloseConnection();
+
+        await _hubContext.Clients.All.ReceiveLog(
+            $"Stopped autoregistrar for user ID {StateManager.StartedForUserId}"
+        );
+        _logger.LogInformation(
+            "Stopped autoregistrar for user ID {UserId}",
+            StateManager.StartedForUserId
+        );
+
+        StateManager.StartedForUserId = default;
+        StateManager.Status = Status.Stopped;
+        return new StatusResponse { Status = StateManager.Status };
+    }
+
+    [Authorize]
     public override Task<StatusResponse> RequestStatus(Empty request, ServerCallContext context)
     {
         return Task.FromResult(
