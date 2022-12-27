@@ -234,10 +234,10 @@ public class AuthenticationService : IAuthenticationService
     private static bool IsValidSecurityAlgorythm(SecurityToken token)
     {
         return token is JwtSecurityToken securityToken
-            && securityToken.Header.Alg.Equals(
-                SecurityAlgorithms.HmacSha256,
-                StringComparison.InvariantCultureIgnoreCase
-            );
+               && securityToken.Header.Alg.Equals(
+                   SecurityAlgorithms.HmacSha256,
+                   StringComparison.InvariantCultureIgnoreCase
+               );
     }
 
     private static DateTime GetExpiryDateUtc(ClaimsPrincipal validatedToken)
@@ -262,10 +262,10 @@ public class AuthenticationService : IAuthenticationService
 
         var jwtHasNotExpired = GetExpiryDateUtc(validatedToken) > DateTime.UtcNow;
         var jti = validatedToken!.Claims.Single(x => x.Type == JwtRegisteredClaimNames.Jti).Value;
+        var isInvalidJti = storedToken.TokenInfo.Jti != jti;
         var isInvalidated = storedToken.TokenInfo.Invalidated;
         var hasBeenUsed = storedToken.TokenInfo.Used;
         var refreshTokenHasExpired = DateTime.UtcNow > storedToken.TokenInfo.ExpiryDate;
-        var isInvalidJti = storedToken.TokenInfo.Jti == jti;
 
         if (
             jwtHasNotExpired
