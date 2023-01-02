@@ -12,6 +12,7 @@ namespace Api.Controllers;
 [Authorize(Policy = "UseRegistrar")]
 [Route("api/[controller]")]
 [ApiController]
+[Tags("Issue management")]
 public class IssuesController : ControllerBase
 {
     private readonly IMapper _mapper;

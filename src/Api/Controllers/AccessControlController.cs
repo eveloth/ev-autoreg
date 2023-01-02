@@ -13,6 +13,7 @@ namespace Api.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
+[Tags("Access control management")]
 public class AccessControlController : ControllerBase
 {
     private readonly ILogger<AccessControlController> _logger;
@@ -42,9 +43,15 @@ public class AccessControlController : ControllerBase
         _roleValidator = roleValidator;
     }
 
+    /// <summary>
+    /// Returns all roles in the system
+    /// </summary>
+    /// <response code="200">Returns all roles in the system</response>
     [Authorize(Policy = "ReadRoles")]
     [Route("roles")]
     [HttpGet]
+    [ProducesResponseType(typeof(PagedResponse<RoleDto>), StatusCodes.Status200OK)]
+    [Produces("application/json")]
     public async Task<IActionResult> GetAllRoles(
         [FromQuery] PaginationQuery pagination,
         CancellationToken cts
@@ -60,9 +67,17 @@ public class AccessControlController : ControllerBase
         return Ok(response);
     }
 
+    /// <summary>
+    /// Creates a new role
+    /// </summary>
+    /// <response code="200">Creates a new role</response>
+    /// <response code="400">If a validation error occured</response>
     [Authorize(Policy = "CreateRoles")]
     [Route("roles")]
     [HttpPost]
+    [ProducesResponseType(typeof(Response<RoleDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [Produces("application/json")]
     public async Task<IActionResult> AddRole([FromBody] RoleRequest request, CancellationToken cts)
     {
         await _roleValidator.ValidateAndThrowAsync(request, cts);
@@ -80,9 +95,19 @@ public class AccessControlController : ControllerBase
         return Ok(response);
     }
 
+    /// <summary>
+    /// Changes role name
+    /// </summary>
+    /// <response code="200">Changes role name</response>
+    /// <response code="400">If a validation error occured</response>
+    /// <response code="404">If role doesn't exist</response>
     [Authorize(Policy = "UpdateRoles")]
     [Route("roles/{id:int}")]
     [HttpPut]
+    [ProducesResponseType(typeof(Response<RoleDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [Produces("application/json")]
     public async Task<IActionResult> ChangeRoleName(
         [FromRoute] int id,
         [FromBody] RoleRequest request,
@@ -104,9 +129,17 @@ public class AccessControlController : ControllerBase
         return Ok(response);
     }
 
+    /// <summary>
+    /// Deletes a role from the system
+    /// </summary>
+    /// <response code="200">Deletes a role from the system</response>
+    /// <response code="404">If role doesn't exist</response>
     [Authorize(Policy = "DeleteRoles")]
     [Route("roles/{id:int}")]
     [HttpDelete]
+    [ProducesResponseType(typeof(Response<RoleDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [Produces("application/json")]
     public async Task<IActionResult> DeleteRole([FromRoute] int id, CancellationToken cts)
     {
         var deletedRole = await _roleService.Delete(id, cts);
@@ -121,9 +154,15 @@ public class AccessControlController : ControllerBase
         return Ok(response);
     }
 
+    /// <summary>
+    /// Returns all permissions in the system
+    /// </summary>
+    /// <response code="200">Returns all permissions in the system</response>
     [Authorize(Policy = "ReadPermissions")]
     [Route("permissions")]
     [HttpGet]
+    [ProducesResponseType(typeof(PagedResponse<PermissionDto>), StatusCodes.Status200OK)]
+    [Produces("application/json")]
     public async Task<IActionResult> GetAllPermissions(
         [FromQuery] PaginationQuery pagination,
         CancellationToken cts
@@ -138,9 +177,15 @@ public class AccessControlController : ControllerBase
         return Ok(response);
     }
 
+    /// <summary>
+    /// Returns all role-permission correlations in the system
+    /// </summary>
+    /// <response code="200">Returns all role-permission correlations in the system</response>
     [Authorize(Policy = "ReadRoles")]
     [Route("roles/permissions")]
     [HttpGet]
+    [ProducesResponseType(typeof(PagedResponse<RolePermissionDto>), StatusCodes.Status200OK)]
+    [Produces("application/json")]
     public async Task<IActionResult> GetAllRolePermissions(
         [FromQuery] PaginationQuery pagination,
         CancellationToken cts
@@ -155,9 +200,17 @@ public class AccessControlController : ControllerBase
         return Ok(response);
     }
 
+    /// <summary>
+    /// Returns a role permissions correlation for the specified role
+    /// </summary>
+    /// <response code="200">Returns a role permissions correlation for the specified role</response>
+    /// <response code="404">If role or role-permission correlation doesn't exist</response>
     [Authorize(Policy = "ReadRoles")]
     [Route("roles/{id:int}/permissions")]
     [HttpGet]
+    [ProducesResponseType(typeof(Response<RolePermissionDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [Produces("application/json")]
     public async Task<IActionResult> GetRolePermissions([FromRoute] int id, CancellationToken cts)
     {
         var rolePermission = await _rolePermissionService.Get(id, cts);
@@ -166,9 +219,19 @@ public class AccessControlController : ControllerBase
         return Ok(response);
     }
 
+    /// <summary>
+    /// Adds a permission to the role
+    /// </summary>
+    /// <response code="200">Adds a permission to the role</response>
+    /// <response code="400">If a validation error occured</response>
+    /// <response code="404">If role or permission doesn't exist</response>
     [Authorize(Policy = "UpdateRoles")]
     [Route("roles/{roleId:int}/permissions/{permissionId:int}")]
     [HttpPost]
+    [ProducesResponseType(typeof(Response<RolePermissionDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [Produces("application/json")]
     public async Task<IActionResult> AddPermissionToRole(
         [FromRoute] int roleId,
         [FromRoute] int permissionId,
@@ -195,9 +258,17 @@ public class AccessControlController : ControllerBase
         return Ok(response);
     }
 
+    /// <summary>
+    /// Removes a permission from role
+    /// </summary>
+    /// <response code="200">Removes a permission from role</response>
+    /// <response code="404">If role, or permission, or role-permission correlation doesn't exist</response>
     [Authorize(Policy = "UpdateRoles")]
     [Route("roles/{roleId:int}/permissions/{permissionId:int}")]
     [HttpDelete]
+    [ProducesResponseType(typeof(Response<RolePermissionDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [Produces("application/json")]
     public async Task<IActionResult> RemovePermissionFromRole(
         [FromRoute] int roleId,
         [FromRoute] int permissionId,
@@ -224,9 +295,17 @@ public class AccessControlController : ControllerBase
         return Ok(response);
     }
 
+    /// <summary>
+    /// Assignes a role to the specified user
+    /// </summary>
+    /// <response code="200">Assignes a role to the specified user</response>
+    /// <response code="404">If user or role doesn't exist</response>
     [Authorize(Policy = "UpdateUsers")]
     [Route("users/{userId:int}/roles/{roleId:int}")]
     [HttpPost]
+    [ProducesResponseType(typeof(Response<UserDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [Produces("application/json")]
     public async Task<IActionResult> AddUserToRole(
         [FromRoute] int userId,
         [FromRoute] int roleId,
@@ -251,9 +330,17 @@ public class AccessControlController : ControllerBase
         return Ok(response);
     }
 
+    /// <summary>
+    /// Removes a user from their role
+    /// </summary>
+    /// <response code="200">Removes a user from their role</response>
+    /// <response code="404">If user doesn't exist</response>
     [Authorize(Policy = "UpdateUsers")]
     [Route("users/{id:int}/roles")]
     [HttpDelete]
+    [ProducesResponseType(typeof(Response<UserDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [Produces("application/json")]
     public async Task<IActionResult> RemoveUserFromRole([FromRoute] int id, CancellationToken cts)
     {
         var updatedUser = await _userService.RemoveUserFromRole(id, cts);

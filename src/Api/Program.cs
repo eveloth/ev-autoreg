@@ -9,6 +9,7 @@ using Api.Extensions;
 using Api.Mapping;
 using Api.Options;
 using Api.Redis;
+using Api.Swagger;
 using Api.Validators;
 using FluentMigrator.Runner;
 using FluentValidation;

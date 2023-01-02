@@ -11,6 +11,4 @@ public interface ICredentialsEncryptor
         int userId,
         ExchangeCredentials credentials
     );
-    EvCredentialsDto DecryptEvCredentials(EvCredentialsModel credentials);
-    ExchangeCredentialsDto DecryptExchangeCredentials(ExchangeCredentialsModel credentials);
 }

@@ -7,6 +7,11 @@
         <UserSecretsId>7ed86210-4c8f-4963-89e3-5d86e2d4e22c</UserSecretsId>
         <LangVersion>11</LangVersion>
     </PropertyGroup>
+    
+    <PropertyGroup>
+        <IncludeOpenAPIAnalyzers>true</IncludeOpenAPIAnalyzers>
+    </PropertyGroup>
+
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
       <DocumentationFile>bin\Debug\net7.0\Api.xml</DocumentationFile>
@@ -40,6 +45,7 @@
         <PackageReference Include="Serilog.Sinks.Seq" Version="5.2.3-dev-00257" />
         <PackageReference Include="StackExchange.Redis" Version="2.6.86" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+        <PackageReference Include="Swashbuckle.AspNetCore.Filters" Version="7.0.6" />
     </ItemGroup>
 
     <ItemGroup>

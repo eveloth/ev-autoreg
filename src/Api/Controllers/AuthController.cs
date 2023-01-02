@@ -11,6 +11,7 @@ namespace Api.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
+[Tags("Authentication")]
 public class AuthController : ControllerBase
 {
     private readonly IAuthenticationService _authService;
@@ -29,18 +30,18 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
-    /// Logs user in.
+    /// Returns a JWT and a refresh token
     /// </summary>
-    /// <param name="request"></param>
-    /// <param name="cts"></param>
-    /// <returns>A JWT token to include in HTTP request header or an error object with the error context</returns>
-    /// <response code="200">Returns JWT token</response>
-    /// <response code="401">If credentials are invalid</response>
-    /// <response code="400">If user is blocked</response>
-    /// <response code="404">If user doesn't exist</response>
+    /// <response code="200">Returns a JWT and a refresh token</response>
+    /// <response code="400">If credentials are invalid or the user is blocked</response>
+    /// <response code="404">If the user doesn't exist</response>
     [AllowAnonymous]
     [Route("token")]
     [HttpPost]
+    [ProducesResponseType(typeof(TokenResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [Produces("application/json")]
     public async Task<IActionResult> Login(
         [FromBody] UserCredentialsRequest request,
         CancellationToken cts
@@ -55,9 +56,17 @@ public class AuthController : ControllerBase
         return Ok(response);
     }
 
+    /// <summary>
+    /// Registers a new user in the system
+    /// </summary>
+    /// <response code="200">Returns a JWT and a refresh token</response>
+    /// <response code="400">If a validation error occured</response>
     [AllowAnonymous]
     [Route("register")]
     [HttpPost]
+    [ProducesResponseType(typeof(TokenResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [Produces("application/json")]
     public async Task<IActionResult> RegisterUser(
         [FromBody] UserCredentialsRequest request,
         CancellationToken cts
@@ -71,9 +80,17 @@ public class AuthController : ControllerBase
         return Ok(response);
     }
 
+    /// <summary>
+    /// Issues a new JWT/refresh token pair
+    /// </summary>
+    /// <response code="200">Returns a JWT and a refresh token</response>
+    /// <response code="400">If a token is invalid</response>
     [AllowAnonymous]
     [Route("refresh")]
     [HttpPost]
+    [ProducesResponseType(typeof(TokenResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [Produces("application/json")]
     public async Task<IActionResult> RefreshToken(
         [FromBody] RefreshTokenRequest request,
         CancellationToken cts
@@ -85,9 +102,14 @@ public class AuthController : ControllerBase
         return Ok(response);
     }
 
+    /// <summary>
+    /// Returns a list of all user's permissions
+    /// </summary>
+    /// <response code="200">Returns a list of all user's permissions</response>
     [Authorize]
     [Route("me")]
     [HttpGet]
+    [Produces("application/json")]
     public IActionResult GetMe()
     {
         var claims = HttpContext.User.Claims.Where(n => n.Type == "Permission");

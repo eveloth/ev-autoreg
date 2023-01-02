@@ -15,6 +15,7 @@ namespace Api.Controllers;
 [Authorize(Policy = "UseRegistrar")]
 [Route("api/[controller]")]
 [ApiController]
+[Tags(("Rule management"))]
 public class RulesController : ControllerBase
 {
     private readonly ILogger<RulesController> _logger;

@@ -14,6 +14,7 @@ namespace Api.Controllers;
 [Authorize]
 [Route("api/[controller]")]
 [ApiController]
+[Tags("ExtraView and Exchange credentials management")]
 public class ExternalCredentialsController : ControllerBase
 {
     private readonly ILogger<ExternalCredentialsController> _logger;

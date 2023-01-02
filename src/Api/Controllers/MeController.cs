@@ -14,6 +14,7 @@ namespace Api.Controllers;
 [Authorize]
 [Route("api/[controller]")]
 [ApiController]
+[Tags("Current user management")]
 public class MeController : ControllerBase
 {
     private readonly ILogger<MeController> _logger;

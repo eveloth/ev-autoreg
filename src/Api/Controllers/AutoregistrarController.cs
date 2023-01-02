@@ -15,6 +15,7 @@ namespace Api.Controllers;
 [Authorize]
 [Route("api/[controller]")]
 [ApiController]
+[Tags("Autoregistrar service management")]
 public class AutoregistrarController : ControllerBase
 {
     private readonly ILogger<AutoregistrarController> _logger;
