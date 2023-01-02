@@ -224,7 +224,7 @@ public class AuthenticationService : IAuthenticationService
 
             return !IsValidSecurityAlgorythm(validatedToken) ? null : principal;
         }
-        catch (Exception e)
+        catch (Exception)
         {
             _tokenValidationParameters.ValidateLifetime = true;
             return null;

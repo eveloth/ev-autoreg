@@ -2,6 +2,7 @@
 
 public class RefreshToken
 {
+#pragma warning disable CS8618
     public RefreshToken()
     {
 
@@ -13,4 +14,5 @@ public class RefreshToken
     }
     public string Token { get; set; }
     public TokenInfo TokenInfo { get; set; }
+#pragma warning restore CS8618
 }

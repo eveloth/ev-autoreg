@@ -2,6 +2,7 @@ namespace Api.Domain;
 
 public class Issue
 {
+#pragma warning disable CS8618
     public int Id { get; set; }
     public DateTime TimeCreated { get; set; }
     public string Author { get; set; }
@@ -14,4 +15,5 @@ public class Issue
     public string Description { get; set; }
     public User? Registrar { get; set; }
     public IssueType? IssueType { get; set; }
+#pragma warning restore CS8618
 }

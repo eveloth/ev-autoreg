@@ -8,6 +8,7 @@ public static class DomainToDtoMappingConfig
 {
     public static void ConfigureDomainToDtoMapping(this IApplicationBuilder app)
     {
+#pragma warning disable CS8602
         TypeAdapterConfig<Issue, IssueDto>
             .NewConfig()
             .Map(dest => dest.RegistrarId, src => src.Registrar.Id)
@@ -15,6 +16,7 @@ public static class DomainToDtoMappingConfig
             .Map(dest => dest.RegistrarLastName, src => src.Registrar.LastName)
             .IgnoreNonMapped(false)
             .IgnoreNullValues(true);
+#pragma warning restore CS8602
 
         TypeAdapterConfig<Rule, RuleDto>
             .NewConfig()
