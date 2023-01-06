@@ -31,6 +31,6 @@ public class PagedRuleResponseExample : IExamplesProvider<PagedResponse<RuleDto>
 
     public PagedResponse<RuleDto> GetExamples()
     {
-        return new PagedResponse<RuleDto>(_rules, Pagination.Example);
+        return new PagedResponse<RuleDto>(_rules, PaginationTemplate.Example);
     }
 }

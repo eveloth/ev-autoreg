@@ -41,7 +41,13 @@ public class MeController : ControllerBase
         _profileValidator = profileValidator;
     }
 
+    /// <summary>
+    /// Returns a profile of the current user
+    /// </summary>
+    /// <response code="200">Returns a profile of the current user</response>
     [HttpGet]
+    [ProducesResponseType(typeof(Response<UserDto>), StatusCodes.Status200OK)]
+    [Produces("application/json")]
     public async Task<IActionResult> GetMyProfile(CancellationToken cts)
     {
         var userId = HttpContext.GetUserId();
@@ -52,8 +58,16 @@ public class MeController : ControllerBase
         return Ok(response);
     }
 
+    /// <summary>
+    /// Updates an email of the current user
+    /// </summary>
+    /// <response code="200">Updates an email of the current user</response>
+    /// <response code="400">If a validation error occured</response>
     [Route("email")]
     [HttpPost]
+    [ProducesResponseType(typeof(Response<UserDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [Produces("application/json")]
     public async Task<IActionResult> UpdateEmail(
         [FromBody] UserEmailRequest request,
         CancellationToken cts
@@ -77,8 +91,16 @@ public class MeController : ControllerBase
         return Ok(response);
     }
 
+    /// <summary>
+    /// Updates a password of the current user
+    /// </summary>
+    /// <response code="200">Updates a password of the current user</response>
+    /// <response code="400">If a validation error occured</response>
     [Route("password")]
     [HttpPost]
+    [ProducesResponseType(typeof(SuccessResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [Produces("application/json")]
     public async Task<IActionResult> UpdatePassword(
         [FromBody] UserPasswordRequest request,
         CancellationToken cts
@@ -96,7 +118,15 @@ public class MeController : ControllerBase
         return Ok(response);
     }
 
+    /// <summary>
+    /// Updates the first and the last name of the current user
+    /// </summary>
+    /// <response code="200">Updates the first and the last name of the current user</response>
+    /// <response code="400">If a validation error occured</response>
     [HttpPatch]
+    [ProducesResponseType(typeof(Response<UserDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [Produces("application/json")]
     public async Task<IActionResult> UpdateUserProfile(
         [FromBody] UserProfileRequest request,
         CancellationToken cts

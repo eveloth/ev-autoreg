@@ -35,9 +35,15 @@ public class ExternalCredentialsController : ControllerBase
         _extCredentialsValidator = extCredentialsValidator;
     }
 
+    /// <summary>
+    /// Saves Exchange credentials for the current user
+    /// </summary>
+    /// <response code="200">Saves Exchange credentials for the current user</response>
     [Authorize(Policy = "UseRegistrar")]
     [Route("exchange")]
     [HttpPost]
+    [ProducesResponseType(typeof(SuccessResponse), StatusCodes.Status200OK)]
+    [Produces("application/json")]
     public async Task<IActionResult> SaveExchangeCredentials(
         [FromBody] ExternalCredentialsRequest credentials,
         CancellationToken cts
@@ -62,9 +68,15 @@ public class ExternalCredentialsController : ControllerBase
         return Ok(response);
     }
 
+    /// <summary>
+    /// Saves ExtraView credentials for the current user
+    /// </summary>
+    /// <response code="200">Saves ExtraView credentials for the current user</response>
     [Authorize(Policy = "UseRegistrar")]
     [Route("ev")]
     [HttpPost]
+    [ProducesResponseType(typeof(SuccessResponse), StatusCodes.Status200OK)]
+    [Produces("application/json")]
     public async Task<IActionResult> SaveEvCredentials(
         [FromBody] ExternalCredentialsRequest credentials,
         CancellationToken cts

@@ -25,6 +25,6 @@ public class PagedPermissionResponseExample : IExamplesProvider<PagedResponse<Pe
 
     public PagedResponse<PermissionDto> GetExamples()
     {
-        return new PagedResponse<PermissionDto>(_permissions, Pagination.Example);
+        return new PagedResponse<PermissionDto>(_permissions, PaginationTemplate.Example);
     }
 }

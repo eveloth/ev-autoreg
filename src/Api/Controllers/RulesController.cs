@@ -36,7 +36,13 @@ public class RulesController : ControllerBase
         _validator = validator;
     }
 
+    /// <summary>
+    /// Returns all issue analysis rules created by the current user
+    /// </summary>
+    /// <response code="200">Returns all issue analysis rules created by the current user</response>
     [HttpGet]
+    [ProducesResponseType(typeof(PagedResponse<RuleDto>), StatusCodes.Status200OK)]
+    [Produces("application/json")]
     public async Task<IActionResult> GetAllRules(
         [FromQuery] PaginationQuery pagination,
         CancellationToken cts
@@ -53,8 +59,16 @@ public class RulesController : ControllerBase
         return Ok(response);
     }
 
+    /// <summary>
+    /// Returns the specified issue analysis rule created by the current user
+    /// </summary>
+    /// <response code="200">Returns the specified issue analysis rule created by the current user</response>
+    /// <response code="404">If a rule doesn't exist</response>
     [Route("{id:int}")]
     [HttpGet]
+    [ProducesResponseType(typeof(Response<RuleDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [Produces("application/json")]
     public async Task<IActionResult> GetRule([FromRoute] int id, CancellationToken cts)
     {
         var userId = HttpContext.GetUserId();
@@ -65,7 +79,17 @@ public class RulesController : ControllerBase
         return Ok(response);
     }
 
+    /// <summary>
+    /// Adds an issue analysis rule for the current user
+    /// </summary>
+    /// <response code="200">Adds an issue analysis rule for the current user</response>
+    /// <response code="400">If a validation error occured</response>
+    /// <response code="404">If a rule, or an issue type, or an issue field doesn't exist</response>
     [HttpPost]
+    [ProducesResponseType(typeof(Response<RuleDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [Produces("application/json")]
     public async Task<IActionResult> AddRule([FromBody] RuleRequest request, CancellationToken cts)
     {
         await _validator.ValidateAndThrowAsync(request, cts);
@@ -87,8 +111,18 @@ public class RulesController : ControllerBase
         return Ok(response);
     }
 
+    /// <summary>
+    /// Updates the specified issue analysis rule for the current user
+    /// </summary>
+    /// <response code="200">Updates the specified issue analysis rule for the current user</response>
+    /// <response code="400">If a validation error occured</response>
+    /// <response code="404">If a rule, or an issue type, or an issue field doesn't exist</response>
     [Route("{id:int}")]
     [HttpPut]
+    [ProducesResponseType(typeof(Response<RuleDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [Produces("application/json")]
     public async Task<IActionResult> UpdateRule(
         [FromRoute] int id,
         [FromBody] RuleRequest request,
@@ -115,8 +149,16 @@ public class RulesController : ControllerBase
         return Ok(response);
     }
 
+    /// <summary>
+    /// Deletes the specified issue analysis rule for the current user
+    /// </summary>
+    /// <response code="200">Deletes the specified issue analysis rule for the current user</response>
+    /// <response code="404">If a rule doesn't exist</response>
     [Route("{id:int}")]
     [HttpDelete]
+    [ProducesResponseType(typeof(Response<RuleDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [Produces("application/json")]
     public async Task<IActionResult> DeleteRule([FromRoute] int id, CancellationToken cts)
     {
         var userId = HttpContext.GetUserId();

@@ -32,6 +32,6 @@ public class PagedQueryParametersResponseExample
 
     public PagedResponse<QueryParametersDto> GetExamples()
     {
-        return new PagedResponse<QueryParametersDto>(_queryParameters, Pagination.Example);
+        return new PagedResponse<QueryParametersDto>(_queryParameters, PaginationTemplate.Example);
     }
 }

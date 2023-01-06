@@ -3,6 +3,7 @@ using Api.Contracts;
 using Api.Contracts.Dto;
 using Api.Contracts.Requests;
 using Api.Contracts.Responses;
+using Api.Domain;
 using Api.Exceptions;
 using Api.Extensions;
 using Api.Services.Interfaces;
@@ -37,9 +38,15 @@ public class UsersController : ControllerBase
         _validator = validator;
     }
 
+    /// <summary>
+    /// Returns all users in the system
+    /// </summary>
+    /// <response code="200">Returns all users in the system</response>
     [Cached(300)]
     [Authorize(Policy = "ReadUsers")]
     [HttpGet]
+    [ProducesResponseType(typeof(PagedResponse<UserDto>), StatusCodes.Status200OK)]
+    [Produces("application/json")]
     public async Task<IActionResult> GetAllUsers(
         [FromQuery] PaginationQuery pagination,
         CancellationToken cts
@@ -55,10 +62,18 @@ public class UsersController : ControllerBase
         return Ok(response);
     }
 
+    /// <summary>
+    /// Returns a scecified user
+    /// </summary>
+    /// <response code="200">Returns a scecified user</response>
+    /// <response code="404">If a user doesn't exist</response>
     [Cached(300)]
     [Authorize]
     [Route("{id:int}")]
     [HttpGet]
+    [ProducesResponseType(typeof(Response<UserDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [Produces("application/json")]
     public async Task<IActionResult> GetUser([FromRoute] int id, CancellationToken cts)
     {
         var user = await _userService.Get(id, cts);
@@ -66,9 +81,19 @@ public class UsersController : ControllerBase
         return Ok(_mapper.Map<UserDto>(user));
     }
 
+    /// <summary>
+    /// Resets a password for the specified user to the provided one
+    /// </summary>
+    /// <response code="200">Resets a password for the specified user to the provided one</response>
+    /// <response code="400">If a validation error occured</response>
+    /// <response code="404">If a user doesn't exist</response>
     [Authorize(Policy = "ResetUserPasswords")]
     [Route("{id:int}/password/reset")]
     [HttpPost]
+    [ProducesResponseType(typeof(SuccessResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [Produces("application/json")]
     public async Task<IActionResult> ResetPassword(
         [FromRoute] int id,
         [FromBody] UserPasswordRequest request,
@@ -85,9 +110,19 @@ public class UsersController : ControllerBase
         return Ok(response);
     }
 
+    /// <summary>
+    /// Blocks a user
+    /// </summary>
+    /// <response code="200">Blocks a user</response>
+    /// <response code="400">If a user tries to block themselves</response>
+    /// <response code="404">If a user doesn't exist</response>
     [Authorize(Policy = "BlockUsers")]
     [Route("{id:int}/block")]
     [HttpPost]
+    [ProducesResponseType(typeof(Response<UserDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [Produces("application/json")]
     public async Task<IActionResult> BlockUser([FromRoute] int id, CancellationToken cts)
     {
         var userId = HttpContext.GetUserId();
@@ -105,9 +140,19 @@ public class UsersController : ControllerBase
         return Ok(response);
     }
 
+    /// <summary>
+    /// Unblocks a user
+    /// </summary>
+    /// <response code="200">Unblocks a user</response>
+    /// <response code="400">If a user tries to block themselves</response>
+    /// <response code="404">If a user doesn't exist</response>
     [Authorize(Policy = "BlockUsers")]
     [Route("{id:int}/unblock")]
     [HttpPost]
+    [ProducesResponseType(typeof(Response<UserDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [Produces("application/json")]
     public async Task<IActionResult> UnblockUser([FromRoute] int id, CancellationToken cts)
     {
         var userId = HttpContext.GetUserId();
@@ -125,9 +170,19 @@ public class UsersController : ControllerBase
         return Ok(response);
     }
 
+    /// <summary>
+    /// Deletes a user
+    /// </summary>
+    /// <response code="200">Unblocks a user</response>
+    /// <response code="400">If a user tries to delete themselves</response>
+    /// <response code="404">If a user doesn't exist</response>
     [Authorize(Policy = "DeleteUsers")]
     [Route("{id:int}")]
     [HttpDelete]
+    [ProducesResponseType(typeof(Response<UserDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [Produces("application/json")]
     public async Task<IActionResult> DeleteUser([FromRoute] int id, CancellationToken cts)
     {
         var userId = HttpContext.GetUserId();
@@ -145,9 +200,19 @@ public class UsersController : ControllerBase
         return Ok(response);
     }
 
+    /// <summary>
+    /// Restores a user
+    /// </summary>
+    /// <response code="200">Restores a user</response>
+    /// <response code="400">If a user tries to restore themselves</response>
+    /// <response code="404">If a user doesn't exist</response>
     [Authorize(Policy = "DeleteUsers")]
     [Route("{id:int}/restore")]
     [HttpPost]
+    [ProducesResponseType(typeof(Response<UserDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [Produces("application/json")]
     public async Task<IActionResult> RestoreUser([FromRoute] int id, CancellationToken cts)
     {
         var userId = HttpContext.GetUserId();
