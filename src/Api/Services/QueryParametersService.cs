@@ -44,29 +44,32 @@ public class QueryParametersService : IQueryParametersService
 
     public async Task<QueryParameters> Get(int issueTypeId, CancellationToken cts)
     {
+        var issueType = await _unitofWork.IssueTypeRepository.Get(issueTypeId, cts);
+
+        if (issueType is null)
+        {
+            Thrower.ThrowApiException(ErrorCode[7004]);
+        }
+
         var queryParameters = await _unitofWork.QueryParametersRepository.Get(issueTypeId, cts);
         await _unitofWork.CommitAsync(cts);
 
         if (queryParameters is null)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[10004]);
-            throw e;
+            Thrower.ThrowApiException(ErrorCode[10004]);
         }
 
-        var result = await _mappingHelper.JoinIssueType(queryParameters, cts);
+        var result = await _mappingHelper.JoinIssueType(queryParameters!, cts);
         return result;
     }
 
     public async Task<QueryParameters> Upsert(QueryParameters parameters, CancellationToken cts)
     {
-        var queryParameters = await _unitofWork.QueryParametersRepository.Get(parameters.IssueType.Id, cts);
+        var issueType = await _unitofWork.IssueTypeRepository.Get(parameters.IssueType.Id, cts);
 
-        if (queryParameters is null)
+        if (issueType is null)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[10004]);
-            throw e;
+            Thrower.ThrowApiException(ErrorCode[7004]);
         }
 
         var queryParametersModel = _mapper.Map<QueryParametersModel>(parameters);
