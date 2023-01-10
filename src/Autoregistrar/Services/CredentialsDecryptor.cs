@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Autoregistrar.Domain;
 using Autoregistrar.Exceptions;
+using Autoregistrar.Services.Interfaces;
 using DataAccessLibrary.Models;
 
 namespace Autoregistrar.Services;

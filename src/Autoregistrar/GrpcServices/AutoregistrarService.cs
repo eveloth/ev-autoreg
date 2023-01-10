@@ -1,31 +1,27 @@
-﻿using Autoregistrar.Hubs;
-using Autoregistrar.Services;
+﻿using Autoregistrar.Services.Interfaces;
 using Autoregistrar.Settings;
+using Autoregistrar.State;
 using Grpc.Core;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.SignalR;
 using Task = System.Threading.Tasks.Task;
 
 namespace Autoregistrar.GrpcServices;
 
 public class AutoregistrarService : Autoregistrar.AutoregistrarBase
 {
-    private readonly ILogger<AutoregistrarService> _logger;
     private readonly ISettingsProvider _settingsProvider;
     private readonly IMailEventListener _listener;
-    private readonly IHubContext<AutoregistrarHub, IAutoregistrarClient> _hubContext;
+    private readonly ILogDispatcher<AutoregistrarService> _logDispatcher;
 
     public AutoregistrarService(
         ISettingsProvider settingsProvider,
         IMailEventListener listener,
-        IHubContext<AutoregistrarHub, IAutoregistrarClient> hubContext,
-        ILogger<AutoregistrarService> logger
+        ILogDispatcher<AutoregistrarService> logDispatcher
     )
     {
         _settingsProvider = settingsProvider;
         _listener = listener;
-        _hubContext = hubContext;
-        _logger = logger;
+        _logDispatcher = logDispatcher;
     }
 
     [Authorize("UseRegistrar")]
@@ -34,109 +30,147 @@ public class AutoregistrarService : Autoregistrar.AutoregistrarBase
         ServerCallContext context
     )
     {
-        StateManager.Status = Status.Pending;
-        StateManager.StartedForUserId = request.UserId;
-        _logger.LogInformation(
-            "Starting autoregistrar for user ID {UserId}",
-            StateManager.StartedForUserId
-        );
-        await _hubContext.Clients.All.ReceiveLog(
-            $"Starting autoregistrar for user ID {StateManager.StartedForUserId}"
-        );
+        if (!StateManager.IsStopped())
+        {
+            return new StatusResponse
+            {
+                RequestStatus = ReqStatus.Failed,
+                ServiceStatus = StateManager.GetStatus(),
+                UserId = StateManager.GetOperator(),
+                Description = "Service is not stopped"
+            };
+        }
+
+        var serviceOperator = request.UserId;
+
+        StateManager.SetStatus(Status.Pending);
+        StateManager.SetOperator(serviceOperator);
+
+        await _logDispatcher.Log($"Starting autoregistrar for user ID {serviceOperator}");
 
         try
         {
             var areSettingsValid = await _settingsProvider.CheckSettingsIntegrity(
-                StateManager.StartedForUserId,
+                serviceOperator,
                 context.CancellationToken
             );
+            var settingsAreNotNull = _settingsProvider.SettingsEntriesAreNotNull();
 
-            if (!areSettingsValid)
+            if (!areSettingsValid || !settingsAreNotNull)
             {
-                throw new RpcException(
-                    new Grpc.Core.Status(
-                        StatusCode.FailedPrecondition,
-                        "Autoregistrar configuraion is not valid, make sure all necessary settings are set "
-                        + "and each issue type has it's query parameters"
-                    )
-                );
+                await _logDispatcher.Log("settings are inalid");
+
+                return new StatusResponse
+                {
+                    RequestStatus = ReqStatus.Failed,
+                    ServiceStatus = StateManager.GetStatus(),
+                    UserId = StateManager.GetOperator(),
+                    Description = "Settings are invalid!"
+                };
             }
 
-            StateManager.Settings = await _settingsProvider.GetSettings(
-                StateManager.StartedForUserId,
-                context.CancellationToken
-            );
+            await _settingsProvider.InitializeSettings(serviceOperator, context.CancellationToken);
             await _listener.OpenConnection(context.CancellationToken);
         }
         catch (Exception e)
         {
-            Console.WriteLine(e);
-            StateManager.Status = Status.Stopped;
+            await _logDispatcher.Log(
+                "Couldn't start service; the reason might be external credentials are invalid or an internal service error"
+            );
+            StateManager.SetStatus(Status.Stopped);
             throw new RpcException(new Grpc.Core.Status(StatusCode.Internal, e.ToString()));
         }
 
-        StateManager.Status = Status.Started;
+        StateManager.SetStatus(Status.Started);
 
         return new StatusResponse
         {
-            Status = StateManager.Status,
-            UserId = StateManager.StartedForUserId
+            RequestStatus = ReqStatus.Success,
+            ServiceStatus = StateManager.GetStatus(),
+            UserId = StateManager.GetOperator(),
+            Description = "Service started!"
         };
     }
 
     [Authorize("UseRegistrar")]
-    public override async Task<StatusResponse> StopService(StopRequest request, ServerCallContext context)
+    public override async Task<StatusResponse> StopService(
+        StopRequest request,
+        ServerCallContext context
+    )
     {
-        StateManager.Status = Status.Pending;
+        var serviceOperator = StateManager.GetOperator();
 
-        _settingsProvider.Clear(StateManager.StartedForUserId);
+        if (!StateManager.IsOperator(request.UserId))
+        {
+            return new StatusResponse
+            {
+                RequestStatus = ReqStatus.Failed,
+                ServiceStatus = StateManager.GetStatus(),
+                UserId = serviceOperator,
+                Description = "Only the operator of the service can stop it."
+            };
+        }
+
+        StateManager.SetStatus(Status.Pending);
+
+        _settingsProvider.Clear(serviceOperator);
         _listener.CloseConnection();
 
-        await _hubContext.Clients.All.ReceiveLog(
-            $"Stopped autoregistrar for user ID {StateManager.StartedForUserId}"
-        );
-        _logger.LogInformation(
-            "Stopped autoregistrar for user ID {UserId}",
-            StateManager.StartedForUserId
-        );
+        await _logDispatcher.Log($"Stopped autoregistrar for user ID {serviceOperator}");
 
-        StateManager.StartedForUserId = default;
-        StateManager.Status = Status.Stopped;
-        return new StatusResponse { Status = StateManager.Status };
+        StateManager.SetOperator(default);
+        StateManager.SetStatus(Status.Stopped);
+
+        return new StatusResponse
+        {
+            RequestStatus = ReqStatus.Success,
+            ServiceStatus = StateManager.GetStatus(),
+            Description = "Service stopped!"
+        };
     }
 
     [Authorize("ForceStopAutoregistrar")]
-    public override async Task<StatusResponse> ForceStopService(ForceStopRequest request, ServerCallContext context)
+    public override async Task<StatusResponse> ForceStopService(
+        ForceStopRequest request,
+        ServerCallContext context
+    )
     {
-        StateManager.Status = Status.Pending;
+        var serviceOperator = StateManager.GetOperator();
 
-        _settingsProvider.Clear(StateManager.StartedForUserId);
+        StateManager.SetStatus(Status.Pending);
+
+        _settingsProvider.Clear(serviceOperator);
         _listener.CloseConnection();
 
-        await _hubContext.Clients.All.ReceiveLog(
-            $"Stopped autoregistrar for user ID {StateManager.StartedForUserId}"
-        );
-        _logger.LogInformation(
-            "Stopped autoregistrar for user ID {UserId}",
-            StateManager.StartedForUserId
-        );
+        await _logDispatcher.Log($"Stopped autoregistrar for user ID {serviceOperator}");
 
-        StateManager.StartedForUserId = default;
-        StateManager.Status = Status.Stopped;
-        return new StatusResponse { Status = StateManager.Status };
+        StateManager.SetOperator(default);
+        StateManager.SetStatus(Status.Stopped);
+
+        return new StatusResponse
+        {
+            RequestStatus = ReqStatus.Success,
+            ServiceStatus = StateManager.GetStatus(),
+            Description = "Service stopped!"
+        };
     }
 
     [Authorize]
     public override Task<StatusResponse> RequestStatus(Empty request, ServerCallContext context)
     {
         return Task.FromResult(
-            StateManager.Status == Status.Started
+            StateManager.GetStatus() is Status.Started or Status.Pending
                 ? new StatusResponse
                 {
-                    Status = StateManager.Status,
-                    UserId = StateManager.StartedForUserId
+                    RequestStatus = ReqStatus.Success,
+                    ServiceStatus = StateManager.GetStatus(),
+                    UserId = StateManager.GetOperator()
                 }
-                : new StatusResponse { Status = StateManager.Status }
+                : new StatusResponse
+                {
+                    RequestStatus = ReqStatus.Success,
+                    ServiceStatus = StateManager.GetStatus()
+                }
         );
     }
 }

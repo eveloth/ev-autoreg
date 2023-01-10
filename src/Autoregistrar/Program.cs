@@ -4,9 +4,11 @@ using Autoregistrar.Hubs;
 using Autoregistrar.Installers;
 using Autoregistrar.Mapping;
 using Autoregistrar.Services;
+using Autoregistrar.Services.Interfaces;
 using Autoregistrar.Settings;
 using DataAccessLibrary.Extensions;
 using MapsterMapper;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,10 +29,11 @@ builder.Logging.AddSerilog(logger);
 builder.AddJwtAuthentication();
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("UseRegistrar", policy =>
-        policy.RequireClaim("Permission", "UseRegistrar"));
-    options.AddPolicy("ForceStopRegistrar", policy =>
-        policy.RequireClaim("Permission", "ForceStopRegistrar"));
+    options.AddPolicy("UseRegistrar", policy => policy.RequireClaim("Permission", "UseRegistrar"));
+    options.AddPolicy(
+        "ForceStopRegistrar",
+        policy => policy.RequireClaim("Permission", "ForceStopRegistrar")
+    );
 });
 
 builder
@@ -49,6 +52,10 @@ builder.Services.AddSingleton<ISettingsProvider, SettingsProvider>();
 builder.Services.AddSingleton<IMailEventListener, MailEventListener>();
 builder.Services.AddSingleton<IEvApi, EvApi>();
 builder.Services.AddSingleton<IIssueProcessor, IssueProcessor>();
+
+builder.Services.TryAdd(
+    ServiceDescriptor.Singleton(typeof(ILogDispatcher<>), typeof(LogDispatcher<>))
+);
 
 builder.Services.AddGrpc();
 builder.Services.AddGrpcReflection();

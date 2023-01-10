@@ -1,4 +1,4 @@
-﻿namespace Api.Options;
+﻿namespace Autoregistrar.Settings;
 
 public class JwtOptions
 {

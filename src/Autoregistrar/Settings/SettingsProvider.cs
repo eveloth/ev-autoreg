@@ -1,9 +1,10 @@
 using Autoregistrar.Domain;
-using Autoregistrar.Services;
+using Autoregistrar.Services.Interfaces;
 using DataAccessLibrary.Filters;
 using DataAccessLibrary.Models;
 using DataAccessLibrary.Repository.Interfaces;
 using MapsterMapper;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Autoregistrar.Settings;
 
@@ -27,11 +28,10 @@ public class SettingsProvider : ISettingsProvider
         _mapper = mapper;
     }
 
-    public async Task<Settings> GetSettings(int userId, CancellationToken cts)
+    public async Task InitializeSettings(int userId, CancellationToken cts)
     {
         using var scope = _scopeFactory.CreateScope();
-        var unitofWork =
-            scope.ServiceProvider.GetService<IUnitofWork>() ?? throw new NullReferenceException();
+        var unitofWork = scope.ServiceProvider.GetRequiredService<IUnitofWork>();
 
         var autoregSettings = await unitofWork.AutoregistrarSettingsRepository.Get(cts);
         var exchangeCredentials = _decryptor.DecryptExchangeCredentials(
@@ -42,10 +42,7 @@ public class SettingsProvider : ISettingsProvider
         );
 
         var queryParams = (
-            await unitofWork.QueryParametersRepository.GetAll(
-                new PaginationFilter(1, 1000),
-                cts
-            )
+            await unitofWork.QueryParametersRepository.GetAll(new PaginationFilter(1, 1000), cts)
         ).ToList();
         var issueTypeSet = await unitofWork.IssueTypeRepository.GetAll(
             new PaginationFilter(1, 1000),
@@ -85,20 +82,22 @@ public class SettingsProvider : ISettingsProvider
 
         _logger.LogInformation("Retrieved autoregistrar settings for user ID {UserId}", userId);
 
-        return new Settings
-        {
-            AutoregistrarSettings = _mapper.Map<AutoregistrarSettings>(autoregSettings!),
-            ExchangeCredentials = exchangeCredentials,
-            ExtraViewCredentials = evCredentials,
-            IssueFields = issueFields,
-            IssueTypes = issueTypes
-        };
+        GlobalSettings.AutoregistrarSettings = _mapper.Map<AutoregistrarSettings>(autoregSettings!);
+        GlobalSettings.ExchangeCredentials = exchangeCredentials;
+        GlobalSettings.ExtraViewCredentials = evCredentials;
+        GlobalSettings.IssueFields = issueFields;
+        GlobalSettings.IssueTypes = issueTypes;
     }
 
     public void Clear(int userId)
     {
         _logger.LogInformation("Cleared autoregistrar settings for user ID {UserId}", userId);
-        StateManager.Settings = null;
+
+        GlobalSettings.AutoregistrarSettings = null;
+        GlobalSettings.ExchangeCredentials = null;
+        GlobalSettings.ExtraViewCredentials = null;
+        GlobalSettings.IssueFields = null;
+        GlobalSettings.IssueTypes = null;
     }
 
     public async Task<bool> CheckSettingsIntegrity(int userId, CancellationToken cts)
@@ -135,10 +134,7 @@ public class SettingsProvider : ISettingsProvider
 
         foreach (var issueType in issueTypes)
         {
-            var queryParams = await unitofWork.QueryParametersRepository.Get(
-                issueType.Id,
-                cts
-            );
+            var queryParams = await unitofWork.QueryParametersRepository.Get(issueType.Id, cts);
 
             if (queryParams is not null)
             {
@@ -150,5 +146,14 @@ public class SettingsProvider : ISettingsProvider
         }
 
         return true;
+    }
+
+    public bool SettingsEntriesAreNotNull()
+    {
+        return GlobalSettings.AutoregistrarSettings is not null
+            && GlobalSettings.ExchangeCredentials is not null
+            && GlobalSettings.ExtraViewCredentials is not null
+            && GlobalSettings.IssueFields is not null
+            && GlobalSettings.IssueTypes is not null;
     }
 }

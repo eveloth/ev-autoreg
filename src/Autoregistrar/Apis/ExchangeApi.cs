@@ -11,11 +11,11 @@ public static class ExchangeApi {
         return new ExchangeService()
         {
             Url = new Uri(
-                $"https://{StateManager.Settings!.AutoregistrarSettings.ExchangeServerUri}/ews/exchange.asmx"
+                $"https://{GlobalSettings.AutoregistrarSettings.ExchangeServerUri}/ews/exchange.asmx"
             ),
             Credentials = new NetworkCredential(
-                StateManager.Settings.ExchangeCredentials.Email,
-                StateManager.Settings.ExchangeCredentials.Password
+                GlobalSettings.ExchangeCredentials.Email,
+                GlobalSettings.ExchangeCredentials.Password
             )
         };
     }

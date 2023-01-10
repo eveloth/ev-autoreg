@@ -2,37 +2,33 @@
 using System.Text.RegularExpressions;
 using Autoregistrar.Apis;
 using Autoregistrar.Domain;
-using Autoregistrar.Hubs;
+using Autoregistrar.Services.Interfaces;
 using Autoregistrar.Settings;
+using Autoregistrar.State;
 using DataAccessLibrary.Models;
 using DataAccessLibrary.Repository.Interfaces;
 using MapsterMapper;
-using Microsoft.AspNetCore.SignalR;
-using Npgsql;
 
 namespace Autoregistrar.Services;
 
 public class IssueProcessor : IIssueProcessor
 {
-    private readonly ILogger<IssueProcessor> _logger;
     private readonly IMapper _mapper;
     private readonly IEvApi _evapi;
-    private readonly IHubContext<AutoregistrarHub, IAutoregistrarClient> _hubContext;
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly ILogDispatcher<IssueProcessor> _logDispatcher;
 
     public IssueProcessor(
-        ILogger<IssueProcessor> logger,
         IMapper mapper,
         IEvApi evapi,
-        IHubContext<AutoregistrarHub, IAutoregistrarClient> hubContext,
-        IServiceScopeFactory scopeFactory
+        IServiceScopeFactory scopeFactory,
+        ILogDispatcher<IssueProcessor> logDispatcher
     )
     {
-        _logger = logger;
         _mapper = mapper;
         _evapi = evapi;
-        _hubContext = hubContext;
         _scopeFactory = scopeFactory;
+        _logDispatcher = logDispatcher;
     }
 
     public async Task ProcessEvent(string issueNo)
@@ -41,13 +37,12 @@ public class IssueProcessor : IIssueProcessor
 
         if (evResponse.StatusCode != HttpStatusCode.OK)
         {
-            _logger.LogInformation("Couldn't retrieve an issue from EV server");
-            await _hubContext.Clients.All.ReceiveLog("Couldn't retrieve an issue from EV server");
+            await _logDispatcher.Log("Couldn't retrieve an issue from EV server");
             return;
         }
 
         var xmlIssue = evResponse.Content!;
-        var issueFields = StateManager.Settings!.IssueFields;
+        var issueFields = GlobalSettings.IssueFields!;
 
         foreach (var field in issueFields)
         {
@@ -63,12 +58,7 @@ public class IssueProcessor : IIssueProcessor
 
             if (value is not string str)
             {
-                _logger.LogError(
-                    "Parsing error occured for issue ID {IssueId} in field name {FieldName}",
-                    issueNo,
-                    field.FieldName
-                );
-                await _hubContext.Clients.All.ReceiveLog(
+                await _logDispatcher.Log(
                     $"Parsing error occured for issue ID {issueNo} in field name {field.FieldName}"
                 );
 
@@ -96,15 +86,13 @@ public class IssueProcessor : IIssueProcessor
     //There rules differ from company to company, so we needed to ensure we reach at least second-level depth of 'updating':
     //the firts update changes issue status to 'regisered', and the second (if needed) -- to 'in work'.
     //If your issue updating rules are standartised enough, you might not need this second update, but it is there in case somebody needs it.
+    // TODO: make cascade updates, i.e. give users the ability to create many query parameters entities for each issue type and enumerate them
     private async Task UpdateAndSaveIssue(int issueType, string issueNo)
     {
-        var queryParameters = StateManager.Settings!.IssueTypes
-            .First(x => x.Id == issueType)
-            .QueryParameters;
+        var loadedIssueType = GlobalSettings.IssueTypes!.First(x => x.Id == issueType);
+        var queryParameters = loadedIssueType.QueryParameters;
 
-        await _hubContext.Clients.All.ReceiveLog(
-            $"Registering issue as: {StateManager.Settings.IssueTypes.First(x => x.Id == issueType).IssueTypeName}"
-        );
+        await _logDispatcher.Log($"Registering an issue as: {loadedIssueType.IssueTypeName}");
 
         var isSecondUpdateNeeded = queryParameters.InWorkStatus is not null;
 
@@ -128,12 +116,7 @@ public class IssueProcessor : IIssueProcessor
         }
         else
         {
-            _logger.LogError(
-                "Failed to update issue ID {IssueId}, EV server response was: {EvResponse}",
-                issueNo,
-                firstUpdateResponse.Content
-            );
-            await _hubContext.Clients.All.ReceiveLog(
+            await _logDispatcher.Log(
                 $"Failed to update issue ID {issueNo}, EV server response was: {firstUpdateResponse.Content}"
             );
         }
@@ -145,24 +128,12 @@ public class IssueProcessor : IIssueProcessor
 
         if (secondUpdateResponse.StatusCode == HttpStatusCode.OK)
         {
-            try
-            {
-                await InsertIssueIntoDatabase(issueNo, issueType);
-            }
-            catch (NpgsqlException e)
-            {
-                _logger.LogError("Error inserting issue: {ErrorMessage}", e);
-                await _hubContext.Clients.All.ReceiveLog("Unable to insert an issue");
-            }
+            await InsertIssueIntoDatabase(issueNo, issueType);
+            await _logDispatcher.Log($"Inserted issue ID {issueNo} into the database");
         }
         else
         {
-            _logger.LogError(
-                "Failed to update issue ID {IssueId}, EV server response was: {EvResponse}",
-                issueNo,
-                secondUpdateResponse.Content
-            );
-            await _hubContext.Clients.All.ReceiveLog(
+            await _logDispatcher.Log(
                 $"Failed to update issue ID {issueNo}, EV server response was: {secondUpdateResponse.Content}"
             );
         }
@@ -176,7 +147,7 @@ public class IssueProcessor : IIssueProcessor
         {
             var issue = _mapper.Map<IssueModel>(xmlIssueResponse.Content!);
             issue.IssueTypeId = issueType;
-            issue.RegistrarId = StateManager.StartedForUserId;
+            issue.RegistrarId = StateManager.GetOperator();
 
             using var scope = _scopeFactory.CreateScope();
             var unitofWork = scope.ServiceProvider.GetService<IUnitofWork>();
@@ -184,13 +155,11 @@ public class IssueProcessor : IIssueProcessor
 
             await unitofWork.CommitAsync(CancellationToken.None);
 
-            _logger.LogInformation("Issue ID {IssueId} was updated", issue.Id);
-            await _hubContext.Clients.All.ReceiveLog($"Issue ID {issue.Id} was updated");
+            await _logDispatcher.Log($"Issue ID {issue.Id} was updated");
         }
         else
         {
-            _logger.LogInformation("Couldn't retrieve an issue from EV server");
-            await _hubContext.Clients.All.ReceiveLog("Couldn't retrieve an issue from EV server");
+            await _logDispatcher.Log("Couldn't retrieve an issue from EV server");
         }
     }
 

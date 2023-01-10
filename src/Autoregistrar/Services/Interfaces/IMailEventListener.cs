@@ -1,4 +1,4 @@
-namespace Autoregistrar.Services;
+namespace Autoregistrar.Services.Interfaces;
 
 public interface IMailEventListener
 {

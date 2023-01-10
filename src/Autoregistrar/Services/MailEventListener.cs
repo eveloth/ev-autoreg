@@ -1,56 +1,47 @@
 using Autoregistrar.Apis;
-using Autoregistrar.Hubs;
+using Autoregistrar.Services.Interfaces;
 using Autoregistrar.Settings;
-using Microsoft.AspNetCore.SignalR;
+using Autoregistrar.State;
 using Microsoft.Exchange.WebServices.Data;
 using Task = System.Threading.Tasks.Task;
-using static Autoregistrar.Settings.StateManager;
 
 namespace Autoregistrar.Services;
 
 public class MailEventListener : IMailEventListener
 {
-    private readonly ILogger<MailEventListener> _logger;
-    private readonly IHubContext<AutoregistrarHub, IAutoregistrarClient> _hubContext;
     private readonly IIssueProcessor _issueProcessor;
-    private ExchangeService Exchange { get; set; } = null!;
-    private StreamingSubscriptionConnection? Connection { get; set; }
+    private readonly ILogDispatcher<MailEventListener> _logDispatcher;
+    private ExchangeService _exchange = null!;
+    private StreamingSubscriptionConnection? _connection;
 
     public MailEventListener(
-        ILogger<MailEventListener> logger,
-        IHubContext<AutoregistrarHub, IAutoregistrarClient> hubContext, IIssueProcessor issueProcessor)
+        IIssueProcessor issueProcessor,
+        ILogDispatcher<MailEventListener> logDispatcher
+    )
     {
-        _logger = logger;
-        _hubContext = hubContext;
         _issueProcessor = issueProcessor;
+        _logDispatcher = logDispatcher;
     }
 
     public async Task OpenConnection(CancellationToken cts)
     {
-        Exchange = ExchangeApi.CreateService();
-        var subscription = await ExchangeApi.CreateStreamingSubscription(Exchange);
-        Connection = new StreamingSubscriptionConnection(Exchange, 20);
+        _exchange = ExchangeApi.CreateService();
+        await CreateConnection();
 
-        Connection.OnNotificationEvent += OnNotificationEvent;
-        Connection.OnDisconnect += OnDisconnect;
-        Connection.OnSubscriptionError += OnSubscriptionError;
+        _connection!.Open();
 
-        Connection.AddSubscription(subscription);
-        Connection.Open();
-
-        if (Connection.IsOpen)
+        if (_connection!.IsOpen)
         {
-            _logger.LogInformation("A connection was opened for user ID {UserId}", StartedForUserId);
-            await _hubContext.Clients.All.ReceiveLog(
-                $"A connection was opened for user ID {StartedForUserId}"
+            await _logDispatcher.Log(
+                $"A connection was opened for user ID {StateManager.GetOperator()}"
             );
         }
     }
 
     public void CloseConnection()
     {
-        Connection!.Close();
-        Connection = null;
+        _connection?.Close();
+        _connection = null;
     }
 
     private async void OnNotificationEvent(object sender, NotificationEventArgs args)
@@ -58,66 +49,94 @@ public class MailEventListener : IMailEventListener
         foreach (var ev in args.Events)
         {
             var notification = (ItemEvent)ev;
-            var email = await EmailMessage.Bind(Exchange, notification.ItemId);
+            var email = await EmailMessage.Bind(_exchange, notification.ItemId);
 
-            if (!StateManager.Settings!.AutoregistrarSettings.NewIssueRegex.IsMatch(email.Subject))
+            if (!GlobalSettings.AutoregistrarSettings!.NewIssueRegex.IsMatch(email.Subject))
             {
-                _logger.LogInformation(
-                    "Received an email that is not a new issue notification, skipping"
-                );
-                await _hubContext.Clients.All.ReceiveLog(
-                    "Received an email that is not a new issue notification, skipping"
+                await _logDispatcher.Log(
+                    $"A connection was opened for user ID {StateManager.GetOperator()}"
                 );
                 continue;
             }
 
-            var issueNo = StateManager.Settings.AutoregistrarSettings.IssueNoRegex
+            var issueNo = GlobalSettings.AutoregistrarSettings.IssueNoRegex
                 .Match(email.Subject)
                 .Groups[1].Value;
-            _logger.LogInformation("Received new issue, ID {IssueNo}", issueNo);
-            await _hubContext.Clients.All.ReceiveLog($"Received new issue, ID {issueNo}");
 
-            await _issueProcessor.ProcessEvent(issueNo);
+            await _logDispatcher.Log($"Received new issue, ID {issueNo}");
+            try
+            {
+                await _issueProcessor.ProcessEvent(issueNo);
+            }
+            catch (Exception)
+            {
+                await _logDispatcher.Log("Processing an issue resulted in an error");
+            }
         }
     }
 
     private async void OnDisconnect(object sender, SubscriptionErrorEventArgs args)
     {
-        if (StateManager.Status != Status.Started)
+        if (!StateManager.IsStarted())
         {
-            _logger.LogInformation(
-                "The connection was gracefully closed for user ID {UserId}",
-                StartedForUserId
+            await _logDispatcher.Log(
+                $"The connection was gracefully closed for user ID {StateManager.GetOperator()}"
             );
-            await _hubContext.Clients.All.ReceiveLog(
-                $"The connection was gracefully closed for user ID {StartedForUserId}"
-            );
+
             return;
         }
 
-        _logger.LogInformation(
-            "The connection was automatically closed for user ID {UserId}, reopening connection",
-            StartedForUserId
-        );
-        await _hubContext.Clients.All.ReceiveLog(
-            $"The connection was automatically closed for user ID {StartedForUserId}, reopening connection"
+        await _logDispatcher.Log(
+            $"The connection was automatically closed for user ID {StateManager.GetOperator()}, reopening connection"
         );
 
-        Connection!.Open();
-
-        if (Connection.IsOpen)
-        {
-            _logger.LogInformation(
-                "A connection was opened for user ID {UserId}",
-                StartedForUserId
-            );
-            await _hubContext.Clients.All.ReceiveLog($"A connection was opened for user ID {StartedForUserId}");
-        }
+        _connection = null;
+        await CreateConnection();
+        await OpenConnectionWithRetry(TimeSpan.FromSeconds(3));
     }
 
     private async void OnSubscriptionError(object sender, SubscriptionErrorEventArgs args)
     {
-        _logger.LogError("A subscription error occured, details: {ErrorMessage}", args.Exception);
-        await _hubContext.Clients.All.ReceiveLog($"A subscription error occured, details: {args.Exception}");
+        await _logDispatcher.Log($"A subscription error occured, details: {args.Exception}");
+
+        _connection = null;
+
+        await CreateConnection();
+        await OpenConnectionWithRetry(TimeSpan.FromSeconds(3));
+    }
+
+    private async Task CreateConnection()
+    {
+        var subscription = await ExchangeApi.CreateStreamingSubscription(_exchange);
+        _connection = new StreamingSubscriptionConnection(_exchange, 20);
+
+        _connection.OnNotificationEvent += OnNotificationEvent;
+        _connection.OnDisconnect += OnDisconnect;
+        _connection.OnSubscriptionError += OnSubscriptionError;
+
+        _connection.AddSubscription(subscription);
+    }
+
+    private async Task OpenConnectionWithRetry(TimeSpan delaySec)
+    {
+        while (!_connection!.IsOpen)
+        {
+            try
+            {
+                _connection.Open();
+
+                if (_connection.IsOpen)
+                {
+                    await _logDispatcher.Log(
+                        $"A connection was opened for user ID {StateManager.GetOperator()}"
+                    );
+                }
+            }
+            catch (Exception)
+            {
+                await _logDispatcher.Log($"Counldn't restore a connection, trying again in {delaySec:%s}s...");
+                await Task.Delay(delaySec);
+            }
+        }
     }
 }

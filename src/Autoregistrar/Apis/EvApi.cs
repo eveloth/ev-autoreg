@@ -17,9 +17,11 @@ public class EvApi : IEvApi
     public async Task<EvResponse<XmlIssue?>> GetIssue(string issueNo)
     {
         var query =
-            $"https://{StateManager.Settings!.AutoregistrarSettings.ExtraViewUri}/"
-            + $"evj/ExtraView/ev_api.action?user_id={StateManager.Settings.ExtraViewCredentials.Email}"
-            + $"&password={StateManager.Settings.ExtraViewCredentials.Password}&statevar=get&id={issueNo}";
+            $"https://{GlobalSettings.AutoregistrarSettings.ExtraViewUri}/"
+            + $"evj/ExtraView/ev_api.action?user_id={GlobalSettings.ExtraViewCredentials.Email}"
+            + $"&password={GlobalSettings.ExtraViewCredentials.Password}&statevar=get&id={issueNo}";
+
+
 
         var response = await _client.GetAsync(query);
         var xmlIssueString = await response.Content.ReadAsStringAsync();
@@ -42,9 +44,9 @@ public class EvApi : IEvApi
     )
     {
         var query =
-            $"https://{StateManager.Settings!.AutoregistrarSettings.ExtraViewUri}/"
-            + $"evj/ExtraView/ev_api.action?user_id={StateManager.Settings.ExtraViewCredentials.Email}"
-            + $"&password={StateManager.Settings.ExtraViewCredentials.Password}&statevar=update&id={issueNo}";
+            $"https://{GlobalSettings.AutoregistrarSettings.ExtraViewUri}/"
+            + $"evj/ExtraView/ev_api.action?user_id={GlobalSettings.ExtraViewCredentials.Email}"
+            + $"&password={GlobalSettings.ExtraViewCredentials.Password}&statevar=update&id={issueNo}";
 
         foreach (var param in queryParameters)
         {

@@ -1,7 +1,7 @@
 using Autoregistrar.Domain;
 using DataAccessLibrary.Models;
 
-namespace Autoregistrar.Services;
+namespace Autoregistrar.Services.Interfaces;
 
 public interface ICredentialsDecryptor
 {
