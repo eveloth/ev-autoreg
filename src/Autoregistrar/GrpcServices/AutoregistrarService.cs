@@ -54,11 +54,12 @@ public class AutoregistrarService : Autoregistrar.AutoregistrarBase
                 serviceOperator,
                 context.CancellationToken
             );
-            var settingsAreNotNull = _settingsProvider.SettingsEntriesAreNotNull();
 
-            if (!areSettingsValid || !settingsAreNotNull)
+            if (!areSettingsValid)
             {
-                await _logDispatcher.Log("settings are inalid");
+                await _logDispatcher.Log("Can't start the autoregistrar, settings are invalid");
+
+                StateManager.SetStatus(Status.Stopped);
 
                 return new StatusResponse
                 {
@@ -75,7 +76,8 @@ public class AutoregistrarService : Autoregistrar.AutoregistrarBase
         catch (Exception e)
         {
             await _logDispatcher.Log(
-                "Couldn't start service; the reason might be external credentials are invalid or an internal service error"
+                "Couldn't start service; " +
+                "the reason might be external credentials are invalid or an internal service error occured"
             );
             StateManager.SetStatus(Status.Stopped);
             throw new RpcException(new Grpc.Core.Status(StatusCode.Internal, e.ToString()));

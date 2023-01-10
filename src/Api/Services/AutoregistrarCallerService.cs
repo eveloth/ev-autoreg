@@ -24,7 +24,7 @@ public class AutoregistrarCallerService : IAutoregistrarCallerService
     {
         var currentStatus = await GetServiceStatus(cts);
 
-        if (currentStatus.Status != Status.Stopped)
+        if (currentStatus.ServiceStatus != Status.Stopped)
         {
             Thrower.ThrowApiException(ErrorCode[11001]);
         }
@@ -39,7 +39,7 @@ public class AutoregistrarCallerService : IAutoregistrarCallerService
     {
         var currentStatus = await GetServiceStatus(cts);
 
-        if (currentStatus.Status != Status.Started)
+        if (currentStatus.ServiceStatus != Status.Started)
         {
             Thrower.ThrowApiException(ErrorCode[11002]);
         }
@@ -59,7 +59,7 @@ public class AutoregistrarCallerService : IAutoregistrarCallerService
     {
         var currentStatus = await GetServiceStatus(cts);
 
-        if (currentStatus.Status != Status.Started)
+        if (currentStatus.ServiceStatus != Status.Started)
         {
             Thrower.ThrowApiException(ErrorCode[11002]);
         }

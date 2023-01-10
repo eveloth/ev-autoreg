@@ -26,8 +26,10 @@ message Empty {
 }
 
 message StatusResponse {
-  Status status = 1;
-  optional int32 userId = 2;
+  ReqStatus requestStatus = 1;
+  Status serviceStatus = 2;
+  optional int32 userId = 3;
+  string description = 4;
 }
 
 enum Status {
@@ -35,4 +37,9 @@ enum Status {
   STARTED = 1;
   STOPPED = 2;
   PENDING = 3;
+}
+
+enum ReqStatus {
+  FAILED = 0;
+  SUCCESS = 1;
 }

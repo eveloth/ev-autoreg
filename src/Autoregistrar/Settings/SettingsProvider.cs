@@ -5,6 +5,7 @@ using DataAccessLibrary.Models;
 using DataAccessLibrary.Repository.Interfaces;
 using MapsterMapper;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration.EnvironmentVariables;
 
 namespace Autoregistrar.Settings;
 
@@ -146,14 +147,5 @@ public class SettingsProvider : ISettingsProvider
         }
 
         return true;
-    }
-
-    public bool SettingsEntriesAreNotNull()
-    {
-        return GlobalSettings.AutoregistrarSettings is not null
-            && GlobalSettings.ExchangeCredentials is not null
-            && GlobalSettings.ExtraViewCredentials is not null
-            && GlobalSettings.IssueFields is not null
-            && GlobalSettings.IssueTypes is not null;
     }
 }
