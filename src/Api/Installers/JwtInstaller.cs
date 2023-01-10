@@ -1,19 +1,13 @@
-﻿using System.Reflection;
-using System.Text;
+﻿using System.Text;
 using Api.Exceptions;
 using Api.Options;
-using Api.Swagger.Examples.Requests;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
-using Swashbuckle.AspNetCore.Filters;
 
-namespace Api.Extensions;
+namespace Api.Installers;
 
-public static class WebApplicationBuilderExtensions
+public static class JwtInstaller
 {
-
-
     public static WebApplicationBuilder AddJwtAuthentication(this WebApplicationBuilder builder)
     {
         var jwt = new JwtOptions();
@@ -30,9 +24,9 @@ public static class WebApplicationBuilderExtensions
             IssuerSigningKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(
                     builder.Configuration["Jwt:Key"]
-                    ?? throw new NullConfigurationEntryException(
-                        "Could not read configuration for JWT"
-                    )
+                        ?? throw new NullConfigurationEntryException(
+                            "Could not read configuration for JWT"
+                        )
                 )
             ),
             ValidateIssuer = true,
@@ -55,24 +49,6 @@ public static class WebApplicationBuilderExtensions
             {
                 t.TokenValidationParameters = tokenValidationParameters;
             });
-
-        return builder;
-    }
-
-    public static WebApplicationBuilder AddPolicyBasedAuthorization(this WebApplicationBuilder builder)
-    {
-        builder.Services.AddAuthorization(options =>
-        {
-            var userPermissions = Permissions.GetPermissions();
-
-            foreach (var permission in userPermissions)
-            {
-                options.AddPolicy(
-                    $"{permission.PermissionName}",
-                    policy => policy.RequireClaim("Permission", $"{permission.PermissionName}")
-                );
-            }
-        });
 
         return builder;
     }
