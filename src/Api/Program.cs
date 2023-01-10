@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Api.Exceptions;
 using Api.Extensions;
 using Api.Middleware;
@@ -27,12 +28,18 @@ internal static class Program
         builder.AddRedisCache();
         builder.Services.AddScoped<ITokenDb, TokenDb>();
 
-        builder.Services.AddControllers(options =>
-        {
-            options.Conventions.Add(
-                new RouteTokenTransformerConvention(new ToSlugCaseTransformerConvention())
-            );
-        });
+        builder.Services
+            .AddControllers(options =>
+            {
+                options.Conventions.Add(
+                    new RouteTokenTransformerConvention(new ToSlugCaseTransformerConvention())
+                );
+            })
+            .AddJsonOptions(options =>
+            {
+                var enumToStringConverter = new JsonStringEnumConverter();
+                options.JsonSerializerOptions.Converters.Add(enumToStringConverter);
+            });
 
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
@@ -44,7 +51,7 @@ internal static class Program
         {
             options.Address = new Uri(
                 builder.Configuration["AutoregistrarUri"]
-                ?? throw new NullConfigurationEntryException("Autoregistrar URI wasn't set")
+                    ?? throw new NullConfigurationEntryException("Autoregistrar URI wasn't set")
             );
         });
 

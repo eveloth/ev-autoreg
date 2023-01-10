@@ -47,7 +47,8 @@ public static class SwaggerInstaller
             options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlCommentsFileName));
 
             options.ExampleFilters();
-            options.OperationFilter<SecurityRequirementsOperationFilter>();
+            options.SupportNonNullableReferenceTypes();
+            options.OperationFilter<AppendAuthorizeToSummaryOperationFilter>();
         });
 
         builder.Services.AddSwaggerExamplesFromAssemblyOf<CredentialsRequestExample>();
