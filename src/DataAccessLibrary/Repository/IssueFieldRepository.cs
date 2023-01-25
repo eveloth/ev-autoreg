@@ -46,6 +46,15 @@ public class IssueFieldRepository : IIssueFieldRepository
         await _db.SaveData(sql, parameters, cts);
     }
 
+    public async Task Delete(int issueFieldId, CancellationToken cts)
+    {
+        const string sql = "DELETE FROM issue_field WHERE id = @IssueFieldId";
+
+        var parameters = new DynamicParameters(new { IssueFieldId = issueFieldId });
+
+        await _db.SaveData(sql, parameters, cts);
+    }
+
     public async Task<bool> DoesExist(int issueFieldId, CancellationToken cts)
     {
         const string sql = @"SELECT EXISTS (SELECT true FROM issue_field WHERE id = @IssueFieldId)";

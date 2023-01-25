@@ -1,4 +1,4 @@
-﻿using Api.Services;
+﻿using Api.Seeding;
 using FluentMigrator.Runner;
 
 namespace Api.Extensions;

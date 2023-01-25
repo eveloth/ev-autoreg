@@ -1,4 +1,5 @@
-﻿using Api.Services;
+﻿using Api.Seeding;
+using Api.Services;
 using Api.Services.Interfaces;
 
 namespace Api.Installers;

@@ -1,4 +1,6 @@
-﻿namespace Api.Installers;
+﻿using Api.Seeding;
+
+namespace Api.Installers;
 
 public static class AuthorizationInstaller
 {

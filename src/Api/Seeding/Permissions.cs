@@ -1,10 +1,11 @@
-﻿using DataAccessLibrary.Models;
+﻿using Api.Domain;
+using DataAccessLibrary.Models;
 
-namespace Api;
+namespace Api.Seeding;
 
-public static class Permissions
+public class Permissions
 {
-    private static readonly List<PermissionModel> PermissionList = new List<PermissionModel>()
+    private static readonly List<PermissionModel> PermissionList = new()
     {
         new()
         {
@@ -19,10 +20,8 @@ public static class Permissions
         new() { PermissionName = "CreateRoles", Description = "Can create new roles" },
         new() { PermissionName = "ReadRoles", Description = "Can view all roles" },
         new() { PermissionName = "UpdateRoles", Description = "Can update roles" },
-        new() { PermissionName = "DeleteRoles", Description = "Can delet roles" },
-        new() { PermissionName = "CreatePermissions", Description = "Can create permissions" },
+        new() { PermissionName = "DeleteRoles", Description = "Can delete roles" },
         new() { PermissionName = "ReadPermissions", Description = "Can view all permissions" },
-        new() { PermissionName = "DeletePermissions", Description = "Can delete permissions" },
         new() { PermissionName = "UseRegistrar", Description = "Can use registrar service" },
         new()
         {

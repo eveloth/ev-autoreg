@@ -1,3 +1,5 @@
+using System.Linq.Expressions;
+
 namespace Extensions;
 
 public static class EnumerableExtensions
@@ -10,5 +12,14 @@ public static class EnumerableExtensions
         var groups = source.GroupBy(keySelector);
 
         return groups.Select(x => x.Select(y => y).ToList());
+    }
+
+    public static IEnumerable<TSource> DiffBy<TSource, TResult>(
+        this IEnumerable<TSource> source,
+        IEnumerable<TSource> compareTo,
+        Func<TSource, TResult> selector
+    )
+    {
+        return source.ExceptBy(compareTo.Select(selector), selector);
     }
 }
