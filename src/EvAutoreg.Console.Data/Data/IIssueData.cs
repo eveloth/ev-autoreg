@@ -1,6 +1,6 @@
-﻿using Data.Models;
+﻿using EvAutoreg.Console.Data.Models;
 
-namespace Data.Data;
+namespace EvAutoreg.Console.Data.Data;
 
 public interface IIssueData
 {

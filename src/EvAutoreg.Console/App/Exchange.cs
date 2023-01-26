@@ -1,11 +1,11 @@
 ﻿using System.Text.RegularExpressions;
-using EVAutoregConsole.Interfaces;
+using EvAutoreg.Console.Interfaces;
 using Microsoft.Exchange.WebServices.Data;
 using Microsoft.Extensions.Configuration;
-using static EVAutoregConsole.Auxiliary.PrettyPrinter;
+using static EvAutoreg.Console.Auxiliary.PrettyPrinter;
 using Task = System.Threading.Tasks.Task;
 
-namespace EVAutoregConsole.App;
+namespace EvAutoreg.Console.App;
 
 public class Exchange
 {
@@ -41,12 +41,12 @@ public class Exchange
 
             if (!Regex.IsMatch(email.Subject, _rules.RegexNewIssue))
             {
-                Console.WriteLine("Received an email that we won't process.");
+                System.Console.WriteLine("Received an email that we won't process.");
                 continue;
             }
 
             PrintNotification($"\n{DateTime.Now}\n------New Mail:------", ConsoleColor.Blue);
-            Console.WriteLine(email.Subject);
+            System.Console.WriteLine(email.Subject);
             await _listener.ProcessEvent(email);
         }
     }

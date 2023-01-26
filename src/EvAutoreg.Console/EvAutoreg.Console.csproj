@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Data\Data.csproj" />
+    <ProjectReference Include="..\EvAutoreg.Console.Data\EvAutoreg.Console.Data.csproj" />
   </ItemGroup>
 
 </Project>

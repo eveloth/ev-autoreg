@@ -3,7 +3,7 @@ using Dapper;
 using Microsoft.Extensions.Configuration;
 using Npgsql;
 
-namespace Data.SqlDataAccess;
+namespace EvAutoreg.Console.Data.SqlDataAccess;
 
 public class SqlDataAccess : ISqlDataAccess
 {

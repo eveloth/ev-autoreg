@@ -1,11 +1,11 @@
 using System.Net;
-using Data.Models;
-using EVAutoregConsole.Auxiliary;
-using EVAutoregConsole.Interfaces;
+using EvAutoreg.Console.Auxiliary;
+using EvAutoreg.Console.Data.Models;
+using EvAutoreg.Console.Interfaces;
 using Microsoft.Extensions.Configuration;
-using static EVAutoregConsole.Auxiliary.PrettyPrinter;
+using static EvAutoreg.Console.Auxiliary.PrettyPrinter;
 
-namespace EVAutoregConsole.App;
+namespace EvAutoreg.Console.App;
 
 public class EVApiWrapper : IEVApiWrapper
 {
@@ -46,7 +46,7 @@ public class EVApiWrapper : IEVApiWrapper
         }
 
         PrintNotification("Failed retrieveing an issue. Reason: ", ConsoleColor.Red);
-        Console.WriteLine(xmlIssueString);
+        System.Console.WriteLine(xmlIssueString);
         return null;
     }
 
@@ -75,7 +75,7 @@ public class EVApiWrapper : IEVApiWrapper
         else
         {
             PrintNotification("Failed updating an issue. Reason: ", ConsoleColor.Red);
-            Console.WriteLine(content);
+            System.Console.WriteLine(content);
 
             return HttpStatusCode.BadRequest;
         }

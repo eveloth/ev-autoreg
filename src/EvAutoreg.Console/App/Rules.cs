@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 
-namespace EVAutoregConsole.App;
+namespace EvAutoreg.Console.App;
 
 public class Rules
 {

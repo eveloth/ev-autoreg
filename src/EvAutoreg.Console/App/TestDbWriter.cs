@@ -1,13 +1,13 @@
 ﻿using System.Text.RegularExpressions;
-using Data.Data;
-using Data.Extensions;
-using EVAutoregConsole.Auxiliary;
-using EVAutoregConsole.Interfaces;
+using EvAutoreg.Console.Auxiliary;
+using EvAutoreg.Console.Data.Data;
+using EvAutoreg.Console.Data.Extensions;
+using EvAutoreg.Console.Interfaces;
 using Microsoft.Exchange.WebServices.Data;
 using Microsoft.Extensions.Configuration;
 using Task = System.Threading.Tasks.Task;
 
-namespace EVAutoregConsole.App;
+namespace EvAutoreg.Console.App;
 
 public class TestDbWriter : IMailEventListener
 {

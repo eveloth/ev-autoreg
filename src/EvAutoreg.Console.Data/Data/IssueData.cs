@@ -1,9 +1,9 @@
 ﻿using Dapper;
-using Data.Extensions;
-using Data.Models;
-using Data.SqlDataAccess;
+using EvAutoreg.Console.Data.Extensions;
+using EvAutoreg.Console.Data.Models;
+using EvAutoreg.Console.Data.SqlDataAccess;
 
-namespace Data.Data;
+namespace EvAutoreg.Console.Data.Data;
 
 public class IssueData : IIssueData
 {
@@ -16,14 +16,14 @@ public class IssueData : IIssueData
 
     public void PrintIssue(XmlIssueModel xmlIssue)
     {
-        Console.WriteLine(
+        System.Console.WriteLine(
             $"{xmlIssue.DateCreated}\n{xmlIssue.IssueNo}\n{xmlIssue.Author}\n{xmlIssue.Company}\n{xmlIssue.Status}\n{xmlIssue.Priority}\n{xmlIssue.Description}"
         );
 
         var issue = xmlIssue.ConvertToSqlModel();
 
-        Console.ForegroundColor = ConsoleColor.DarkRed;
-        Console.WriteLine($"New datetime: {issue.DateCreated}");
+        System.Console.ForegroundColor = ConsoleColor.DarkRed;
+        System.Console.WriteLine($"New datetime: {issue.DateCreated}");
     }
 
     public async Task<IEnumerable<IssueModel>> GetAllIssues() =>

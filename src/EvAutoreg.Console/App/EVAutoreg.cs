@@ -1,12 +1,12 @@
-﻿using Data.Data;
-using Data.SqlDataAccess;
-using EVAutoregConsole.Interfaces;
+﻿using EvAutoreg.Console.Data.Data;
+using EvAutoreg.Console.Data.SqlDataAccess;
+using EvAutoreg.Console.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Task = System.Threading.Tasks.Task;
-using static EVAutoregConsole.Auxiliary.PrettyPrinter;
+using static EvAutoreg.Console.Auxiliary.PrettyPrinter;
 
-namespace EVAutoregConsole.App;
+namespace EvAutoreg.Console.App;
 
 internal static class EVAutoreg
 {
@@ -30,11 +30,11 @@ internal static class EVAutoreg
 
         var exchange = host.Services.GetRequiredService<Exchange>();
 
-        Console.WriteLine("Welcome to EV Autoregistrator!");
+        System.Console.WriteLine("Welcome to EV Autoregistrator!");
 
         await exchange.StartService();
 
-        Console.CancelKeyPress += (sender, eArgs) =>
+        System.Console.CancelKeyPress += (sender, eArgs) =>
         {
             QuitEvent.Set();
             eArgs.Cancel = true;

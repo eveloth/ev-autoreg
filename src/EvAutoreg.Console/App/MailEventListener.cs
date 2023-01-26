@@ -1,16 +1,16 @@
 using System.Net;
 using System.Text.RegularExpressions;
-using Data.Data;
-using Data.Extensions;
-using EVAutoregConsole.Interfaces;
+using EvAutoreg.Console.Data.Data;
+using EvAutoreg.Console.Data.Extensions;
+using EvAutoreg.Console.Interfaces;
 using Microsoft.Exchange.WebServices.Data;
 using Microsoft.Extensions.Configuration;
-using static EVAutoregConsole.Auxiliary.PrettyPrinter;
+using static EvAutoreg.Console.Auxiliary.PrettyPrinter;
 using Task = System.Threading.Tasks.Task;
 
 // ReSharper disable InconsistentNaming
 
-namespace EVAutoregConsole.App;
+namespace EvAutoreg.Console.App;
 
 public class MailEventListener : IMailEventListener
 {
@@ -99,9 +99,9 @@ public class MailEventListener : IMailEventListener
     private async Task RegisterAsSpam(string issueNo)
     {
         PrintNotification("Received SPAM issue, processing...", ConsoleColor.Blue);
-        Console.Write("Issue No. to process: ");
+        System.Console.Write("Issue No. to process: ");
         PrintNotification(issueNo, ConsoleColor.Magenta);
-        Console.WriteLine();
+        System.Console.WriteLine();
 
         var xmlIssue = await _evapi.GetIssue(issueNo);
         var issue = xmlIssue!.ConvertToSqlModel();
@@ -137,9 +137,9 @@ public class MailEventListener : IMailEventListener
     private async Task RegisterAsMonitoring(string issueNo)
     {
         PrintNotification("Received monitoring issue, processing...", ConsoleColor.Blue);
-        Console.Write("Issue No. to process: ");
+        System.Console.Write("Issue No. to process: ");
         PrintNotification(issueNo, ConsoleColor.Magenta);
-        Console.WriteLine();
+        System.Console.WriteLine();
 
         var registeringParameters = _config
             .GetSection("QueryParameters:QueryRegisterParameters")
@@ -186,9 +186,9 @@ public class MailEventListener : IMailEventListener
     private async Task RegisterAsExternalIT(string issueNo)
     {
         PrintNotification("Received External IT issue, processing...", ConsoleColor.Blue);
-        Console.Write("Issue No. to process: ");
+        System.Console.Write("Issue No. to process: ");
         PrintNotification(issueNo, ConsoleColor.Magenta);
-        Console.WriteLine();
+        System.Console.WriteLine();
 
         var registeringParameters = _config
             .GetSection("QueryParameters:QueryExternalITParameters")

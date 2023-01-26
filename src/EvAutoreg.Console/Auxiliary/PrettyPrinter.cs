@@ -1,14 +1,14 @@
 using Microsoft.Exchange.WebServices.Data;
 
-namespace EVAutoregConsole.Auxiliary;
+namespace EvAutoreg.Console.Auxiliary;
 
 public static class PrettyPrinter
 {
     public static void PrintNotification(string str, ConsoleColor color = ConsoleColor.Gray)
     {
-        Console.ForegroundColor = color;
-        Console.WriteLine(str);
-        Console.ResetColor();
+        System.Console.ForegroundColor = color;
+        System.Console.WriteLine(str);
+        System.Console.ResetColor();
     }
 
     public static void PrintConnectionStatus(StreamingSubscriptionConnection connection)
@@ -22,7 +22,7 @@ public static class PrettyPrinter
 
             foreach (var sub in connection.CurrentSubscriptions)
             {
-                Console.WriteLine(
+                System.Console.WriteLine(
                     $"Subscription debugging info:\nID: {sub.Id}\nService: {sub.Service.Url}\n"
                 );
             }

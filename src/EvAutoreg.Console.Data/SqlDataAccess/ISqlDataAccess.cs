@@ -1,4 +1,4 @@
-﻿namespace Data.SqlDataAccess;
+﻿namespace EvAutoreg.Console.Data.SqlDataAccess;
 
 public interface ISqlDataAccess
 {

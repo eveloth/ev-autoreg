@@ -1,6 +1,6 @@
-﻿using Data.Models;
+﻿using EvAutoreg.Console.Data.Models;
 
-namespace Data.Extensions;
+namespace EvAutoreg.Console.Data.Extensions;
 
 public static class IssueExtensions
 {
