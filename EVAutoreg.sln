@@ -9,13 +9,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{CE6DDC26-AD1
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EvAutoreg.Console.Data", "src\EvAutoreg.Console.Data\EvAutoreg.Console.Data.csproj", "{46A13B7B-1336-4BA4-A857-57F65DB92FAF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataAccessLibrary", "src\DataAccessLibrary\DataAccessLibrary.csproj", "{BDC91302-D8A3-4EA6-AFA0-653A17299F71}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EvAutoreg.Data", "src\EvAutoreg.Data\EvAutoreg.Data.csproj", "{BDC91302-D8A3-4EA6-AFA0-653A17299F71}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Api", "src\Api\Api.csproj", "{C103E63A-0173-4728-A832-8E50F9A9E49D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EvAutoreg.Api", "src\EvAutoreg.Api\EvAutoreg.Api.csproj", "{C103E63A-0173-4728-A832-8E50F9A9E49D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Extensions", "src\Extensions\Extensions.csproj", "{C782A7D7-25A5-40D4-A548-39039C53712D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EvAutoreg.Extensions", "src\EvAutoreg.Extensions\EvAutoreg.Extensions.csproj", "{C782A7D7-25A5-40D4-A548-39039C53712D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Autoregistrar", "src\Autoregistrar\Autoregistrar.csproj", "{A5BD2BF4-50FC-483F-A3CE-70DFE7E2D801}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EvAutoreg.Autoregistrar", "src\EvAutoreg.Autoregistrar\EvAutoreg.Autoregistrar.csproj", "{A5BD2BF4-50FC-483F-A3CE-70DFE7E2D801}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+option csharp_namespace = "EvAutoreg.Api";
+
+package autoregistrar;
+
+service Autoregistrar {
+  rpc StartService (StartRequest) returns (StatusResponse);
+  rpc StopService (StopRequest) returns (StatusResponse);
+  rpc ForceStopService (ForceStopRequest) returns (StatusResponse);
+  rpc RequestStatus (Empty) returns (StatusResponse);
+}
+
+message StartRequest {
+  int32 userId = 1;
+}
+
+message StopRequest {
+  int32 userId = 1;
+}
+
+message ForceStopRequest {
+}
+
+message Empty {
+}
+
+message StatusResponse {
+  ReqStatus requestStatus = 1;
+  Status serviceStatus = 2;
+  optional int32 userId = 3;
+  string description = 4;
+}
+
+enum Status {
+  UNKNOWN = 0;
+  STARTED = 1;
+  STOPPED = 2;
+  PENDING = 3;
+}
+
+enum ReqStatus {
+  FAILED = 0;
+  SUCCESS = 1;
+}
