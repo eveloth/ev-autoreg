@@ -47,9 +47,7 @@ public class RolePermissionService : IRolePermissionService
 
         if (role is null)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[2004]);
-            throw e;
+            throw new ApiException().WithApiError(ErrorCode[2004]);
         }
 
         var rolePermissions = await _unitofWork.RolePermissionRepository.Get(id, cts);
@@ -70,9 +68,7 @@ public class RolePermissionService : IRolePermissionService
 
         if (role is null)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[2004]);
-            throw e;
+            throw new ApiException().WithApiError(ErrorCode[2004]);
         }
 
         var doesPermissionExist = await _unitofWork.PermissionRepository.DoesExist(
@@ -82,9 +78,7 @@ public class RolePermissionService : IRolePermissionService
 
         if (!doesPermissionExist)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[3004]);
-            throw e;
+            throw new ApiException().WithApiError(ErrorCode[3004]);
         }
 
         var doesCorrelationExist =
@@ -92,9 +86,7 @@ public class RolePermissionService : IRolePermissionService
 
         if (doesCorrelationExist)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[4001]);
-            throw e;
+            throw new ApiException().WithApiError(ErrorCode[4001]);
         }
 
         var createdCorrelation = await _unitofWork.RolePermissionRepository.AddPermissionToRole(
@@ -118,9 +110,7 @@ public class RolePermissionService : IRolePermissionService
 
         if (role is null)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[2004]);
-            throw e;
+            throw new ApiException().WithApiError(ErrorCode[2004]);
         }
 
         var doesCorrelationExist =
@@ -128,9 +118,7 @@ public class RolePermissionService : IRolePermissionService
 
         if (!doesCorrelationExist)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[4004]);
-            throw e;
+            throw new ApiException().WithApiError(ErrorCode[4004]);
         }
 
         var deletedCorrelation = await _unitofWork.RolePermissionRepository.RemovePermissionFromRole(

@@ -26,7 +26,7 @@ public class AutoregistrarCallerService : IAutoregistrarCallerService
 
         if (currentStatus.ServiceStatus != Status.Stopped)
         {
-            Thrower.ThrowApiException(ErrorCode[11001]);
+            throw new ApiException().WithApiError(ErrorCode[11001]);
         }
 
         var request = new StartRequest { UserId = userId };
@@ -41,12 +41,12 @@ public class AutoregistrarCallerService : IAutoregistrarCallerService
 
         if (currentStatus.ServiceStatus != Status.Started)
         {
-            Thrower.ThrowApiException(ErrorCode[11002]);
+            throw new ApiException().WithApiError(ErrorCode[11002]);
         }
 
         if (currentStatus.UserId != userId)
         {
-            Thrower.ThrowApiException(ErrorCode[11003]);
+            throw new ApiException().WithApiError(ErrorCode[11003]);
         }
 
         var request = new StopRequest { UserId = userId };
@@ -61,7 +61,7 @@ public class AutoregistrarCallerService : IAutoregistrarCallerService
 
         if (currentStatus.ServiceStatus != Status.Started)
         {
-            Thrower.ThrowApiException(ErrorCode[11002]);
+            throw new ApiException().WithApiError(ErrorCode[11002]);
         }
 
         var request = new ForceStopRequest();

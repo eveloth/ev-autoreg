@@ -48,7 +48,7 @@ public class QueryParametersService : IQueryParametersService
 
         if (issueType is null)
         {
-            Thrower.ThrowApiException(ErrorCode[7004]);
+            throw new ApiException().WithApiError(ErrorCode[7004]);
         }
 
         var queryParameters = await _unitofWork.QueryParametersRepository.Get(issueTypeId, cts);
@@ -56,7 +56,7 @@ public class QueryParametersService : IQueryParametersService
 
         if (queryParameters is null)
         {
-            Thrower.ThrowApiException(ErrorCode[10004]);
+            throw new ApiException().WithApiError(ErrorCode[10004]);
         }
 
         var result = await _mappingHelper.JoinIssueType(queryParameters!, cts);
@@ -69,7 +69,7 @@ public class QueryParametersService : IQueryParametersService
 
         if (issueType is null)
         {
-            Thrower.ThrowApiException(ErrorCode[7004]);
+            throw new ApiException().WithApiError(ErrorCode[7004]);
         }
 
         var queryParametersModel = _mapper.Map<QueryParametersModel>(parameters);

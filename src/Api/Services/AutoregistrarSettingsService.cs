@@ -26,9 +26,7 @@ public class AutoregistrarSettingsService : IAutoregistrarSettingsService
 
         if (settings is null)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[9004]);
-            throw e;
+            throw new ApiException().WithApiError(ErrorCode[9004]);
         }
 
         var result = _mapper.Map<AutoregistrarSettings>(settings);

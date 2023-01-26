@@ -39,9 +39,7 @@ public class IssueService : IIssueService
 
         if (existingIssue is null)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[5004]);
-            throw e;
+            throw new ApiException().WithApiError(ErrorCode[5004]);
         }
 
         var result = await _mappingHelper.JoinIssueTypeAndUser(existingIssue, cts);

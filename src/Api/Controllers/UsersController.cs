@@ -3,7 +3,6 @@ using Api.Contracts;
 using Api.Contracts.Dto;
 using Api.Contracts.Requests;
 using Api.Contracts.Responses;
-using Api.Domain;
 using Api.Exceptions;
 using Api.Extensions;
 using Api.Services.Interfaces;
@@ -129,7 +128,7 @@ public class UsersController : ControllerBase
 
         if (userId == id)
         {
-            Thrower.ThrowApiException(ErrorCode[1013]);
+            throw new ApiException().WithApiError(ErrorCode[1013]);
         }
 
         var updatedUser = await _userService.Block(id, cts);
@@ -159,7 +158,7 @@ public class UsersController : ControllerBase
 
         if (userId == id)
         {
-            Thrower.ThrowApiException(ErrorCode[1013]);
+            throw new ApiException().WithApiError(ErrorCode[1013]);
         }
 
         var updatedUser = await _userService.Unblock(id, cts);
@@ -189,7 +188,7 @@ public class UsersController : ControllerBase
 
         if (userId == id)
         {
-            Thrower.ThrowApiException(ErrorCode[1013]);
+            throw new ApiException().WithApiError(ErrorCode[1013]);
         }
 
         var updatedUser = await _userService.Delete(id, cts);
@@ -219,7 +218,7 @@ public class UsersController : ControllerBase
 
         if (userId == id)
         {
-            Thrower.ThrowApiException(ErrorCode[1013]);
+            throw new ApiException().WithApiError(ErrorCode[1013]);
         }
 
         var updatedUser = await _userService.Restore(id, cts);

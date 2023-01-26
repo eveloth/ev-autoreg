@@ -42,9 +42,7 @@ public class RoleService : IRoleService
 
         if (role is null)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[2004]);
-            throw e;
+            throw new ApiException().WithApiError(ErrorCode[2004]);
         }
 
         var result = _mapper.Map<Role>(role);
@@ -57,9 +55,7 @@ public class RoleService : IRoleService
 
         if (isRoleNameTaken)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[2001]);
-            throw e;
+            throw new ApiException().WithApiError(ErrorCode[2001]);
         }
 
         var roleModel = _mapper.Map<RoleModel>(role);
@@ -75,18 +71,14 @@ public class RoleService : IRoleService
 
         if (existingRole is null)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[2004]);
-            throw e;
+            throw new ApiException().WithApiError(ErrorCode[2004]);
         }
 
         var isRoleNameTaken = await _unitofWork.RoleRepository.DoesExist(role.RoleName, cts);
 
         if (isRoleNameTaken)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[2001]);
-            throw e;
+            throw new ApiException().WithApiError(ErrorCode[2001]);
         }
 
         var roleModel = _mapper.Map<RoleModel>(role);
@@ -102,9 +94,7 @@ public class RoleService : IRoleService
 
         if (existingRole is null)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[2004]);
-            throw e;
+            throw new ApiException().WithApiError(ErrorCode[2004]);
         }
 
         var deletedRole = await _unitofWork.RoleRepository.Delete(id, cts);

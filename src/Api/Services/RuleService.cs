@@ -46,9 +46,7 @@ public class RuleService : IRuleService
 
         if (rule is null)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[6004]);
-            throw e;
+            throw new ApiException().WithApiError(ErrorCode[6004]);
         }
 
         var result = await _mappingHelper.JoinIssueTypeAndField(rule, cts);
@@ -61,18 +59,14 @@ public class RuleService : IRuleService
 
         if (existingRule is null)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[6004]);
-            throw e;
+            throw new ApiException().WithApiError(ErrorCode[6004]);
         }
 
         var existingIssueType = await _unitofWork.IssueTypeRepository.Get(rule.IssueType.Id, cts);
 
         if (existingIssueType is null)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[7004]);
-            throw e;
+            throw new ApiException().WithApiError(ErrorCode[7004]);
         }
 
         var existingIssueField = await _unitofWork.IssueFieldRepository.Get(
@@ -82,9 +76,7 @@ public class RuleService : IRuleService
 
         if (existingIssueField is null)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[8004]);
-            throw e;
+            throw new ApiException().WithApiError(ErrorCode[8004]);
         }
 
         var ruleModel = _mapper.Map<RuleModel>(rule);
@@ -101,18 +93,14 @@ public class RuleService : IRuleService
 
         if (existingRule is null)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[6004]);
-            throw e;
+            throw new ApiException().WithApiError(ErrorCode[6004]);
         }
 
         var existingIssueType = await _unitofWork.IssueTypeRepository.Get(rule.IssueType.Id, cts);
 
         if (existingIssueType is null)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[7004]);
-            throw e;
+            throw new ApiException().WithApiError(ErrorCode[7004]);
         }
 
         var existingIssueField = await _unitofWork.IssueFieldRepository.Get(
@@ -122,9 +110,7 @@ public class RuleService : IRuleService
 
         if (existingIssueField is null)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[8004]);
-            throw e;
+            throw new ApiException().WithApiError(ErrorCode[8004]);
         }
 
         var ruleModel = _mapper.Map<RuleModel>(rule);
@@ -141,9 +127,7 @@ public class RuleService : IRuleService
 
         if (existingRule is null)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[6004]);
-            throw e;
+            throw new ApiException().WithApiError(ErrorCode[6004]);
         }
 
         var deletedRule = await _unitofWork.RuleRepository.Delete(ruleId, userId, cts);

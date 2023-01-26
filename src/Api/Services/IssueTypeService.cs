@@ -38,9 +38,7 @@ public class IssueTypeService : IIssueTypeService
 
         if (issueType is null)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[7004]);
-            throw e;
+            throw new ApiException().WithApiError(ErrorCode[7004]);
         }
 
         var result = _mapper.Map<IssueType>(issueType);
@@ -53,9 +51,7 @@ public class IssueTypeService : IIssueTypeService
 
         if (issueTypeNameTaken)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[7001]);
-            throw e;
+            throw new ApiException().WithApiError(ErrorCode[7001]);
         }
 
         var issueTypeModel = _mapper.Map<IssueTypeModel>(type);
@@ -71,9 +67,7 @@ public class IssueTypeService : IIssueTypeService
 
         if (issueTypeNameTaken)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[7001]);
-            throw e;
+            throw new ApiException().WithApiError(ErrorCode[7001]);
         }
 
         var issueTypeModel = _mapper.Map<IssueTypeModel>(type);
@@ -89,9 +83,7 @@ public class IssueTypeService : IIssueTypeService
 
         if (issueType is null)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[7004]);
-            throw e;
+            throw new ApiException().WithApiError(ErrorCode[7004]);
         }
 
         var deletedIssueType = await _unitofWork.IssueTypeRepository.Delete(id, cts);

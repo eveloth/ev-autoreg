@@ -55,16 +55,12 @@ public class AuthenticationService : IAuthenticationService
 
         if (existingUser is not null)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[1001]);
-            throw e;
+            throw new ApiException().WithApiError(ErrorCode[1001]);
         }
 
         if (password == email)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[1002]);
-            throw e;
+            throw new ApiException().WithApiError(ErrorCode[1002]);
         }
 
         var passwordHash = _passwordHasher.HashPassword(password);
@@ -83,16 +79,12 @@ public class AuthenticationService : IAuthenticationService
 
         if (existingUser is null)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[1004]);
-            throw e;
+            throw new ApiException().WithApiError(ErrorCode[1004]);
         }
 
         if (existingUser.IsBlocked)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[1003]);
-            throw e;
+            throw new ApiException().WithApiError(ErrorCode[1003]);
         }
 
         if (
@@ -100,9 +92,7 @@ public class AuthenticationService : IAuthenticationService
             != PasswordVerificationResult.Success
         )
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[1005]);
-            throw e;
+            throw new ApiException().WithApiError(ErrorCode[1005]);
         }
 
         var user = await _mappingHelper.JoinUserRole(existingUser, cts);
@@ -115,20 +105,20 @@ public class AuthenticationService : IAuthenticationService
 
         if (validatedToken is null)
         {
-            Thrower.ThrowApiException(ErrorCode[1006]);
+            throw new ApiException().WithApiError(ErrorCode[1006]);
         }
 
         var storedToken = await ChallengeToken(validatedToken!, token.RefreshToken);
 
         if (storedToken is null)
         {
-            Thrower.ThrowApiException(ErrorCode[1006]);
+            throw new ApiException().WithApiError(ErrorCode[1006]);
         }
 
         storedToken!.TokenInfo.Used = true;
 
         var userId = int.Parse(
-            validatedToken!.Claims.Single(x => x.Type == ClaimTypes.NameIdentifier).Value
+            validatedToken.Claims.Single(x => x.Type == ClaimTypes.NameIdentifier).Value
         );
         var userModel = await _unitofWork.UserRepository.GetById(userId, cts);
         var user = await _mappingHelper.JoinUserRole(userModel!, cts);
