@@ -6,14 +6,12 @@ public static class SerilogInstaller
 {
     public static WebApplicationBuilder InstallSerilog(this WebApplicationBuilder builder)
     {
-        var logger = new LoggerConfiguration().ReadFrom
+        Log.Logger = new LoggerConfiguration().ReadFrom
             .Configuration(builder.Configuration)
             .Enrich.FromLogContext()
+            .Enrich.WithMachineName()
             .CreateLogger();
-
-        builder.Logging.ClearProviders();
-        builder.Logging.AddSerilog(logger);
-
+        builder.Host.UseSerilog();
         return builder;
     }
 }

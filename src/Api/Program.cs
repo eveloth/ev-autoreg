@@ -11,6 +11,7 @@ using Api.Validators;
 using FluentValidation;
 using MapsterMapper;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
+using Serilog;
 
 namespace Api;
 
@@ -76,6 +77,8 @@ internal static class Program
 
         //app.RunMigrations();
         await app.SeedData();
+
+        app.UseSerilogRequestLogging();
 
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
