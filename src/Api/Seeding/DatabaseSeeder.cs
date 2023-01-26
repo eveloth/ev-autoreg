@@ -2,6 +2,7 @@
 using DataAccessLibrary.Filters;
 using DataAccessLibrary.Models;
 using DataAccessLibrary.Repository.Interfaces;
+using Extensions;
 using Npgsql;
 
 namespace Api.Seeding;
@@ -94,9 +95,9 @@ public class DatabaseSeeder
         var role = Roles.DefaultRole;
         var insertedRole = await _unitofWork.RoleRepository.Add(role, ct);
 
-        var rolePermissions = insertedPermissions
-            .Select(x => new RolePermissionModel { RoleId = insertedRole.Id, PermissionId = x.Id })
-            .ToList();
+        var rolePermissions = insertedPermissions.Select(
+            x => new RolePermissionModel { RoleId = insertedRole.Id, PermissionId = x.Id }
+        );
 
         foreach (var rolePermission in rolePermissions)
         {
@@ -129,14 +130,14 @@ public class DatabaseSeeder
         var availablePermissions = Permissions.GetPermissions();
 
         var lackingDiff = availablePermissions
-            .ExceptBy(createdPermissions.Select(x => x.PermissionName), y => y.PermissionName)
+            .ExceptByProperty(createdPermissions, x => x.PermissionName)
             .ToList();
 
         var excessiveDiff = createdPermissions
-            .ExceptBy(availablePermissions.Select(x => x.PermissionName), y => y.PermissionName)
+            .ExceptByProperty(availablePermissions, x => x.PermissionName)
             .ToList();
 
-        if (!lackingDiff.Any() && !excessiveDiff.Any())
+        if (lackingDiff.No() && excessiveDiff.No())
         {
             _logger.LogInformation("Permissions are up to date");
             return;
@@ -168,14 +169,14 @@ public class DatabaseSeeder
         var availableIssueFields = IssueFields.DefaultIssueFileds;
 
         var lackingDiff = availableIssueFields
-            .ExceptBy(createdIssueFiels.Select(x => x.FieldName), y => y.FieldName)
+            .ExceptByProperty(createdIssueFiels, x => x.FieldName)
             .ToList();
 
         var excessiveDiff = createdIssueFiels
-            .ExceptBy(availableIssueFields.Select(x => x.FieldName), y => y.FieldName)
+            .ExceptByProperty(availableIssueFields, x => x.FieldName)
             .ToList();
 
-        if (!lackingDiff.Any() && !excessiveDiff.Any())
+        if (lackingDiff.No() && excessiveDiff.No())
         {
             _logger.LogInformation("Issue fields are up to date");
             return;

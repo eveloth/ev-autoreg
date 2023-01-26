@@ -1,5 +1,3 @@
-using System.Linq.Expressions;
-
 namespace Extensions;
 
 public static class EnumerableExtensions
@@ -14,12 +12,31 @@ public static class EnumerableExtensions
         return groups.Select(x => x.Select(y => y).ToList());
     }
 
-    public static IEnumerable<TSource> DiffBy<TSource, TResult>(
+    /// <summary>
+    /// Produces the set difference of two sequences using specified property.
+    /// </summary>
+    public static IEnumerable<TSource> ExceptByProperty<TSource, TKey>(
         this IEnumerable<TSource> source,
         IEnumerable<TSource> compareTo,
-        Func<TSource, TResult> selector
+        Func<TSource,  TKey> selector
     )
     {
         return source.ExceptBy(compareTo.Select(selector), selector);
+    }
+
+    /// <summary>
+    /// The opposite of Any()
+    /// </summary>
+    public static bool No<TSource>(this IEnumerable<TSource> source)
+    {
+        return !source.Any();
+    }
+
+    /// <summary>
+    /// The opposite of Any()
+    /// </summary>
+    public static bool No<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate)
+    {
+        return !source.Any(predicate);
     }
 }
