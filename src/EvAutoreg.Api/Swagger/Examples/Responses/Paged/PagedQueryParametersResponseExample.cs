@@ -14,8 +14,7 @@ public class PagedQueryParametersResponseExample
         {
             IssueType = new IssueTypeDto { Id = 3, IssueTypeName = "Networking / Legal Entity" },
             WorkTime = "worktime=4",
-            RegStatus = "status=registered",
-            InWorkStatus = null,
+            Status = "status=registered",
             AssignedGroup = "assigned_group=techsupport",
             RequestType = "reqtype=notification",
         },
@@ -23,8 +22,7 @@ public class PagedQueryParametersResponseExample
         {
             IssueType = new IssueTypeDto { Id = 7, IssueTypeName = "Offers" },
             WorkTime = "worktime=4",
-            RegStatus = "status=registered",
-            InWorkStatus = null,
+            Status = "status=registered",
             AssignedGroup = "assigned_group=sales",
             RequestType = "reqtype=notification",
         }

@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS ev_credentials (
 );
 CREATE TABLE IF NOT EXISTS issue_type (
   id BIGSERIAL PRIMARY KEY, 
-  issue_type VARCHAR(32) UNIQUE NOT NULL
+  issue_type_name VARCHAR(32) UNIQUE NOT NULL
 );
 CREATE TABLE IF NOT EXISTS issue (
   id BIGINT PRIMARY KEY, 
@@ -67,17 +67,18 @@ CREATE TABLE IF NOT EXISTS rule (
   rule VARCHAR(256) NOT NULL, 
   owner_user_id BIGINT NOT NULL REFERENCES app_user(id) ON DELETE CASCADE, 
   issue_type_id BIGINT NOT NULL REFERENCES issue_type(id) ON DELETE CASCADE, 
-  Issue_field_id BIGINT NOT NULL REFERENCES issue_field(id) ON DELETE CASCADE, 
+  issue_field_id BIGINT NOT NULL REFERENCES issue_field(id) ON DELETE CASCADE,
   is_regex BOOLEAN NOT NULL DEFAULT false, 
   is_negative BOOLEAN NOT NULL DEFAULT false
 );
 CREATE TABLE IF NOT EXISTS registering_parameters (
-  issue_type_id BIGINT PRIMARY KEY REFERENCES issue_type(id) ON DELETE CASCADE, 
-  work_time VARCHAR(4) NOT NULL, 
-  reg_status VARCHAR(64) NOT NULL, 
-  inwork_status VARCHAR(64), 
-  assigned_group VARCHAR(64), 
-  request_type VARCHAR(64)
+  id BIGSERIAL PRIMARY KEY,
+  issue_type_id BIGINT REFERENCES issue_type(id) ON DELETE CASCADE,
+  work_time VARCHAR(64) NOT NULL,
+  status VARCHAR(64) NOT NULL,
+  assigned_group VARCHAR(64),
+  request_type VARCHAR(64),
+  execution_order INTEGER NOT NULL
 );
 CREATE TABLE IF NOT EXISTS autoregistrar_settings (
   id BIGSERIAL PRIMARY KEY, 

@@ -55,13 +55,6 @@ public class RuleService : IRuleService
 
     public async Task<Rule> Add(Rule rule, CancellationToken cts)
     {
-        var existingRule = await _unitofWork.RuleRepository.Get(rule.Id, rule.OwnerUserId, cts);
-
-        if (existingRule is null)
-        {
-            throw new ApiException().WithApiError(ErrorCode[6004]);
-        }
-
         var existingIssueType = await _unitofWork.IssueTypeRepository.Get(rule.IssueType.Id, cts);
 
         if (existingIssueType is null)

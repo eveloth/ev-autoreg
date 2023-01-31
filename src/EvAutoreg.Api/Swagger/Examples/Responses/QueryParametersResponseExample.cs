@@ -4,23 +4,26 @@ using Swashbuckle.AspNetCore.Filters;
 
 namespace EvAutoreg.Api.Swagger.Examples.Responses;
 
-public class QueryParametersResponseExample : IExamplesProvider<Response<QueryParametersDto>>
+public class QueryParametersResponseExample
+    : IExamplesProvider<Response<IEnumerable<QueryParametersDto>>>
 {
-    public Response<QueryParametersDto> GetExamples()
+    public Response<IEnumerable<QueryParametersDto>> GetExamples()
     {
-        return new Response<QueryParametersDto>(
-            new QueryParametersDto
+        return new Response<IEnumerable<QueryParametersDto>>(
+            new[]
             {
-                IssueType = new IssueTypeDto
+                new QueryParametersDto
                 {
-                    Id = 3,
-                    IssueTypeName = "Networking / Legal Entity"
-                },
-                WorkTime = "worktime=4",
-                RegStatus = "status=registered",
-                InWorkStatus = null,
-                AssignedGroup = "assigned_group=techsupport",
-                RequestType = "reqtype=notification",
+                    IssueType = new IssueTypeDto
+                    {
+                        Id = 3,
+                        IssueTypeName = "Networking / Legal Entity"
+                    },
+                    WorkTime = "worktime=4",
+                    Status = "status=registered",
+                    AssignedGroup = "assigned_group=techsupport",
+                    RequestType = "reqtype=notification",
+                }
             }
         );
     }

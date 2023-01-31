@@ -370,7 +370,7 @@ public class AutoregistrarController : ControllerBase
     [Authorize(Policy = "UseRegistrar")]
     [Route("settings/issue-types/{id:int}/ev-api-query-parameters")]
     [HttpGet]
-    [ProducesResponseType(typeof(Response<QueryParametersDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(Response<IEnumerable<QueryParametersDto>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     [Produces("application/json")]
     public async Task<IActionResult> GetEvApiQueryParametersForIssueType(
@@ -380,8 +380,8 @@ public class AutoregistrarController : ControllerBase
     {
         var queryParameters = await _queryParametersService.Get(id, cts);
 
-        var response = new Response<QueryParametersDto>(
-            _mapper.Map<QueryParametersDto>(queryParameters)
+        var response = new Response<IEnumerable<QueryParametersDto>>(
+            _mapper.Map<IEnumerable<QueryParametersDto>>(queryParameters)
         );
         return Ok(response);
     }
@@ -399,7 +399,7 @@ public class AutoregistrarController : ControllerBase
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     [Produces("application/json")]
-    public async Task<IActionResult> UpsertEvApiQueryParametersForIssueType(
+    public async Task<IActionResult> AddEvApiQueryParametersForIssueType(
         [FromRoute] int id,
         [FromBody] QueryParametersRequest request,
         CancellationToken cts
@@ -410,10 +410,69 @@ public class AutoregistrarController : ControllerBase
         var queryParameters = _mapper.Map<QueryParameters>(request);
         queryParameters.IssueType.Id = id;
 
-        var createdQueryParameters = await _queryParametersService.Upsert(queryParameters, cts);
+        var createdQueryParameters = await _queryParametersService.Add(queryParameters, cts);
 
         var response = new Response<QueryParametersDto>(
             _mapper.Map<QueryParametersDto>(createdQueryParameters)
+        );
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Updates EV API query parameters for the specified issue type
+    /// </summary>
+    /// <response code="200">Updates EV API query parameters for the specified issue type</response>
+    /// <response code="400">If a validation error occured</response>
+    /// <response code="404">If an issue type doesn't exist or query parameters don't exist</response>
+    [Authorize(Policy = "ConfigureRegistrar")]
+    [Route("settings/issue-types/{issueTypeId:int}/ev-api-query-parameters/{id:int}")]
+    [HttpPut]
+    [ProducesResponseType(typeof(Response<QueryParametersDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [Produces("application/json")]
+    public async Task<IActionResult> UpdateEvApiQueryParametersForIssueType(
+        [FromRoute] int id,
+        [FromRoute] int issueTypeId,
+        [FromBody] QueryParametersRequest request,
+        CancellationToken cts
+    )
+    {
+        await _queryParametersValidator.ValidateAndThrowAsync(request, cts);
+
+        var queryParameters = _mapper.Map<QueryParameters>(request);
+        queryParameters.Id = issueTypeId;
+        queryParameters.IssueType.Id = issueTypeId;
+
+        var updatedQueryParameters = await _queryParametersService.Update(queryParameters, cts);
+
+        var response = new Response<QueryParametersDto>(
+            _mapper.Map<QueryParametersDto>(updatedQueryParameters)
+        );
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Deletes EV API query parameters for the specified issue type
+    /// </summary>
+    /// <response code="200">Deletes EV API query parameters for the specified issue type</response>
+    /// <response code="404">If an issue type doesn't exist or query parameters don't exist</response>
+    [Authorize(Policy = "ConfigureRegistrar")]
+    [Route("settings/issue-types/{issueTypeId:int}/ev-api-query-parameters/{id:int}")]
+    [HttpDelete]
+    [ProducesResponseType(typeof(Response<IEnumerable<QueryParametersDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [Produces("application/json")]
+    public async Task<IActionResult> DeleteEvApiQueryParametersForIssueType(
+        [FromRoute] int id,
+        [FromRoute] int issueTypeId,
+        CancellationToken cts
+    )
+    {
+        var updatedQueryParameters = await _queryParametersService.Delete(id, issueTypeId, cts);
+
+        var response = new Response<QueryParametersDto>(
+            _mapper.Map<QueryParametersDto>(updatedQueryParameters)
         );
         return Ok(response);
     }

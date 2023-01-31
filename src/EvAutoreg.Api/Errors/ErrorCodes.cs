@@ -24,13 +24,24 @@ public static class ErrorCodes
             { 5004, new ApiError(5004, "Issue not found") },
             { 6004, new ApiError(6004, "Rule not found.") },
             { 7001, new ApiError(7001, "Issue type with the specified name already exists.") },
-            { 7003, new ApiError(7004, "Issue type not found.") },
+            { 7004, new ApiError(7004, "Issue type not found.") },
             { 8004, new ApiError(8004, "Issue field not found.") },
             { 9004, new ApiError(9004, "Autoregistrar settings not found.") },
+            { 10001, new ApiError(10001, "ExtraView API query parameters already exist.") },
+            {
+                10002,
+                new ApiError(
+                    10002,
+                    "Query parameters execution order must differ from already specified."
+                )
+            },
             { 10004, new ApiError(10004, "ExtraView API query parameters not found.") },
             { 11001, new ApiError(11001, "Couldn't start autoregistar; it is not stopped.") },
             { 11002, new ApiError(11002, "Couldn't stop autoregistar; it is not started.") },
-            { 11003, new ApiError(11003, "Only the owner of the current session can terminate it.") },
+            {
+                11003,
+                new ApiError(11003, "Only the owner of the current session can terminate it.")
+            },
             { 12001, new ApiError(12001, "Validation error") },
             { 13001, new ApiError(13001, "Internal error. Consult the service administrator.") },
             { 14001, new ApiError(14001, "Configuration file is not valid, check entries.") },

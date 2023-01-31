@@ -16,5 +16,11 @@ public static class RequestToDomainMappingConfig
             .Ignore(dest => dest.IssueField.FieldName)
             .IgnoreNonMapped(false)
             .IgnoreNullValues(true);
+
+        TypeAdapterConfig<QueryParametersRequest, QueryParameters>
+            .NewConfig()
+            .Map(dest => dest.IssueType, src => new IssueType())
+            .IgnoreNonMapped(false)
+            .IgnoreNullValues(true);
     }
 }

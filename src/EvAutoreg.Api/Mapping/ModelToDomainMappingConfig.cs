@@ -52,11 +52,12 @@ public static class ModelToDomainMappingConfig
             .TwoWays()
             .Map(dest => dest.IssueType.Id, src => src.Item2.Id)
             .Map(dest => dest.IssueType.IssueTypeName, src => src.Item2.IssueTypeName)
+            .Map(dest => dest.Id, src => src.Item1.Id)
             .Map(dest => dest.WorkTime, src => src.Item1.WorkTime)
-            .Map(dest => dest.RegStatus, src => src.Item1.RegStatus)
-            .Map(dest => dest.InWorkStatus, src => src.Item1.InWorkStatus)
+            .Map(dest => dest.Status, src => src.Item1.Status)
             .Map(dest => dest.AssignedGroup, src => src.Item1.AssignedGroup)
             .Map(dest => dest.RequestType, src => src.Item1.RequestType)
+            .Map(dest => dest.ExecutionOrder, src => src.Item1.ExecutionOrder)
             .IgnoreNullValues(true);
 
         TypeAdapterConfig<(RuleModel, IssueTypeModel?, IssueFieldModel?), Rule>

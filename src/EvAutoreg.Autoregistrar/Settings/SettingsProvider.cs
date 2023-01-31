@@ -137,7 +137,7 @@ public class SettingsProvider : ISettingsProvider
         {
             var queryParams = await unitofWork.QueryParametersRepository.Get(issueType.Id, cts);
 
-            if (queryParams is not null)
+            if (queryParams.Any())
             {
                 continue;
             }
@@ -146,6 +146,7 @@ public class SettingsProvider : ISettingsProvider
             return false;
         }
 
+        await unitofWork.CommitAsync(cts);
         return true;
     }
 }

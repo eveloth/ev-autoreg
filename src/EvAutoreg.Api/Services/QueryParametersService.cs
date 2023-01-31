@@ -6,6 +6,7 @@ using EvAutoreg.Api.Services.Interfaces;
 using EvAutoreg.Data.Filters;
 using EvAutoreg.Data.Models;
 using EvAutoreg.Data.Repository.Interfaces;
+using EvAutoreg.Extensions;
 using MapsterMapper;
 using static EvAutoreg.Api.Errors.ErrorCodes;
 
@@ -42,7 +43,7 @@ public class QueryParametersService : IQueryParametersService
         return result;
     }
 
-    public async Task<QueryParameters> Get(int issueTypeId, CancellationToken cts)
+    public async Task<IEnumerable<QueryParameters>> Get(int issueTypeId, CancellationToken cts)
     {
         var issueType = await _unitofWork.IssueTypeRepository.Get(issueTypeId, cts);
 
@@ -54,16 +55,11 @@ public class QueryParametersService : IQueryParametersService
         var queryParameters = await _unitofWork.QueryParametersRepository.Get(issueTypeId, cts);
         await _unitofWork.CommitAsync(cts);
 
-        if (queryParameters is null)
-        {
-            throw new ApiException().WithApiError(ErrorCode[10004]);
-        }
-
-        var result = await _mappingHelper.JoinIssueType(queryParameters!, cts);
+        var result = queryParameters.Select(x => _mappingHelper.JoinIssueType(x, cts).Result);
         return result;
     }
 
-    public async Task<QueryParameters> Upsert(QueryParameters parameters, CancellationToken cts)
+    public async Task<QueryParameters> Add(QueryParameters parameters, CancellationToken cts)
     {
         var issueType = await _unitofWork.IssueTypeRepository.Get(parameters.IssueType.Id, cts);
 
@@ -72,10 +68,86 @@ public class QueryParametersService : IQueryParametersService
             throw new ApiException().WithApiError(ErrorCode[7004]);
         }
 
+        var queryParameters = (
+            await _unitofWork.QueryParametersRepository.Get(parameters.IssueType.Id, cts)
+        ).ToList();
+
+        if (queryParameters.Any(x => x.Id == parameters.Id))
+        {
+            throw new ApiException().WithApiError(ErrorCode[10001]);
+        }
+
+        if (queryParameters.Any(x => x.ExecutionOrder == parameters.ExecutionOrder))
+        {
+            throw new ApiException().WithApiError(ErrorCode[10002]);
+        }
+
         var queryParametersModel = _mapper.Map<QueryParametersModel>(parameters);
-        var upsertedQueryParameters = await _unitofWork.QueryParametersRepository.Upsert(queryParametersModel, cts);
+        var createdQueryParameters = await _unitofWork.QueryParametersRepository.Add(
+            queryParametersModel,
+            cts
+        );
         await _unitofWork.CommitAsync(cts);
-        var result = await _mappingHelper.JoinIssueType(upsertedQueryParameters, cts);
+        var result = await _mappingHelper.JoinIssueType(createdQueryParameters, cts);
+        return result;
+    }
+
+    public async Task<QueryParameters> Update(QueryParameters parameters, CancellationToken cts)
+    {
+        var issueType = await _unitofWork.IssueTypeRepository.Get(parameters.IssueType.Id, cts);
+
+        if (issueType is null)
+        {
+            throw new ApiException().WithApiError(ErrorCode[7004]);
+        }
+
+        var queryParameters = (
+            await _unitofWork.QueryParametersRepository.Get(parameters.IssueType.Id, cts)
+        ).ToList();
+
+        if (queryParameters.No(x => x.Id == parameters.Id))
+        {
+            throw new ApiException().WithApiError(ErrorCode[10004]);
+        }
+
+        if (queryParameters.Any(x => x.ExecutionOrder == parameters.ExecutionOrder))
+        {
+            throw new ApiException().WithApiError(ErrorCode[10002]);
+        }
+
+        var queryParametersModel = _mapper.Map<QueryParametersModel>(parameters);
+        var updatedQueryParameters = await _unitofWork.QueryParametersRepository.Update(
+            queryParametersModel,
+            cts
+        );
+        await _unitofWork.CommitAsync(cts);
+        var result = await _mappingHelper.JoinIssueType(updatedQueryParameters, cts);
+        return result;
+    }
+
+    public async Task<QueryParameters> Delete(int id, int issueTypeId, CancellationToken cts)
+    {
+        var issueType = await _unitofWork.IssueTypeRepository.Get(issueTypeId, cts);
+
+        if (issueType is null)
+        {
+            throw new ApiException().WithApiError(ErrorCode[7004]);
+        }
+
+        var queryParameters = await _unitofWork.QueryParametersRepository.Get(issueTypeId, cts);
+
+        if (queryParameters.No(x => x.Id == id))
+        {
+            throw new ApiException().WithApiError(ErrorCode[10004]);
+        }
+
+        var deletedQueryParameters = await _unitofWork.QueryParametersRepository.Delete(
+            id,
+            issueTypeId,
+            cts
+        );
+        await _unitofWork.CommitAsync(cts);
+        var result = await _mappingHelper.JoinIssueType(deletedQueryParameters, cts);
         return result;
     }
 }

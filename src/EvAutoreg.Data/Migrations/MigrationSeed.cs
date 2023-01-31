@@ -7,11 +7,11 @@ public class MigrationSeed : Migration
 {
     public override void Up()
     {
-        Execute.Script("../DataAccessLibrary/ev-autoreg.sql");
+        Execute.Script("../EvAutoreg.Data/ev-autoreg.sql");
     }
 
     public override void Down()
     {
-        Execute.Script("../DataAccessLibrary/ev-autoreg-drop-schema.sql");
+        Execute.Script("../EvAutoreg.Data/ev-autoreg-drop-schema.sql");
     }
 }

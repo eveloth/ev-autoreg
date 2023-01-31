@@ -7,6 +7,6 @@ public class IssueTypeRequestExample : IExamplesProvider<IssueTypeRequest>
 {
     public IssueTypeRequest GetExamples()
     {
-        return new IssueTypeRequest("Bug report");
+        return new IssueTypeRequest("BugReport");
     }
 }

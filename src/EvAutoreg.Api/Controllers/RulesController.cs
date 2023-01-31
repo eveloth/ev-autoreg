@@ -96,7 +96,7 @@ public class RulesController : ControllerBase
 
         var userId = HttpContext.GetUserId();
 
-        var rule = _mapper.Map<Domain.Rule>(request);
+        var rule = _mapper.Map<Rule>(request);
         rule.OwnerUserId = userId;
 
         var createdRule = await _ruleService.Add(rule, cts);
@@ -133,7 +133,7 @@ public class RulesController : ControllerBase
 
         var userId = HttpContext.GetUserId();
 
-        var rule = _mapper.Map<Domain.Rule>(request);
+        var rule = _mapper.Map<Rule>(request);
         rule.Id = id;
         rule.OwnerUserId = userId;
 

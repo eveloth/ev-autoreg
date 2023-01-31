@@ -10,9 +10,9 @@ public class QueryParametersRequestExample : IExamplesProvider<QueryParametersRe
         return new QueryParametersRequest(
             "worktime=4",
             "status=registered",
-            null,
             "assigned_group=techsupport",
-            "reqtype=notification"
+            "reqtype=notification",
+            2
         );
     }
 }

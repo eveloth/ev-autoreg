@@ -74,8 +74,9 @@ internal static class Program
         app.ConfigureModelToDomainMapping();
         app.ConfigureDomainToModelMapping();
         app.ConfigureDomainToDtoMapping();
+        app.ConfigureRequestToDomainMapping();
 
-        //app.RunMigrations();
+        app.RunMigrations();
         await app.SeedData();
 
         app.UseSerilogRequestLogging();
