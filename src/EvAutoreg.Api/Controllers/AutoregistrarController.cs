@@ -190,7 +190,7 @@ public class AutoregistrarController : ControllerBase
     /// </summary>
     /// <response code="200">Returns all issue types in the system</response>
     [Authorize(Policy = "UseRegistrar")]
-    [Route("settings/issue-types")]
+    [Route("issue-types")]
     [HttpGet]
     [ProducesResponseType(typeof(PagedResponse<IssueTypeDto>), StatusCodes.Status200OK)]
     [Produces("application/json")]
@@ -214,7 +214,7 @@ public class AutoregistrarController : ControllerBase
     /// <response code="200">Returns the requested issue type</response>
     /// <response code="404">If an issue type doesn't exist</response>
     [Authorize(Policy = "UseRegistrar")]
-    [Route("settings/issue-types/{id:int}")]
+    [Route("issue-types/{id:int}")]
     [HttpGet]
     [ProducesResponseType(typeof(Response<IssueTypeDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
@@ -233,7 +233,7 @@ public class AutoregistrarController : ControllerBase
     /// <response code="200">Adds a new issue type to the system</response>
     /// <response code="400">If a validation error occured or if the issue type name is taken</response>
     [Authorize(Policy = "ConfigureRegistrar")]
-    [Route("settings/issue-types")]
+    [Route("issue-types")]
     [HttpPost]
     [ProducesResponseType(typeof(Response<IssueTypeDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
@@ -266,7 +266,7 @@ public class AutoregistrarController : ControllerBase
     /// <response code="400">If a validation error occured or if the issue type name is taken</response>
     /// <response code="404">If an issue type doesn't exist</response>
     [Authorize(Policy = "ConfigureRegistrar")]
-    [Route("settings/issue-types/{id:int}")]
+    [Route("issue-types/{id:int}")]
     [HttpPut]
     [ProducesResponseType(typeof(Response<IssueTypeDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
@@ -301,7 +301,7 @@ public class AutoregistrarController : ControllerBase
     /// <response code="200">Deletes an issue type from the system</response>
     /// <response code="404">If an issue type doesn't exist</response>
     [Authorize(Policy = "ConfigureRegistrar")]
-    [Route("settings/issue-types/{id:int}")]
+    [Route("issue-types/{id:int}")]
     [HttpDelete]
     [ProducesResponseType(typeof(Response<IssueTypeDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
@@ -321,7 +321,7 @@ public class AutoregistrarController : ControllerBase
     /// </summary>
     /// <response code="200">Returns all issue fields in the system</response>
     [Authorize(Policy = "UseRegistrar")]
-    [Route("settings/issue-fields")]
+    [Route("issue-fields")]
     [HttpGet]
     [ProducesResponseType(typeof(PagedResponse<IssueFieldDto>), StatusCodes.Status200OK)]
     [Produces("application/json")]
@@ -344,7 +344,7 @@ public class AutoregistrarController : ControllerBase
     /// </summary>
     /// <response code="200">Returns all EV API query parameters associated with all issue types</response>
     [Authorize(Policy = "UseRegistrar")]
-    [Route("settings/issue-types/ev-api-query-parameters")]
+    [Route("issue-types/ev-api-query-parameters")]
     [HttpGet]
     [ProducesResponseType(typeof(PagedResponse<QueryParametersDto>), StatusCodes.Status200OK)]
     [Produces("application/json")]
@@ -368,7 +368,7 @@ public class AutoregistrarController : ControllerBase
     /// <response code="200">Returns EV API query parameters for the specified issue type</response>
     /// <response code="404">If query parameters are not set for that issue type or if an issue type doesn't exist</response>
     [Authorize(Policy = "UseRegistrar")]
-    [Route("settings/issue-types/{id:int}/ev-api-query-parameters")]
+    [Route("issue-types/{id:int}/ev-api-query-parameters")]
     [HttpGet]
     [ProducesResponseType(typeof(Response<IEnumerable<QueryParametersDto>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
@@ -387,13 +387,13 @@ public class AutoregistrarController : ControllerBase
     }
 
     /// <summary>
-    /// Returns EV API query parameters for the specified issue type
+    /// Adds EV API query parameters to the specified issue type
     /// </summary>
-    /// <response code="200">Returns EV API query parameters for the specified issue type</response>
+    /// <response code="200">Adds EV API query parameters to the specified issue type</response>
     /// <response code="400">If a validation error occured</response>
     /// <response code="404">If an issue type doesn't exist</response>
     [Authorize(Policy = "ConfigureRegistrar")]
-    [Route("settings/issue-types/{id:int}/ev-api-query-parameters")]
+    [Route("issue-types/{id:int}/ev-api-query-parameters")]
     [HttpPost]
     [ProducesResponseType(typeof(Response<QueryParametersDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
@@ -425,7 +425,7 @@ public class AutoregistrarController : ControllerBase
     /// <response code="400">If a validation error occured</response>
     /// <response code="404">If an issue type doesn't exist or query parameters don't exist</response>
     [Authorize(Policy = "ConfigureRegistrar")]
-    [Route("settings/issue-types/{issueTypeId:int}/ev-api-query-parameters/{id:int}")]
+    [Route("issue-types/{issueTypeId:int}/ev-api-query-parameters/{id:int}")]
     [HttpPut]
     [ProducesResponseType(typeof(Response<QueryParametersDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
@@ -458,7 +458,7 @@ public class AutoregistrarController : ControllerBase
     /// <response code="200">Deletes EV API query parameters for the specified issue type</response>
     /// <response code="404">If an issue type doesn't exist or query parameters don't exist</response>
     [Authorize(Policy = "ConfigureRegistrar")]
-    [Route("settings/issue-types/{issueTypeId:int}/ev-api-query-parameters/{id:int}")]
+    [Route("issue-types/{issueTypeId:int}/ev-api-query-parameters/{id:int}")]
     [HttpDelete]
     [ProducesResponseType(typeof(Response<IEnumerable<QueryParametersDto>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
