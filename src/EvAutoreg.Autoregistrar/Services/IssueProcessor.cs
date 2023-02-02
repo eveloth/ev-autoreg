@@ -69,12 +69,14 @@ public class IssueProcessor : IIssueProcessor
 
             foreach (var ruleSet in rulesByIssueType)
             {
+                var issueTypeId = ruleSet.Key;
+
                 if (
                     MatchesARule(ruleSet, str) && DoesntMatchANegativeRule(ruleSet, str)
                     || MatchesARegExp(ruleSet, str) && DoesntMatchANegativeRegExp(ruleSet, str)
                 )
                 {
-                    await UpdateAndSaveIssue(ruleSet.Key, xmlIssue.Id);
+                    await UpdateAndSaveIssue(issueTypeId, issueNo);
                     return;
                 }
             }
@@ -87,55 +89,48 @@ public class IssueProcessor : IIssueProcessor
     //the firts update changes issue status to 'regisered', and the second (if needed) -- to 'in work'.
     //If your issue updating rules are standartised enough, you might not need this second update, but it is there in case somebody needs it.
     // TODO: make cascade updates, i.e. give users the ability to create many query parameters entities for each issue type and enumerate them
-    private async Task UpdateAndSaveIssue(int issueType, string issueNo)
+    //UPD Made cascade updates
+    private async Task UpdateAndSaveIssue(int issueTypeId, string issueNo)
     {
-        var loadedIssueType = GlobalSettings.IssueTypes!.First(x => x.Id == issueType);
+        var loadedIssueType = GlobalSettings.IssueTypes!.First(x => x.Id == issueTypeId);
         var queryParameters = loadedIssueType.QueryParameters;
 
         await _logDispatcher.Log($"Registering an issue as: {loadedIssueType.IssueTypeName}");
 
-        var isSecondUpdateNeeded = queryParameters.InWorkStatus is not null;
+        await UpdateIssue(queryParameters, issueTypeId, issueNo);
+    }
 
-        var queryString = new List<string>
+    private async Task UpdateIssue(
+        IEnumerable<QueryParameters> queryParameters,
+        int issueTypeId,
+        string issueNo
+    )
+    {
+        var sortedQueryParameters = queryParameters.OrderBy(x => x.ExecutionOrder);
+
+        foreach (var qp in sortedQueryParameters)
         {
-            queryParameters.WorkTime,
-            queryParameters.RegStatus,
-            queryParameters.AssignedGroup ?? string.Empty,
-            queryParameters.RequestType ?? string.Empty
-        };
-
-        var firstUpdateResponse = await _evapi.UpdateIssue(issueNo, queryString.ToArray());
-
-        if (firstUpdateResponse.StatusCode == HttpStatusCode.OK)
-        {
-            if (!isSecondUpdateNeeded)
+            var queryString = new[]
             {
-                await InsertIssueIntoDatabase(issueNo, issueType);
-                return;
+                qp.WorkTime,
+                qp.Status,
+                qp.AssignedGroup ?? string.Empty,
+                qp.RequestType ?? string.Empty
+            };
+
+            var response = await _evapi.UpdateIssue(issueNo, queryString);
+
+            if (response.StatusCode is HttpStatusCode.OK)
+            {
+                await InsertIssueIntoDatabase(issueNo, issueTypeId);
+                await _logDispatcher.Log($"Inserted issue ID {issueNo} into the database");
             }
-        }
-        else
-        {
-            await _logDispatcher.Log(
-                $"Failed to update issue ID {issueNo}, EV server response was: {firstUpdateResponse.Content}"
-            );
-        }
-
-        queryString.Remove(queryParameters.RegStatus);
-        queryString.Add(queryParameters.InWorkStatus!);
-
-        var secondUpdateResponse = await _evapi.UpdateIssue(issueNo, queryString.ToArray());
-
-        if (secondUpdateResponse.StatusCode == HttpStatusCode.OK)
-        {
-            await InsertIssueIntoDatabase(issueNo, issueType);
-            await _logDispatcher.Log($"Inserted issue ID {issueNo} into the database");
-        }
-        else
-        {
-            await _logDispatcher.Log(
-                $"Failed to update issue ID {issueNo}, EV server response was: {secondUpdateResponse.Content}"
-            );
+            else
+            {
+                await _logDispatcher.Log(
+                    $"Failed to update issue ID {issueNo}, EV server response was: {response.Content}"
+                );
+            }
         }
     }
 

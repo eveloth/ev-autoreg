@@ -36,10 +36,7 @@ public static class MappingConfig
             .NewConfig()
             .Map(dest => dest.Id, src => src.Item1.Id)
             .Map(dest => dest.IssueTypeName, src => src.Item1.IssueTypeName)
-            .Map(
-                dest => dest.QueryParameters,
-                src => src.Item2.First(x => x.IssueTypeId == src.Item1.Id)
-            )
+            .Map(dest => dest.QueryParameters, src => src.Item2)
             .IgnoreNullValues(true);
     }
 

@@ -53,10 +53,11 @@ public class SettingsProvider : ISettingsProvider
 
         foreach (var type in issueTypeSet)
         {
+            var queryParamsForIssueType = queryParams.Where(x => x.IssueTypeId == type.Id);
             var aggregationTable = new ValueTuple<
                 IssueTypeModel,
                 IEnumerable<QueryParametersModel>
-            >(type, queryParams);
+            >(type, queryParamsForIssueType);
             issueTypes.Add(_mapper.Map<IssueType>(aggregationTable));
         }
 
