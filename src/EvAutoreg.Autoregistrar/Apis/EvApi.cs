@@ -7,71 +7,69 @@ namespace EvAutoreg.Autoregistrar.Apis;
 
 public class EvApi : IEvApi
 {
-    private readonly HttpClient _client;
+    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly ILogger<EvApi> _logger;
 
-    public EvApi(HttpClient client)
+    private readonly string _evUri = GlobalSettings.AutoregistrarSettings!.ExtraViewUri;
+    private readonly string _evEmail = GlobalSettings.ExtraViewCredentials!.Email;
+    private readonly string _evPassword = GlobalSettings.ExtraViewCredentials.Password;
+
+    public static string ClientName => nameof(EvApi) + "Client";
+
+    public EvApi(ILogger<EvApi> logger, IHttpClientFactory httpClientFactory)
     {
-        _client = client;
+        _logger = logger;
+        _httpClientFactory = httpClientFactory;
     }
 
-    public async Task<EvResponse<XmlIssue?>> GetIssue(string issueNo)
+    public async Task<XmlIssue> GetIssue(string issueNo)
     {
+        var client = _httpClientFactory.CreateClient(ClientName);
         var query =
-            $"https://{GlobalSettings.AutoregistrarSettings.ExtraViewUri}/"
-            + $"evj/ExtraView/ev_api.action?user_id={GlobalSettings.ExtraViewCredentials.Email}"
-            + $"&password={GlobalSettings.ExtraViewCredentials.Password}&statevar=get&id={issueNo}";
+            $"https://{_evUri}/"
+            + $"evj/ExtraView/ev_api.action?user_id={_evEmail}"
+            + $"&password={_evPassword}&statevar=get&id={issueNo}";
 
+        var response = await client.GetAsync(query);
+        var responseBody = await response.Content.ReadAsStringAsync();
 
-
-        var response = await _client.GetAsync(query);
-        var xmlIssueString = await response.Content.ReadAsStringAsync();
-
-        if (response.IsSuccessStatusCode && xmlIssueString.StartsWith("<?xml"))
+        if (!response.IsSuccessStatusCode)
         {
-            return new EvResponse<XmlIssue?>
-            {
-                StatusCode = HttpStatusCode.OK,
-                Content = xmlIssueString.DeserializeXmlString<XmlIssue>()
-            };
+            throw new EvApiException(responseBody, response.StatusCode);
         }
 
-        return new EvResponse<XmlIssue?> { StatusCode = HttpStatusCode.BadRequest, Content = null };
+        if (!responseBody.StartsWith("<?xml)"))
+        {
+            throw new EvApiException(responseBody);
+        }
+
+        return responseBody.DeserializeXmlString<XmlIssue>();
     }
 
-    public async Task<EvResponse<string>> UpdateIssue(
-        string issueNo,
-        params string[] queryParameters
-    )
+    public async Task UpdateIssue(string issueNo, params string[] queryParameters)
     {
+        var client = _httpClientFactory.CreateClient(ClientName);
         var query =
-            $"https://{GlobalSettings.AutoregistrarSettings.ExtraViewUri}/"
-            + $"evj/ExtraView/ev_api.action?user_id={GlobalSettings.ExtraViewCredentials.Email}"
-            + $"&password={GlobalSettings.ExtraViewCredentials.Password}&statevar=update&id={issueNo}";
+            $"https://{_evUri}/"
+            + $"evj/ExtraView/ev_api.action?user_id={_evEmail}"
+            + $"&password={_evPassword}&statevar=update&id={issueNo}";
 
         foreach (var param in queryParameters)
         {
             query += $"&{param}";
         }
 
-        var response = await _client.GetAsync(query);
-        var responseString = await response.Content.ReadAsStringAsync();
+        var response = await client.GetAsync(query);
+        var responseBody = await response.Content.ReadAsStringAsync();
 
-        if (
-            response.IsSuccessStatusCode
-            && responseString.Contains("updated", StringComparison.InvariantCultureIgnoreCase)
-        )
+        if (!response.IsSuccessStatusCode)
         {
-            return new EvResponse<string>
-            {
-                StatusCode = HttpStatusCode.OK,
-                Content = responseString
-            };
+            throw new EvApiException(responseBody, response.StatusCode);
         }
 
-        return new EvResponse<string>
+        if (!responseBody.Contains("updated", StringComparison.InvariantCultureIgnoreCase))
         {
-            StatusCode = HttpStatusCode.BadRequest,
-            Content = responseString
-        };
+            throw new EvApiException(responseBody);
+        }
     }
 }

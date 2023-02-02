@@ -7,8 +7,11 @@ using EvAutoreg.Autoregistrar.Services;
 using EvAutoreg.Autoregistrar.Services.Interfaces;
 using EvAutoreg.Autoregistrar.Settings;
 using EvAutoreg.Data.Extensions;
+using Grpc.Net.Client.Balancer;
 using MapsterMapper;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Polly;
+using Polly.Contrib.WaitAndRetry;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -41,9 +44,14 @@ builder
     .AddDapperSnakeCaseConvention()
     .AddRepositories();
 
-builder.Services.AddSingleton(
-    new HttpClient(new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(2) })
-);
+builder.Services
+    .AddHttpClient(EvApi.ClientName)
+    .AddTransientHttpErrorPolicy(
+        policyBuilder =>
+            policyBuilder.WaitAndRetryAsync(
+                Backoff.DecorrelatedJitterBackoffV2(TimeSpan.FromSeconds(1), 5)
+            )
+    );
 
 builder.Services.AddSingleton<IMapper, Mapper>();
 builder.Services.AddSingleton<ICredentialsDecryptor, CredentialsDecryptor>();

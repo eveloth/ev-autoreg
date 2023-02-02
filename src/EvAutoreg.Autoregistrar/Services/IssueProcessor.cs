@@ -1,5 +1,4 @@
-﻿using System.Net;
-using EvAutoreg.Autoregistrar.Apis;
+﻿using EvAutoreg.Autoregistrar.Apis;
 using EvAutoreg.Autoregistrar.Domain;
 using EvAutoreg.Autoregistrar.Services.Interfaces;
 using EvAutoreg.Autoregistrar.Settings;
@@ -35,15 +34,7 @@ public class IssueProcessor : IIssueProcessor
 
     public async Task ProcessEvent(string issueNo)
     {
-        var evResponse = await _evapi.GetIssue(issueNo);
-
-        if (evResponse.StatusCode != HttpStatusCode.OK)
-        {
-            await _logDispatcher.Log("Couldn't retrieve an issue from EV server");
-            return;
-        }
-
-        var xmlIssue = evResponse.Content!;
+        var xmlIssue = await _evapi.GetIssue(issueNo);
 
         var issueTypeId = await _issueAnalyzer.AnalyzeIssue(xmlIssue);
 
@@ -53,10 +44,10 @@ public class IssueProcessor : IIssueProcessor
             return;
         }
 
-        await UpdateAndSaveIssue(issueTypeId.Value, issueNo);
+        await SaveAndUpdateIssue(issueTypeId.Value, issueNo);
     }
 
-    private async Task UpdateAndSaveIssue(int issueTypeId, string issueNo)
+    private async Task SaveAndUpdateIssue(int issueTypeId, string issueNo)
     {
         var loadedIssueType = GlobalSettings.IssueTypes!.First(x => x.Id == issueTypeId);
         var queryParameters = loadedIssueType.QueryParameters;
@@ -88,43 +79,25 @@ public class IssueProcessor : IIssueProcessor
                 qp.RequestType ?? string.Empty
             };
 
-            var response = await _evapi.UpdateIssue(issueNo, queryString);
-
-            if (response.StatusCode is HttpStatusCode.OK)
-            {
-                await InsertIssueIntoDatabase(issueNo, issueTypeId);
-                await _logDispatcher.Log($"Inserted issue ID {issueNo} into the database");
-            }
-            else
-            {
-                await _logDispatcher.Log(
-                    $"Failed to update issue ID {issueNo}, EV server response was: {response.Content}"
-                );
-            }
+            await _evapi.UpdateIssue(issueNo, queryString);
+            await InsertIssueIntoDatabase(issueNo, issueTypeId);
+            await _logDispatcher.Log($"Inserted issue ID {issueNo} into the database");
         }
     }
 
-    private async Task InsertIssueIntoDatabase(string issueNo, int issueType)
+    private async Task InsertIssueIntoDatabase(string issueNo, int issueTypeId)
     {
-        var xmlIssueResponse = await _evapi.GetIssue(issueNo);
+        var xmlIssue = await _evapi.GetIssue(issueNo);
+        var issue = _mapper.Map<IssueModel>(xmlIssue);
 
-        if (xmlIssueResponse.StatusCode == HttpStatusCode.OK)
-        {
-            var issue = _mapper.Map<IssueModel>(xmlIssueResponse.Content!);
-            issue.IssueTypeId = issueType;
-            issue.RegistrarId = StateManager.GetOperator();
+        issue.IssueTypeId = issueTypeId;
+        issue.RegistrarId = StateManager.GetOperator();
 
-            using var scope = _scopeFactory.CreateScope();
-            var unitofWork = scope.ServiceProvider.GetService<IUnitofWork>();
-            await unitofWork!.IssueRepository.Upsert(issue, CancellationToken.None);
+        using var scope = _scopeFactory.CreateScope();
+        var unitofWork = scope.ServiceProvider.GetRequiredService<IUnitofWork>();
+        await unitofWork.IssueRepository.Upsert(issue, CancellationToken.None);
+        await unitofWork.CommitAsync(CancellationToken.None);
 
-            await unitofWork.CommitAsync(CancellationToken.None);
-
-            await _logDispatcher.Log($"Issue ID {issue.Id} was updated");
-        }
-        else
-        {
-            await _logDispatcher.Log("Couldn't retrieve an issue from EV server");
-        }
+        await _logDispatcher.Log($"Issue ID {issue.Id} was updated");
     }
 }

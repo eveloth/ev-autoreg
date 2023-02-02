@@ -3,6 +3,7 @@ using EvAutoreg.Autoregistrar.Services.Interfaces;
 using EvAutoreg.Autoregistrar.Settings;
 using EvAutoreg.Autoregistrar.State;
 using Microsoft.Exchange.WebServices.Data;
+using Npgsql;
 using Task = System.Threading.Tasks.Task;
 
 namespace EvAutoreg.Autoregistrar.Services;
@@ -64,9 +65,22 @@ public class MailEventListener : IMailEventListener
                 .Groups[1].Value;
 
             await _logDispatcher.Log($"Received new issue, ID {issueNo}");
+
             try
             {
                 await _issueProcessor.ProcessEvent(issueNo);
+            }
+            catch (EvApiException)
+            {
+                await _logDispatcher.Log("Processing an issue resulted in an error");
+            }
+            catch (HttpRequestException)
+            {
+                await _logDispatcher.Log("Processing an issue resulted in an error");
+            }
+            catch (NpgsqlException)
+            {
+                await _logDispatcher.Log("Processing an issue resulted in an error");
             }
             catch (Exception)
             {
@@ -134,7 +148,9 @@ public class MailEventListener : IMailEventListener
             }
             catch (Exception)
             {
-                await _logDispatcher.Log($"Counldn't restore a connection, trying again in {delaySec:%s}s...");
+                await _logDispatcher.Log(
+                    $"Counldn't restore a connection, trying again in {delaySec:%s}s..."
+                );
                 await Task.Delay(delaySec);
             }
         }
