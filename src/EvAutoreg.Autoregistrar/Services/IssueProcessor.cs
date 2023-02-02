@@ -1,5 +1,4 @@
 ﻿using System.Net;
-using System.Text.RegularExpressions;
 using EvAutoreg.Autoregistrar.Apis;
 using EvAutoreg.Autoregistrar.Domain;
 using EvAutoreg.Autoregistrar.Services.Interfaces;
@@ -17,18 +16,21 @@ public class IssueProcessor : IIssueProcessor
     private readonly IEvApi _evapi;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogDispatcher<IssueProcessor> _logDispatcher;
+    private readonly IIssueAnalyzer _issueAnalyzer;
 
     public IssueProcessor(
         IMapper mapper,
         IEvApi evapi,
         IServiceScopeFactory scopeFactory,
-        ILogDispatcher<IssueProcessor> logDispatcher
+        ILogDispatcher<IssueProcessor> logDispatcher,
+        IIssueAnalyzer issueAnalyzer
     )
     {
         _mapper = mapper;
         _evapi = evapi;
         _scopeFactory = scopeFactory;
         _logDispatcher = logDispatcher;
+        _issueAnalyzer = issueAnalyzer;
     }
 
     public async Task ProcessEvent(string issueNo)
@@ -42,60 +44,28 @@ public class IssueProcessor : IIssueProcessor
         }
 
         var xmlIssue = evResponse.Content!;
-        var issueFields = GlobalSettings.IssueFields!;
 
-        foreach (var field in issueFields)
+        var issueTypeId = await _issueAnalyzer.AnalyzeIssue(xmlIssue);
+
+        if (issueTypeId is null)
         {
-            //We don't want to use reflection if in the end every rule check will be false
-            //because there are no rules associated with this issue field, e.g. with issue Author etc.
-            if (field.Rules.Count < 1)
-            {
-                continue;
-            }
-
-            var value = xmlIssue.GetType().GetProperty(field.FieldName)!.GetValue(xmlIssue);
-            var rules = field.Rules;
-
-            if (value is not string str)
-            {
-                await _logDispatcher.Log(
-                    $"Parsing error occured for issue ID {issueNo} in field name {field.FieldName}"
-                );
-
-                continue;
-            }
-
-            var rulesByIssueType = rules.GroupBy(x => x.IssueTypeId);
-
-            foreach (var ruleSet in rulesByIssueType)
-            {
-                var issueTypeId = ruleSet.Key;
-
-                if (
-                    MatchesARule(ruleSet, str) && DoesntMatchANegativeRule(ruleSet, str)
-                    || MatchesARegExp(ruleSet, str) && DoesntMatchANegativeRegExp(ruleSet, str)
-                )
-                {
-                    await UpdateAndSaveIssue(issueTypeId, issueNo);
-                    return;
-                }
-            }
+            await _logDispatcher.Log($"Issue ID {issueNo} doesn't match any rules, skipping");
+            return;
         }
+
+        await UpdateAndSaveIssue(issueTypeId.Value, issueNo);
     }
 
-    //This class's cognitive complexity is higher than desired, but as for now here we have an external infrastructure bottleneck;
-    //the Extra View server has it's own set of rules on whether to consider issue properly 'registered'.
-    //There rules differ from company to company, so we needed to ensure we reach at least second-level depth of 'updating':
-    //the firts update changes issue status to 'regisered', and the second (if needed) -- to 'in work'.
-    //If your issue updating rules are standartised enough, you might not need this second update, but it is there in case somebody needs it.
-    // TODO: make cascade updates, i.e. give users the ability to create many query parameters entities for each issue type and enumerate them
-    //UPD Made cascade updates
     private async Task UpdateAndSaveIssue(int issueTypeId, string issueNo)
     {
         var loadedIssueType = GlobalSettings.IssueTypes!.First(x => x.Id == issueTypeId);
         var queryParameters = loadedIssueType.QueryParameters;
 
         await _logDispatcher.Log($"Registering an issue as: {loadedIssueType.IssueTypeName}");
+
+        await InsertIssueIntoDatabase(issueNo, issueTypeId);
+
+        await _logDispatcher.Log($"Inserted issue ID {issueNo} into the database");
 
         await UpdateIssue(queryParameters, issueTypeId, issueNo);
     }
@@ -156,37 +126,5 @@ public class IssueProcessor : IIssueProcessor
         {
             await _logDispatcher.Log("Couldn't retrieve an issue from EV server");
         }
-    }
-
-    private static bool MatchesARule(IEnumerable<Rule> ruleSet, string input)
-    {
-        return ruleSet
-            .Where(x => x is { IsNegative: false, IsRegex: false })
-            .Select(x => x.RuleSubstring)
-            .Any(input.Contains);
-    }
-
-    private static bool DoesntMatchANegativeRule(IEnumerable<Rule> ruleSet, string input)
-    {
-        return !ruleSet
-            .Where(x => x is { IsNegative: true, IsRegex: false })
-            .Select(x => x.RuleSubstring)
-            .Any(input.Contains);
-    }
-
-    private static bool MatchesARegExp(IEnumerable<Rule> regExpCollection, string input)
-    {
-        return regExpCollection
-            .Where(x => x is { IsNegative: false, IsRegex: true })
-            .Select(x => x.RuleSubstring)
-            .Any(x => Regex.IsMatch(input, x));
-    }
-
-    private static bool DoesntMatchANegativeRegExp(IEnumerable<Rule> regExpCollection, string input)
-    {
-        return !regExpCollection
-            .Where(x => x is { IsNegative: true, IsRegex: true })
-            .Select(x => x.RuleSubstring)
-            .Any(x => Regex.IsMatch(input, x));
     }
 }

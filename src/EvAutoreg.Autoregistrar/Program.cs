@@ -51,6 +51,7 @@ builder.Services.AddSingleton<ISettingsProvider, SettingsProvider>();
 builder.Services.AddSingleton<IMailEventListener, MailEventListener>();
 builder.Services.AddSingleton<IEvApi, EvApi>();
 builder.Services.AddSingleton<IIssueProcessor, IssueProcessor>();
+builder.Services.AddSingleton<IIssueAnalyzer, IssueAnalyzer>();
 
 builder.Services.TryAdd(
     ServiceDescriptor.Singleton(typeof(ILogDispatcher<>), typeof(LogDispatcher<>))
