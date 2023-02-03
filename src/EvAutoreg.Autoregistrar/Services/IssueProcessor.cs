@@ -44,27 +44,42 @@ public class IssueProcessor : IIssueProcessor
             return;
         }
 
-        await SaveAndUpdateIssue(issueTypeId.Value, issueNo);
+        await SaveAndUpdateIssue(xmlIssue, issueTypeId.Value);
     }
 
-    private async Task SaveAndUpdateIssue(int issueTypeId, string issueNo)
+    private async Task SaveAndUpdateIssue(XmlIssue xmlIssue, int issueTypeId)
     {
         var loadedIssueType = GlobalSettings.IssueTypes!.First(x => x.Id == issueTypeId);
         var queryParameters = loadedIssueType.QueryParameters;
 
         await _logDispatcher.Log($"Registering an issue as: {loadedIssueType.IssueTypeName}");
 
-        await InsertIssueIntoDatabase(issueNo, issueTypeId);
+        await InsertIssueIntoDatabase(xmlIssue, issueTypeId);
 
-        await _logDispatcher.Log($"Inserted issue ID {issueNo} into the database");
+        await _logDispatcher.Log($"Inserted issue ID {xmlIssue.Id} into the database");
 
-        await UpdateIssue(queryParameters, issueTypeId, issueNo);
+        await UpdateIssue(queryParameters, xmlIssue, issueTypeId);
+    }
+
+    private async Task InsertIssueIntoDatabase(XmlIssue xmlIssue, int issueTypeId)
+    {
+        var issue = _mapper.Map<IssueModel>(xmlIssue);
+
+        issue.IssueTypeId = issueTypeId;
+        issue.RegistrarId = StateManager.GetOperator();
+
+        using var scope = _scopeFactory.CreateScope();
+        var unitofWork = scope.ServiceProvider.GetRequiredService<IUnitofWork>();
+        await unitofWork.IssueRepository.Upsert(issue, CancellationToken.None);
+        await unitofWork.CommitAsync(CancellationToken.None);
+
+        await _logDispatcher.Log($"Issue ID {issue.Id} was updated");
     }
 
     private async Task UpdateIssue(
         IEnumerable<QueryParameters> queryParameters,
-        int issueTypeId,
-        string issueNo
+        XmlIssue xmlIssue,
+        int issueTypeId
     )
     {
         var sortedQueryParameters = queryParameters.OrderBy(x => x.ExecutionOrder);
@@ -79,25 +94,9 @@ public class IssueProcessor : IIssueProcessor
                 qp.RequestType ?? string.Empty
             };
 
-            await _evapi.UpdateIssue(issueNo, queryString);
-            await InsertIssueIntoDatabase(issueNo, issueTypeId);
-            await _logDispatcher.Log($"Inserted issue ID {issueNo} into the database");
+            await _evapi.UpdateIssue(xmlIssue.Id, queryString);
+            await InsertIssueIntoDatabase(xmlIssue, issueTypeId);
+            await _logDispatcher.Log($"Inserted issue ID {xmlIssue.Id} into the database");
         }
-    }
-
-    private async Task InsertIssueIntoDatabase(string issueNo, int issueTypeId)
-    {
-        var xmlIssue = await _evapi.GetIssue(issueNo);
-        var issue = _mapper.Map<IssueModel>(xmlIssue);
-
-        issue.IssueTypeId = issueTypeId;
-        issue.RegistrarId = StateManager.GetOperator();
-
-        using var scope = _scopeFactory.CreateScope();
-        var unitofWork = scope.ServiceProvider.GetRequiredService<IUnitofWork>();
-        await unitofWork.IssueRepository.Upsert(issue, CancellationToken.None);
-        await unitofWork.CommitAsync(CancellationToken.None);
-
-        await _logDispatcher.Log($"Issue ID {issue.Id} was updated");
     }
 }
