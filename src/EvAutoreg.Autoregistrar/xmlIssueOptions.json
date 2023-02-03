@@ -1,15 +1,15 @@
 ﻿{
   "XmlIssueOptions": {
-    "Root": "",
-    "Id": "",
-    "TimeCreated": "",
-    "Author": "",
-    "Company": "",
-    "Status": "",
-    "Priority": "",
-    "AssignedGroup": "",
-    "Assignee": "",
-    "ShortDescription": "",
-    "Description": ""
+    "Root": "PROBLEM_RECORD",
+    "Id": "ID",
+    "TimeCreated": "DATE_CREATED",
+    "Author": "ORIGINATOR",
+    "Company": "CTI_CUST_LIST",
+    "Status": "STATUS",
+    "Priority": "PRIORITY",
+    "AssignedGroup": "CTI_ASSIGNEDGROUP",
+    "Assignee": "ASSIGNED_TO",
+    "ShortDescription": "SHORT_DESCR",
+    "Description": "DESCRIPTION"
   }
 }

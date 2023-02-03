@@ -19,11 +19,13 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("xmlIssueOptions.json", optional: false);
 XmlIssueOptions xmlIssueOptions = new();
 builder.Configuration.Bind(nameof(XmlIssueOptions), xmlIssueOptions);
-builder.AddExtendedXmlSerializer(xmlIssueOptions);
+builder.AddIssueXmlSerializer(xmlIssueOptions);
+builder.Services.AddSingleton<IIssueDeserialzer, IssueDeserialzer>();
 
 Log.Logger = new LoggerConfiguration().ReadFrom
     .Configuration(builder.Configuration)
     .Enrich.FromLogContext()
+    .Enrich.WithMachineName()
     .CreateLogger();
 
 builder.Host.UseSerilog();
@@ -50,7 +52,10 @@ builder
     .AddRepositories();
 
 builder.Services
-    .AddHttpClient(EvApi.ClientName)
+    .AddHttpClient(
+        EvApi.ClientName,
+        client => client.DefaultRequestHeaders.Add("user-agent", "OperatorsAPI")
+    )
     .AddTransientHttpErrorPolicy(
         policyBuilder =>
             policyBuilder.WaitAndRetryAsync(
@@ -76,12 +81,6 @@ builder.Services.AddGrpcReflection();
 builder.Services.AddSignalR();
 
 var app = builder.Build();
-
-using (var scope = app.Services.CreateScope())
-{
-    var httpClient = scope.ServiceProvider.GetService<HttpClient>();
-    httpClient!.DefaultRequestHeaders.Add("User-agent", "OperatorsAPI");
-}
 
 app.ConfigureDbToDomainMapping();
 app.ConfigureXmlToModelMapping();

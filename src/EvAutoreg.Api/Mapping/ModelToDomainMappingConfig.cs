@@ -64,6 +64,7 @@ public static class ModelToDomainMappingConfig
             .NewConfig()
             .TwoWays()
             .Map(dest => dest.Id, src => src.Item1.Id)
+            .Map(dest => dest.OwnerUserId, src => src.Item1.OwnerUserId)
             .Map(dest => dest.RuleSubstring, src => src.Item1.Rule)
             .Map(dest => dest.IssueType.Id, src => src.Item2.Id)
             .Map(dest => dest.IssueType.IssueTypeName, src => src.Item2.IssueTypeName)

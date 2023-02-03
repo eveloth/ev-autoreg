@@ -1,8 +1,7 @@
 using System.Text;
 using EvAutoreg.Autoregistrar.Domain;
+using EvAutoreg.Autoregistrar.Services.Interfaces;
 using EvAutoreg.Autoregistrar.Settings;
-using EvAutoreg.Extensions;
-using ExtendedXmlSerializer;
 using Microsoft.IdentityModel.Tokens;
 
 namespace EvAutoreg.Autoregistrar.Apis;
@@ -11,15 +10,11 @@ public class EvApi : IEvApi
 {
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<EvApi> _logger;
-    private readonly IExtendedXmlSerializer _xmlSerializer;
-
-    private readonly string _evUri = GlobalSettings.AutoregistrarSettings!.ExtraViewUri;
-    private readonly string _evEmail = GlobalSettings.ExtraViewCredentials!.Email;
-    private readonly string _evPassword = GlobalSettings.ExtraViewCredentials.Password;
+    private readonly IIssueDeserialzer _issueDeserialzer;
 
     private const string Https = "https://";
     private const string EvBackend = "/evj/ExtraView/";
-    private const string EvAction = "ev.api.action?";
+    private const string EvAction = "ev_api.action?";
     private const string EvUserId = "user_id=";
     private const string EvPassword = "&password=";
     private const string MethodCall = "&statevar=";
@@ -32,25 +27,29 @@ public class EvApi : IEvApi
     public EvApi(
         ILogger<EvApi> logger,
         IHttpClientFactory httpClientFactory,
-        IExtendedXmlSerializer xmlSerializer
+        IIssueDeserialzer issueDeserialzer
     )
     {
         _logger = logger;
         _httpClientFactory = httpClientFactory;
-        _xmlSerializer = xmlSerializer;
+        _issueDeserialzer = issueDeserialzer;
     }
 
     public async Task<XmlIssue> GetIssue(string issueNo)
     {
+        var evUri = GlobalSettings.AutoregistrarSettings!.ExtraViewUri;
+        var evEmail = GlobalSettings.ExtraViewCredentials!.Email;
+        var evPassword = GlobalSettings.ExtraViewCredentials.Password;
+
         var client = _httpClientFactory.CreateClient(ClientName);
         var queryBuilder = new StringBuilder(Https)
-            .Append(_evUri)
+            .Append(evUri)
             .Append(EvBackend)
             .Append(EvAction)
             .Append(EvUserId)
-            .Append(_evEmail)
+            .Append(evEmail)
             .Append(EvPassword)
-            .Append(_evPassword)
+            .Append(evPassword)
             .Append(MethodCall)
             .Append(GetMethod)
             .Append(IssueId)
@@ -73,20 +72,24 @@ public class EvApi : IEvApi
             throw new EvApiException(responseBody);
         }
 
-        return _xmlSerializer.Deserialize<XmlIssue>(responseBody);
+        return _issueDeserialzer.DeserializeIssue(responseBody);
     }
 
     public async Task UpdateIssue(string issueNo, params string[] queryParameters)
     {
+        var evUri = GlobalSettings.AutoregistrarSettings!.ExtraViewUri;
+        var evEmail = GlobalSettings.ExtraViewCredentials!.Email;
+        var evPassword = GlobalSettings.ExtraViewCredentials.Password;
+
         var client = _httpClientFactory.CreateClient(ClientName);
         var queryBuilder = new StringBuilder(Https)
-            .Append(_evUri)
+            .Append(evUri)
             .Append(EvBackend)
             .Append(EvAction)
             .Append(EvUserId)
-            .Append(_evEmail)
+            .Append(evEmail)
             .Append(EvPassword)
-            .Append(_evPassword)
+            .Append(evPassword)
             .Append(MethodCall)
             .Append(UpdateMethod)
             .Append(IssueId)

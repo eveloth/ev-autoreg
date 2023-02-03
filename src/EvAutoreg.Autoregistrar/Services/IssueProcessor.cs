@@ -55,10 +55,9 @@ public class IssueProcessor : IIssueProcessor
         await _logDispatcher.Log($"Registering an issue as: {loadedIssueType.IssueTypeName}");
 
         await InsertIssueIntoDatabase(xmlIssue, issueTypeId);
-
         await _logDispatcher.Log($"Inserted issue ID {xmlIssue.Id} into the database");
 
-        await UpdateIssue(queryParameters, xmlIssue, issueTypeId);
+        await UpdateIssue(queryParameters, xmlIssue);
     }
 
     private async Task InsertIssueIntoDatabase(XmlIssue xmlIssue, int issueTypeId)
@@ -78,8 +77,7 @@ public class IssueProcessor : IIssueProcessor
 
     private async Task UpdateIssue(
         IEnumerable<QueryParameters> queryParameters,
-        XmlIssue xmlIssue,
-        int issueTypeId
+        XmlIssue xmlIssue
     )
     {
         var sortedQueryParameters = queryParameters.OrderBy(x => x.ExecutionOrder);
@@ -95,8 +93,6 @@ public class IssueProcessor : IIssueProcessor
             };
 
             await _evapi.UpdateIssue(xmlIssue.Id, queryString);
-            await InsertIssueIntoDatabase(xmlIssue, issueTypeId);
-            await _logDispatcher.Log($"Inserted issue ID {xmlIssue.Id} into the database");
         }
     }
 }

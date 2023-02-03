@@ -51,7 +51,12 @@ public class IssueAnalyzer : IIssueAnalyzer
 
             var rules = field.Rules;
 
-            return ComputeIssueType(stringToAnalyze, rules);
+            var issueTypeId =  ComputeIssueType(stringToAnalyze, rules);
+
+            if (issueTypeId is not null)
+            {
+                return issueTypeId;
+            }
         }
 
         return null;
@@ -84,7 +89,7 @@ public class IssueAnalyzer : IIssueAnalyzer
         return ruleSet
             .Where(x => x is { IsNegative: false, IsRegex: false })
             .Select(x => x.RuleSubstring)
-            .Any(input.Contains);
+            .Any(x => input.Contains(x, StringComparison.InvariantCultureIgnoreCase));
     }
 
     private static bool DoesntMatchANegativeRule(IEnumerable<Rule> ruleSet, string input)
@@ -92,7 +97,7 @@ public class IssueAnalyzer : IIssueAnalyzer
         return !ruleSet
             .Where(x => x is { IsNegative: true, IsRegex: false })
             .Select(x => x.RuleSubstring)
-            .Any(input.Contains);
+            .Any(x => input.Contains(x, StringComparison.InvariantCultureIgnoreCase));
     }
 
     private static bool MatchesARegExp(IEnumerable<Rule> regExpCollection, string input)
