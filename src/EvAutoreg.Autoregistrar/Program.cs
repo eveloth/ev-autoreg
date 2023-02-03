@@ -3,11 +3,11 @@ using EvAutoreg.Autoregistrar.GrpcServices;
 using EvAutoreg.Autoregistrar.Hubs;
 using EvAutoreg.Autoregistrar.Installers;
 using EvAutoreg.Autoregistrar.Mapping;
+using EvAutoreg.Autoregistrar.Options;
 using EvAutoreg.Autoregistrar.Services;
 using EvAutoreg.Autoregistrar.Services.Interfaces;
 using EvAutoreg.Autoregistrar.Settings;
 using EvAutoreg.Data.Extensions;
-using Grpc.Net.Client.Balancer;
 using MapsterMapper;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Polly;
@@ -15,6 +15,11 @@ using Polly.Contrib.WaitAndRetry;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Configuration.AddJsonFile("xmlIssueOptions.json", optional: false);
+XmlIssueOptions xmlIssueOptions = new();
+builder.Configuration.Bind(nameof(XmlIssueOptions), xmlIssueOptions);
+builder.AddExtendedXmlSerializer(xmlIssueOptions);
 
 Log.Logger = new LoggerConfiguration().ReadFrom
     .Configuration(builder.Configuration)

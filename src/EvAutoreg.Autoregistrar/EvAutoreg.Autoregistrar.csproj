@@ -12,6 +12,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="ExtendedXmlSerializer" Version="3.7.10" />
         <PackageReference Include="Grpc.AspNetCore" Version="2.49.0" />
         <PackageReference Include="Grpc.AspNetCore.Server.Reflection" Version="2.50.0" />
         <PackageReference Include="Mapster" Version="7.3.0" />

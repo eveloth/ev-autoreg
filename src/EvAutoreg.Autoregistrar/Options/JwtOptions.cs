@@ -1,4 +1,4 @@
-﻿namespace EvAutoreg.Autoregistrar.Settings;
+﻿namespace EvAutoreg.Autoregistrar.Options;
 
 public class JwtOptions
 {

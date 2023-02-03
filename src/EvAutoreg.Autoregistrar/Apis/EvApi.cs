@@ -2,6 +2,7 @@ using System.Text;
 using EvAutoreg.Autoregistrar.Domain;
 using EvAutoreg.Autoregistrar.Settings;
 using EvAutoreg.Extensions;
+using ExtendedXmlSerializer;
 using Microsoft.IdentityModel.Tokens;
 
 namespace EvAutoreg.Autoregistrar.Apis;
@@ -10,6 +11,7 @@ public class EvApi : IEvApi
 {
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<EvApi> _logger;
+    private readonly IExtendedXmlSerializer _xmlSerializer;
 
     private readonly string _evUri = GlobalSettings.AutoregistrarSettings!.ExtraViewUri;
     private readonly string _evEmail = GlobalSettings.ExtraViewCredentials!.Email;
@@ -27,10 +29,15 @@ public class EvApi : IEvApi
 
     public static string ClientName => nameof(EvApi) + "Client";
 
-    public EvApi(ILogger<EvApi> logger, IHttpClientFactory httpClientFactory)
+    public EvApi(
+        ILogger<EvApi> logger,
+        IHttpClientFactory httpClientFactory,
+        IExtendedXmlSerializer xmlSerializer
+    )
     {
         _logger = logger;
         _httpClientFactory = httpClientFactory;
+        _xmlSerializer = xmlSerializer;
     }
 
     public async Task<XmlIssue> GetIssue(string issueNo)
@@ -66,7 +73,7 @@ public class EvApi : IEvApi
             throw new EvApiException(responseBody);
         }
 
-        return responseBody.DeserializeXmlString<XmlIssue>();
+        return _xmlSerializer.Deserialize<XmlIssue>(responseBody);
     }
 
     public async Task UpdateIssue(string issueNo, params string[] queryParameters)

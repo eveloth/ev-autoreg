@@ -1,5 +1,6 @@
 using System.Text;
 using EvAutoreg.Autoregistrar.Exceptions;
+using EvAutoreg.Autoregistrar.Options;
 using EvAutoreg.Autoregistrar.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
