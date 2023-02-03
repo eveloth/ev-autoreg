@@ -11,17 +11,20 @@ namespace EvAutoreg.Autoregistrar.Services;
 public class MailEventListener : IMailEventListener
 {
     private readonly IIssueProcessor _issueProcessor;
+    private readonly ILogger<MailEventListener> _logger;
     private readonly ILogDispatcher<MailEventListener> _logDispatcher;
     private ExchangeService _exchange = null!;
     private StreamingSubscriptionConnection? _connection;
 
     public MailEventListener(
         IIssueProcessor issueProcessor,
-        ILogDispatcher<MailEventListener> logDispatcher
+        ILogDispatcher<MailEventListener> logDispatcher,
+        ILogger<MailEventListener> logger
     )
     {
         _issueProcessor = issueProcessor;
         _logDispatcher = logDispatcher;
+        _logger = logger;
     }
 
     public async Task OpenConnection(CancellationToken cts)
@@ -70,21 +73,43 @@ public class MailEventListener : IMailEventListener
             {
                 await _issueProcessor.ProcessEvent(issueNo);
             }
-            catch (EvApiException)
+            catch (EvApiException e)
             {
-                await _logDispatcher.Log("Processing an issue resulted in an error");
+                await _logDispatcher.Log($"Processing an issue {issueNo} resulted in an error");
+                _logger.LogError(
+                    "Processing an issue ID {IssueId} resulted in an error: {Error}",
+                    issueNo,
+                    e
+                );
             }
-            catch (HttpRequestException)
+            catch (HttpRequestException e)
             {
-                await _logDispatcher.Log("Processing an issue resulted in an error");
+                await _logDispatcher.Log(
+                    $"Processing an issue {issueNo} resulted in an error: couldn't connect to EV server"
+                );
+                _logger.LogError(
+                    "Processing an issue ID {Issueid} resulted in an error: {Error}",
+                    issueNo,
+                    e
+                );
             }
-            catch (NpgsqlException)
+            catch (NpgsqlException e)
             {
-                await _logDispatcher.Log("Processing an issue resulted in an error");
+                await _logDispatcher.Log($"Processing an issue {issueNo} resulted in an error");
+                _logger.LogError(
+                    "Processing an issue ID {Issueid} resulted in an error: {Error}",
+                    issueNo,
+                    e
+                );
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                await _logDispatcher.Log("Processing an issue resulted in an error");
+                await _logDispatcher.Log($"Processing an issue {issueNo} resulted in an error");
+                _logger.LogError(
+                    "Processing an issue ID {Issueid} resulted in an error: {Error}",
+                    issueNo,
+                    e
+                );
             }
         }
     }
@@ -111,7 +136,8 @@ public class MailEventListener : IMailEventListener
 
     private async void OnSubscriptionError(object sender, SubscriptionErrorEventArgs args)
     {
-        await _logDispatcher.Log($"A subscription error occured, details: {args.Exception}");
+        await _logDispatcher.Log("A subscription error occured, trying to recover...");
+        _logger.LogError("A subscription error occured: {Error}", args.Exception);
 
         _connection = null;
 
@@ -146,11 +172,12 @@ public class MailEventListener : IMailEventListener
                     );
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 await _logDispatcher.Log(
                     $"Counldn't restore a connection, trying again in {delaySec:%s}s..."
                 );
+                _logger.LogError("Could not open connection, error: {Error}", e);
                 await Task.Delay(delaySec);
             }
         }

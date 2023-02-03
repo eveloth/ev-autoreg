@@ -8,11 +8,13 @@ namespace EvAutoreg.Autoregistrar.Services;
 
 public class IssueAnalyzer : IIssueAnalyzer
 {
+    private readonly ILogger<IssueAnalyzer> _logger;
     private readonly ILogDispatcher<IssueAnalyzer> _logDispatcher;
 
-    public IssueAnalyzer(ILogDispatcher<IssueAnalyzer> logDispatcher)
+    public IssueAnalyzer(ILogDispatcher<IssueAnalyzer> logDispatcher, ILogger<IssueAnalyzer> logger)
     {
         _logDispatcher = logDispatcher;
+        _logger = logger;
     }
 
     public async Task<int?> AnalyzeIssue(XmlIssue issue)
@@ -34,6 +36,15 @@ public class IssueAnalyzer : IIssueAnalyzer
             {
                 await _logDispatcher.Log(
                     $"Parsing error occured for issue ID {issue.Id} in field name {field.FieldName}"
+                );
+
+                _logger.LogWarning(
+                    "A parsing error occured while trying to analyze issue ID {IssueId}. "
+                        + "Expected type {Type} for field Issue.{Field}, got {ActualType}",
+                    issue.Id,
+                    typeof(string),
+                    propertyValue?.GetType().Name ?? "NULL",
+                    field.FieldName
                 );
                 continue;
             }
