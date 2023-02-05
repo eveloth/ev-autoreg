@@ -15,6 +15,7 @@ public class IssueProcessor : IIssueProcessor
     private readonly IEvApi _evapi;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogDispatcher<IssueProcessor> _logDispatcher;
+    private readonly ILogger<IssueProcessor> _logger;
     private readonly IIssueAnalyzer _issueAnalyzer;
 
     public IssueProcessor(
@@ -22,7 +23,8 @@ public class IssueProcessor : IIssueProcessor
         IEvApi evapi,
         IServiceScopeFactory scopeFactory,
         ILogDispatcher<IssueProcessor> logDispatcher,
-        IIssueAnalyzer issueAnalyzer
+        IIssueAnalyzer issueAnalyzer,
+        ILogger<IssueProcessor> logger
     )
     {
         _mapper = mapper;
@@ -30,6 +32,7 @@ public class IssueProcessor : IIssueProcessor
         _scopeFactory = scopeFactory;
         _logDispatcher = logDispatcher;
         _issueAnalyzer = issueAnalyzer;
+        _logger = logger;
     }
 
     public async Task ProcessEvent(string issueNo)
@@ -52,12 +55,15 @@ public class IssueProcessor : IIssueProcessor
         var loadedIssueType = GlobalSettings.IssueTypes!.First(x => x.Id == issueTypeId);
         var queryParameters = loadedIssueType.QueryParameters;
 
-        await _logDispatcher.Log($"Registering an issue as: {loadedIssueType.IssueTypeName}");
+        await _logDispatcher.Log(
+            $"Registering an issue ID {xmlIssue.Id} as: {loadedIssueType.IssueTypeName}"
+        );
 
         await InsertIssueIntoDatabase(xmlIssue, issueTypeId);
-        await _logDispatcher.Log($"Inserted issue ID {xmlIssue.Id} into the database");
+        _logger.LogInformation("Inserted issue ID {IssueId} into the database", xmlIssue.Id);
 
         await UpdateIssue(queryParameters, xmlIssue);
+        await _logDispatcher.Log($"Issue ID {xmlIssue.Id} was updated");
     }
 
     private async Task InsertIssueIntoDatabase(XmlIssue xmlIssue, int issueTypeId)
@@ -71,14 +77,9 @@ public class IssueProcessor : IIssueProcessor
         var unitofWork = scope.ServiceProvider.GetRequiredService<IUnitofWork>();
         await unitofWork.IssueRepository.Upsert(issue, CancellationToken.None);
         await unitofWork.CommitAsync(CancellationToken.None);
-
-        await _logDispatcher.Log($"Issue ID {issue.Id} was updated");
     }
 
-    private async Task UpdateIssue(
-        IEnumerable<QueryParameters> queryParameters,
-        XmlIssue xmlIssue
-    )
+    private async Task UpdateIssue(IEnumerable<QueryParameters> queryParameters, XmlIssue xmlIssue)
     {
         var sortedQueryParameters = queryParameters.OrderBy(x => x.ExecutionOrder);
 

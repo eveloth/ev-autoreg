@@ -76,5 +76,12 @@ public class ErrorHandlingMiddleware
             var error = new ErrorResponse { ApiError = ErrorCode[13001] };
             await context.Response.WriteAsJsonAsync(error);
         }
+        catch (Exception e)
+        {
+            _logger.LogError("An error occured executing the request: {Error}", e);
+            context.Response.StatusCode = 500;
+            var error = new ErrorResponse { ApiError = ErrorCode[13001] };
+            await context.Response.WriteAsJsonAsync(error);
+        }
     }
 }
