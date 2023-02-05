@@ -1,8 +1,11 @@
-﻿using EvAutoreg.Autoregistrar.Services.Interfaces;
+﻿using System.Security.Cryptography;
+using EvAutoreg.Autoregistrar.Services.Interfaces;
 using EvAutoreg.Autoregistrar.Settings;
 using EvAutoreg.Autoregistrar.State;
 using Grpc.Core;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Exchange.WebServices.Data;
+using Npgsql;
 using Task = System.Threading.Tasks.Task;
 
 namespace EvAutoreg.Autoregistrar.GrpcServices;
@@ -73,14 +76,24 @@ public class AutoregistrarService : Autoregistrar.AutoregistrarBase
             await _settingsProvider.InitializeSettings(serviceOperator, context.CancellationToken);
             await _listener.OpenConnection(context.CancellationToken);
         }
-        catch (Exception e)
+        catch (Exception e) when (e is CryptographicException or NpgsqlException)
         {
             await _logDispatcher.Log(
-                "Couldn't start service; " +
-                "the reason might be external credentials are invalid or an internal service error occured"
+                "Couldn't start service; " + "consult the service administartor"
             );
             StateManager.SetStatus(Status.Stopped);
             throw new RpcException(new Grpc.Core.Status(StatusCode.Internal, e.ToString()));
+        }
+        catch (Exception e) when (e is ServiceRequestException)
+        {
+            await _logDispatcher.Log(
+                "Couldn't connect to the Exchange server; the reason might be credentials are invalid "
+                    + "or Exchange server is unreachable"
+            );
+            StateManager.SetStatus(Status.Stopped);
+            throw new RpcException(
+                new Grpc.Core.Status(StatusCode.FailedPrecondition, e.ToString())
+            );
         }
 
         StateManager.SetStatus(Status.Started);

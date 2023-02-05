@@ -44,6 +44,13 @@ public static class ErrorCodes
             },
             { 12001, new ApiError(12001, "Validation error") },
             { 13001, new ApiError(13001, "Internal error. Consult the service administrator.") },
+            {
+                13002,
+                new ApiError(
+                    13002,
+                    "Exchange credentials are invalid or Exchange server is inreachable."
+                )
+            },
             { 14001, new ApiError(14001, "Configuration file is not valid, check entries.") },
         };
 

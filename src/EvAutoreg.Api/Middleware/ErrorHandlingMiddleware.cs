@@ -64,9 +64,19 @@ public class ErrorHandlingMiddleware
         }
         catch (RpcException e)
         {
-            _logger.LogError("Autoregistrar service returned an error: {Error}", e);
+            _logger.LogError(
+                "Autoregistrar service returned an error: {StatusCode}: {Error}",
+                e.StatusCode,
+                e.Message
+            );
+
             context.Response.StatusCode = 500;
-            var error = new ErrorResponse { ApiError = ErrorCode[13001] };
+
+            var error = e.StatusCode switch
+            {
+                StatusCode.FailedPrecondition => new ErrorResponse { ApiError = ErrorCode[13002] },
+                _ => new ErrorResponse { ApiError = ErrorCode[13001] }
+            };
             await context.Response.WriteAsJsonAsync(error);
         }
         catch (RedisTimeoutException e)
