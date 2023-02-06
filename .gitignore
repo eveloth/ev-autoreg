@@ -353,3 +353,4 @@ MigrationBackup/
 .ionide/
 
 EVAutoreg.sln.DotSettings.user
+.env

@@ -5,12 +5,12 @@ EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
-COPY ["EvAutoreg.Api.csproj", "."]
-COPY ["EvAutoreg.Data.csproj", "."]
-COPY ["EvAutoreg.Extensions.csproj", "."]
-RUN dotnet restore "./EvAutoreg.Api.csproj"
+COPY ["src/EvAutoreg.Api/EvAutoreg.Api.csproj", "src/EvAutoreg.Api/"]
+COPY ["src/EvAutoreg.Data/EvAutoreg.Data.csproj", "src/EvAutoreg.Data/"]
+COPY ["src/EvAutoreg.Extensions/EvAutoreg.Extensions.csproj", "src/EvAutoreg.Extensions/"]
+RUN dotnet restore "src/EvAutoreg.Api/EvAutoreg.Api.csproj"
 COPY . .
-WORKDIR "/src/."
+WORKDIR "/src/src/EvAutoreg.Api"
 RUN dotnet build "EvAutoreg.Api.csproj" -c Release -o /app/build
 
 FROM build AS publish
@@ -19,4 +19,4 @@ RUN dotnet publish "EvAutoreg.Api.csproj" -c Release -o /app/publish
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "EvAutoreg.Api.dll", "--environment=Production"]
+ENTRYPOINT ["dotnet", "EvAutoreg.Api.dll"]
