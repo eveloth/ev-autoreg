@@ -1,10 +1,11 @@
-﻿using EvAutoreg.Api.Options;
+using EvAutoreg.Autoregistrar.Options;
 using Serilog;
 
-namespace EvAutoreg.Api.Installers;
+namespace EvAutoreg.Autoregistrar.Installers;
 
 public static class SerilogInstaller
 {
+
     public static WebApplicationBuilder InstallSerilog(this WebApplicationBuilder builder)
     {
         var serilogOptions = new SerilogOptions();
@@ -23,7 +24,7 @@ public static class SerilogInstaller
             )
             .WriteTo.Conditional(
                 _ => serilogOptions.EnableFile,
-                configuration => configuration.File("../logs/ev-autoreg-.log")
+                configuration => configuration.File("../logs/autoregistrar-.log")
             )
             .WriteTo.Conditional(
                 _ => serilogOptions.EnableSeq,

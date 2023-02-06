@@ -6,6 +6,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <UserSecretsId>7ed86210-4c8f-4963-89e3-5d86e2d4e22c</UserSecretsId>
         <LangVersion>11</LangVersion>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     </PropertyGroup>
     
     <PropertyGroup>
@@ -54,6 +55,12 @@
       <Protobuf Include="Protos\evautoreg.proto">
         <GrpcServices>Client</GrpcServices>
       </Protobuf>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="..\..\.dockerignore">
+        <Link>.dockerignore</Link>
+      </Content>
     </ItemGroup>
 
 </Project>

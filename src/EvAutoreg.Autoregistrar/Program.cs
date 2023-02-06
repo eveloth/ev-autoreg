@@ -16,19 +16,13 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.InstallSerilog();
+
 builder.Configuration.AddJsonFile("xmlIssueOptions.json", optional: false);
 XmlIssueOptions xmlIssueOptions = new();
 builder.Configuration.Bind(nameof(XmlIssueOptions), xmlIssueOptions);
 builder.AddIssueXmlSerializer(xmlIssueOptions);
 builder.Services.AddSingleton<IIssueDeserialzer, IssueDeserialzer>();
-
-Log.Logger = new LoggerConfiguration().ReadFrom
-    .Configuration(builder.Configuration)
-    .Enrich.FromLogContext()
-    .Enrich.WithMachineName()
-    .CreateLogger();
-
-builder.Host.UseSerilog();
 
 // Additional configuration is required to successfully run gRPC on macOS.
 // For instructions on how to configure Kestrel and gRPC clients on macOS, visit https://go.microsoft.com/fwlink/?linkid=2099682
