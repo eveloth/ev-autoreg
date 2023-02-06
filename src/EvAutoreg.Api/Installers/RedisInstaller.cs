@@ -11,11 +11,19 @@ public static class RedisInstaller
         var redisCs =
             builder.Configuration.GetConnectionString("Redis")
             ?? throw new NullConfigurationEntryException();
-        var redis = await ConnectionMultiplexer.ConnectAsync(redisCs);
-        builder.Services.AddSingleton(redis);
+
         var redisOptions = new RedisOptions();
         builder.Configuration.Bind(nameof(redisOptions), redisOptions);
         builder.Services.AddSingleton(redisOptions);
+
+        var redis = await ConnectionMultiplexer.ConnectAsync(
+            redisCs,
+            options =>
+            {
+                options.Password = redisOptions.Password;
+            }
+        );
+        builder.Services.AddSingleton(redis);
 
         return builder;
     }
