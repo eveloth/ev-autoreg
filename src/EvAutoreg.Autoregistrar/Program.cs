@@ -9,6 +9,7 @@ using EvAutoreg.Autoregistrar.Services.Interfaces;
 using EvAutoreg.Autoregistrar.Settings;
 using EvAutoreg.Data.Extensions;
 using MapsterMapper;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Polly;
 using Polly.Contrib.WaitAndRetry;
@@ -80,6 +81,13 @@ app.ConfigureDbToDomainMapping();
 app.ConfigureXmlToModelMapping();
 
 var env = app.Environment;
+
+app.UseForwardedHeaders(
+    new ForwardedHeadersOptions
+    {
+        ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+    }
+);
 
 app.UseSerilogRequestLogging();
 

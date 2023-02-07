@@ -11,6 +11,7 @@ using EvAutoreg.Api.Validators;
 using EvAutoreg.Data.Extensions;
 using FluentValidation;
 using MapsterMapper;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Serilog;
 
@@ -79,6 +80,13 @@ internal static class Program
 
         app.RunMigrations();
         await app.SeedData();
+
+        app.UseForwardedHeaders(
+            new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+            }
+        );
 
         app.UseSerilogRequestLogging();
 
