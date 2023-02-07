@@ -139,7 +139,7 @@ public class MeController : ControllerBase
         var user = new User
         {
             Id = userId,
-            FirstName = request.FisrtName,
+            FirstName = request.FirstName,
             LastName = request.LastName
         };
 

@@ -8,7 +8,7 @@ public class UserProfileValidator : AbstractValidator<UserProfileRequest>
 {
     public UserProfileValidator()
     {
-        RuleFor(profile => profile.FisrtName)
+        RuleFor(profile => profile.FirstName)
             .NotNull()
             .NotEmpty()
             .Length(min: 2, max: 64)
