@@ -1,5 +1,6 @@
 ﻿using EvAutoreg.Api.Cache;
 using EvAutoreg.Api.Options;
+using StackExchange.Redis;
 
 namespace EvAutoreg.Api.Installers;
 
@@ -14,10 +15,18 @@ public static class RedisCacheInstaller
         if (!redisCacheOptions.Enabled)
             return builder;
 
-        builder.Services.AddStackExchangeRedisCache(
-            options =>
-                options.Configuration = builder.Configuration.GetConnectionString("RedisCache")
-        );
+        var redisOptions = new RedisOptions();
+        builder.Configuration.Bind(nameof(redisOptions), redisOptions);
+
+        var redisConnectionString = builder.Configuration.GetConnectionString("RedisCache");
+        var config = ConfigurationOptions.Parse(redisConnectionString!);
+        config.Password = redisOptions.Password;
+
+        builder.Services.AddStackExchangeRedisCache(options =>
+        {
+            options.ConfigurationOptions = config;
+        });
+
         builder.Services.AddSingleton<IResponseCacheService, ResponseCacheService>();
 
         return builder;
