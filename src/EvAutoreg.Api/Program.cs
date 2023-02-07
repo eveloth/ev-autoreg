@@ -5,6 +5,7 @@ using EvAutoreg.Api.Swagger;
 using EvAutoreg.Api.Exceptions;
 using EvAutoreg.Api.Mapping;
 using EvAutoreg.Api.Middleware;
+using EvAutoreg.Api.Options;
 using EvAutoreg.Api.Redis;
 using EvAutoreg.Api.Validators;
 using EvAutoreg.Data.Extensions;
@@ -81,8 +82,10 @@ internal static class Program
 
         app.UseSerilogRequestLogging();
 
-        // Configure the HTTP request pipeline.
-        if (app.Environment.IsDevelopment())
+        var swaggerOptions = new SwaggerOptions();
+        app.Configuration.Bind(nameof(SwaggerOptions), swaggerOptions);
+
+        if (app.Environment.IsDevelopment() || swaggerOptions.Enabled)
         {
             app.UseSwagger();
             app.UseSwaggerUI();

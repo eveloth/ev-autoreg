@@ -89,7 +89,10 @@ app.UseAuthorization();
 // Configure the HTTP request pipeline.
 app.MapGrpcService<AutoregistrarService>();
 
-if (env.IsDevelopment())
+var grpcReflectionOptions = new GrpcReflectionOptions();
+app.Configuration.Bind(nameof(GrpcReflectionOptions), grpcReflectionOptions);
+
+if (env.IsDevelopment() || grpcReflectionOptions.Enabled)
 {
     app.MapGrpcReflectionService();
 }
