@@ -2,18 +2,16 @@ namespace EvAutoreg.Api.Domain;
 
 public class Issue
 {
-#pragma warning disable CS8618
     public int Id { get; set; }
     public DateTime TimeCreated { get; set; }
-    public string Author { get; set; }
-    public string Company { get; set; }
-    public string Status { get; set; }
-    public string Priority { get; set; }
+    public string Author { get; set; } = default!;
+    public string Company { get; set; } = default!;
+    public string Status { get; set; } = default!;
+    public string Priority { get; set; } = default!;
     public string? AssignedGroup { get; set; }
     public string? Assignee { get; set; }
-    public string ShortDescription { get; set; }
-    public string Description { get; set; }
+    public string ShortDescription { get; set; } = default!;
+    public string Description { get; set; } = default!;
     public User? Registrar { get; set; }
     public IssueType? IssueType { get; set; }
-#pragma warning restore CS8618
 }
