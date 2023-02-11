@@ -19,6 +19,7 @@ public class EvApi : IEvApi
     private const string EvPassword = "&password=";
     private const string MethodCall = "&statevar=";
     private const string GetMethod = "get";
+    private const string GetFieldMethod = "get_fields";
     private const string UpdateMethod = "update";
     private const string IssueId = "&id=";
 
@@ -57,7 +58,11 @@ public class EvApi : IEvApi
 
         var query = queryBuilder.ToString();
 
-        _logger.LogInformation("Initiating request to EV server at {Uri}", evUri);
+        _logger.LogInformation(
+            "Initiating request to EV server at {Uri}, method: {Method}",
+            evUri,
+            nameof(GetMethod)
+        );
 
         var response = await client.GetAsync(query);
         var responseBody = await response.Content.ReadAsStringAsync();
@@ -105,7 +110,11 @@ public class EvApi : IEvApi
 
         var query = queryBuilder.ToString();
 
-        _logger.LogInformation("Initiating request to EV server at {Uri}", evUri);
+        _logger.LogInformation(
+            "Initiating request to EV server at {Uri}, method: {Method}",
+            evUri,
+            nameof(UpdateMethod)
+        );
 
         var response = await client.GetAsync(query);
         var responseBody = await response.Content.ReadAsStringAsync();
@@ -119,6 +128,46 @@ public class EvApi : IEvApi
         {
             throw new EvApiException(responseBody);
         }
+    }
+
+    public async Task<string> GetFieldValue(string issueNo, string issueField)
+    {
+        var evUri = GlobalSettings.AutoregistrarSettings!.ExtraViewUri;
+        var evEmail = GlobalSettings.ExtraViewCredentials!.Email;
+        var evPassword = GlobalSettings.ExtraViewCredentials.Password;
+
+        var client = _httpClientFactory.CreateClient(ClientName);
+        var queryBuilder = new StringBuilder(Https)
+            .Append(evUri)
+            .Append(EvBackend)
+            .Append(EvAction)
+            .Append(EvUserId)
+            .Append(evEmail)
+            .Append(EvPassword)
+            .Append(evPassword)
+            .Append(MethodCall)
+            .Append(GetFieldMethod)
+            .Append(IssueId)
+            .Append(issueNo)
+            .Append('&')
+            .Append(issueField);
+
+        var query = queryBuilder.ToString();
+
+        _logger.LogInformation(
+            "Initiating request to EV server at {Uri}, method: {Method}",
+            evUri,
+            nameof(GetFieldMethod)
+        );
+
+        var response = await client.GetStringAsync(query);
+
+        if (string.IsNullOrEmpty(response))
+        {
+            throw new EvApiException($"Issue field {issueField} not found");
+        }
+
+        return response;
     }
 
     private static bool IsValidXml(string xmlString)

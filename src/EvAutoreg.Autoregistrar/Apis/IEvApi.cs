@@ -6,4 +6,6 @@ public interface IEvApi
 {
     Task<XmlIssue> GetIssue(string issueNo);
     Task UpdateIssue(string issueNo, params string[] queryParameters);
+
+    Task<string> GetFieldValue(string issueNo, string issueField);
 }

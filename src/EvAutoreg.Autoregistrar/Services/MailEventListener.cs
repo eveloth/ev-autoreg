@@ -50,22 +50,20 @@ public class MailEventListener : IMailEventListener
 
     private async void OnNotificationEvent(object sender, NotificationEventArgs args)
     {
+        var newIssueRegex = GlobalSettings.AutoregistrarSettings!.NewIssueRegex;
+        var issueNoRegex = GlobalSettings.AutoregistrarSettings.IssueNoRegex;
+
         foreach (var ev in args.Events)
         {
             var notification = (ItemEvent)ev;
             var email = await EmailMessage.Bind(_exchange, notification.ItemId);
 
-            if (!GlobalSettings.AutoregistrarSettings!.NewIssueRegex.IsMatch(email.Subject))
+            if (!newIssueRegex.IsMatch(email.Subject))
             {
-                await _logDispatcher.Log(
-                    $"A connection was opened for user ID {StateManager.GetOperator()}"
-                );
                 continue;
             }
 
-            var issueNo = GlobalSettings.AutoregistrarSettings.IssueNoRegex
-                .Match(email.Subject)
-                .Groups[1].Value;
+            var issueNo = issueNoRegex.Match(email.Subject).Groups[1].Value;
 
             await _logDispatcher.Log($"Received new issue, ID {issueNo}");
 
@@ -73,7 +71,7 @@ public class MailEventListener : IMailEventListener
             {
                 await _issueProcessor.ProcessEvent(issueNo);
             }
-            catch (EvApiException e)
+            catch (Exception e) when (e is EvApiException or NpgsqlException)
             {
                 await _logDispatcher.Log($"Processing an issue {issueNo} resulted in an error");
                 _logger.LogError(
@@ -87,15 +85,6 @@ public class MailEventListener : IMailEventListener
                 await _logDispatcher.Log(
                     $"Processing an issue {issueNo} resulted in an error: couldn't connect to EV server"
                 );
-                _logger.LogError(
-                    "Processing an issue ID {Issueid} resulted in an error: {Error}",
-                    issueNo,
-                    e
-                );
-            }
-            catch (NpgsqlException e)
-            {
-                await _logDispatcher.Log($"Processing an issue {issueNo} resulted in an error");
                 _logger.LogError(
                     "Processing an issue ID {Issueid} resulted in an error: {Error}",
                     issueNo,
@@ -121,7 +110,6 @@ public class MailEventListener : IMailEventListener
             await _logDispatcher.Log(
                 $"The connection was gracefully closed for user ID {StateManager.GetOperator()}"
             );
-
             return;
         }
 
@@ -129,9 +117,7 @@ public class MailEventListener : IMailEventListener
             $"The connection was automatically closed for user ID {StateManager.GetOperator()}, reopening connection"
         );
 
-        _connection = null;
-        await CreateConnection();
-        await OpenConnectionWithRetry(TimeSpan.FromSeconds(3));
+        await ReconnectWithRetry(TimeSpan.FromSeconds(3));
     }
 
     private async void OnSubscriptionError(object sender, SubscriptionErrorEventArgs args)
@@ -139,10 +125,45 @@ public class MailEventListener : IMailEventListener
         await _logDispatcher.Log("A subscription error occured, trying to recover...");
         _logger.LogError("A subscription error occured: {Error}", args.Exception);
 
-        _connection = null;
+        await ReconnectWithRetry(TimeSpan.FromSeconds(3));
+    }
 
+    private async Task ReconnectWithRetry(TimeSpan delaySec)
+    {
+        while (!ConnectionIsOpen())
+        {
+            if (!StateManager.IsStarted())
+            {
+                break;
+            }
+
+            try
+            {
+                await TryReconnect();
+            }
+            catch (Exception e)
+            {
+                await _logDispatcher.Log(
+                    $"Counldn't restore a connection, trying again in {delaySec:%s}s..."
+                );
+                _logger.LogError("Could not open connection, error: {Error}", e);
+                await Task.Delay(delaySec);
+            }
+        }
+    }
+
+    private async Task TryReconnect()
+    {
+        _connection = null;
         await CreateConnection();
-        await OpenConnectionWithRetry(TimeSpan.FromSeconds(3));
+        _connection!.Open();
+
+        if (_connection.IsOpen)
+        {
+            await _logDispatcher.Log(
+                $"A connection was opened for user ID {StateManager.GetOperator()}"
+            );
+        }
     }
 
     private async Task CreateConnection()
@@ -157,29 +178,8 @@ public class MailEventListener : IMailEventListener
         _connection.AddSubscription(subscription);
     }
 
-    private async Task OpenConnectionWithRetry(TimeSpan delaySec)
+    private bool ConnectionIsOpen()
     {
-        while (!_connection!.IsOpen)
-        {
-            try
-            {
-                _connection.Open();
-
-                if (_connection.IsOpen)
-                {
-                    await _logDispatcher.Log(
-                        $"A connection was opened for user ID {StateManager.GetOperator()}"
-                    );
-                }
-            }
-            catch (Exception e)
-            {
-                await _logDispatcher.Log(
-                    $"Counldn't restore a connection, trying again in {delaySec:%s}s..."
-                );
-                _logger.LogError("Could not open connection, error: {Error}", e);
-                await Task.Delay(delaySec);
-            }
-        }
+        return _connection?.IsOpen ?? false;
     }
 }
