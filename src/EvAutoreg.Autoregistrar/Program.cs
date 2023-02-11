@@ -12,8 +12,6 @@ using EvAutoreg.Data.Extensions;
 using MapsterMapper;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Polly;
-using Polly.Contrib.WaitAndRetry;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -51,17 +49,7 @@ builder
     .AddDapperSnakeCaseConvention()
     .AddRepositories();
 
-builder.Services
-    .AddHttpClient(
-        EvApi.ClientName,
-        client => client.DefaultRequestHeaders.Add("user-agent", "OperatorsAPI")
-    )
-    .AddTransientHttpErrorPolicy(
-        policyBuilder =>
-            policyBuilder.WaitAndRetryAsync(
-                Backoff.DecorrelatedJitterBackoffV2(TimeSpan.FromSeconds(1), 5)
-            )
-    );
+builder.InstallEvApiHttpClient();
 
 builder.Services.AddSingleton<IMapper, Mapper>();
 builder.Services.AddSingleton<ICredentialsDecryptor, CredentialsDecryptor>();
@@ -99,7 +87,6 @@ app.UseSerilogRequestLogging();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Configure the HTTP request pipeline.
 app.MapGrpcService<AutoregistrarService>();
 
 var grpcReflectionOptions = new GrpcReflectionOptions();
