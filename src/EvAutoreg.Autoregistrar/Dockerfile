@@ -18,5 +18,6 @@ RUN dotnet publish "EvAutoreg.Autoregistrar.csproj" -c Release -o /app/publish
 
 FROM base AS final
 WORKDIR /app
+RUN apt update && apt -y install gss-ntlmssp
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "EvAutoreg.Autoregistrar.dll"]

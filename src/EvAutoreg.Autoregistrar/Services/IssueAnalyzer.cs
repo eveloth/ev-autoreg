@@ -43,15 +43,15 @@ public class IssueAnalyzer : IIssueAnalyzer
                         + "Expected type {Type} for field Issue.{Field}, got {ActualType}",
                     issue.Id,
                     typeof(string),
-                    propertyValue?.GetType().Name ?? "NULL",
-                    field.FieldName
+                    field.FieldName,
+                    propertyValue?.GetType().Name ?? "NULL"
                 );
                 continue;
             }
 
             var rules = field.Rules;
 
-            var issueTypeId =  ComputeIssueType(stringToAnalyze, rules);
+            var issueTypeId = ComputeIssueType(stringToAnalyze, rules);
 
             if (issueTypeId is not null)
             {
