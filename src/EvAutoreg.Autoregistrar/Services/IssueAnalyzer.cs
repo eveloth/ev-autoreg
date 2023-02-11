@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using EvAutoreg.Autoregistrar.Domain;
+using EvAutoreg.Autoregistrar.Reflection;
 using EvAutoreg.Autoregistrar.Services.Interfaces;
 using EvAutoreg.Autoregistrar.Settings;
 using EvAutoreg.Extensions;
@@ -10,11 +11,17 @@ public class IssueAnalyzer : IIssueAnalyzer
 {
     private readonly ILogger<IssueAnalyzer> _logger;
     private readonly ILogDispatcher<IssueAnalyzer> _logDispatcher;
+    private readonly IssuePropertyInfos _issuePropertyInfos;
 
-    public IssueAnalyzer(ILogDispatcher<IssueAnalyzer> logDispatcher, ILogger<IssueAnalyzer> logger)
+    public IssueAnalyzer(
+        ILogDispatcher<IssueAnalyzer> logDispatcher,
+        ILogger<IssueAnalyzer> logger,
+        IssuePropertyInfos issuePropertyInfos
+    )
     {
         _logDispatcher = logDispatcher;
         _logger = logger;
+        _issuePropertyInfos = issuePropertyInfos;
     }
 
     public async Task<int?> AnalyzeIssue(XmlIssue issue)
@@ -28,8 +35,9 @@ public class IssueAnalyzer : IIssueAnalyzer
                 continue;
             }
 
-            var xmlIssueType = issue.GetType();
-            var currentProperty = xmlIssueType.GetProperty(field.FieldName)!;
+            var currentProperty = _issuePropertyInfos.XmlIssueProps.Single(
+                x => x.Name == field.FieldName
+            );
             var propertyValue = currentProperty.GetValue(issue);
 
             if (propertyValue is not string stringToAnalyze)

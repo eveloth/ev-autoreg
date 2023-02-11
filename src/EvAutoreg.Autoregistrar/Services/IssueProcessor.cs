@@ -1,6 +1,7 @@
 ﻿using EvAutoreg.Autoregistrar.Apis;
 using EvAutoreg.Autoregistrar.Domain;
 using EvAutoreg.Autoregistrar.Options;
+using EvAutoreg.Autoregistrar.Reflection;
 using EvAutoreg.Autoregistrar.Services.Interfaces;
 using EvAutoreg.Autoregistrar.Settings;
 using EvAutoreg.Autoregistrar.State;
@@ -20,6 +21,7 @@ public class IssueProcessor : IIssueProcessor
     private readonly ILogger<IssueProcessor> _logger;
     private readonly IIssueAnalyzer _issueAnalyzer;
     private readonly XmlIssueOptions _xmlIssueOptions;
+    private readonly IssuePropertyInfos _issuePropertyInfos;
 
     public IssueProcessor(
         IMapper mapper,
@@ -28,7 +30,8 @@ public class IssueProcessor : IIssueProcessor
         ILogDispatcher<IssueProcessor> logDispatcher,
         IIssueAnalyzer issueAnalyzer,
         ILogger<IssueProcessor> logger,
-        XmlIssueOptions xmlIssueOptions
+        XmlIssueOptions xmlIssueOptions,
+        IssuePropertyInfos issuePropertyInfos
     )
     {
         _mapper = mapper;
@@ -38,6 +41,7 @@ public class IssueProcessor : IIssueProcessor
         _issueAnalyzer = issueAnalyzer;
         _logger = logger;
         _xmlIssueOptions = xmlIssueOptions;
+        _issuePropertyInfos = issuePropertyInfos;
     }
 
     public async Task ProcessEvent(string issueNo)
@@ -105,15 +109,13 @@ public class IssueProcessor : IIssueProcessor
 
     private async Task GetLackingIssueFields(XmlIssue issue)
     {
-        var xmlOptionsProperties = typeof(XmlIssueOptions).GetProperties();
-        var issueProperties = typeof(XmlIssue).GetProperties();
-
-        foreach (var property in issueProperties)
+        foreach (var property in _issuePropertyInfos.XmlIssueProps)
         {
-            if (!property.IsValueNullOnObject(issue)) continue;
+            if (!property.IsValueNullOnObject(issue))
+                continue;
 
             var xmlOptionsPropertyValue =
-                xmlOptionsProperties
+                _issuePropertyInfos.XmlIssueOptionsProps
                     .Single(x => x.Name == property.Name)
                     .GetValue(_xmlIssueOptions) as string;
 

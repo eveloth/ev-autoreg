@@ -4,6 +4,7 @@ using EvAutoreg.Autoregistrar.Hubs;
 using EvAutoreg.Autoregistrar.Installers;
 using EvAutoreg.Autoregistrar.Mapping;
 using EvAutoreg.Autoregistrar.Options;
+using EvAutoreg.Autoregistrar.Reflection;
 using EvAutoreg.Autoregistrar.Services;
 using EvAutoreg.Autoregistrar.Services.Interfaces;
 using EvAutoreg.Autoregistrar.Settings;
@@ -23,8 +24,11 @@ builder.Configuration.AddJsonFile("xmlIssueOptions.json", optional: false);
 XmlIssueOptions xmlIssueOptions = new();
 builder.Configuration.Bind(nameof(XmlIssueOptions), xmlIssueOptions);
 builder.Services.AddSingleton(xmlIssueOptions);
+
 builder.AddIssueXmlSerializer(xmlIssueOptions);
 builder.Services.AddSingleton<IIssueDeserialzer, IssueDeserialzer>();
+
+builder.GatherPropertiesInformation();
 
 // Additional configuration is required to successfully run gRPC on macOS.
 // For instructions on how to configure Kestrel and gRPC clients on macOS, visit https://go.microsoft.com/fwlink/?linkid=2099682
