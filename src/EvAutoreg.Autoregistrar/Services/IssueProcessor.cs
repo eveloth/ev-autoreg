@@ -114,6 +114,12 @@ public class IssueProcessor : IIssueProcessor
             if (!property.IsValueNullOnObject(issue))
                 continue;
 
+            _logger.LogDebug(
+                "A lacking filed {FieldName} detected while processing issue ID {IssueId}",
+                property.Name,
+                issue.Id
+            );
+
             var xmlOptionsPropertyValue =
                 _issuePropertyInfos.XmlIssueOptionsProps
                     .Single(x => x.Name == property.Name)

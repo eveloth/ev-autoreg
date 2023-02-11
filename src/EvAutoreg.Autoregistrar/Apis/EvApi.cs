@@ -58,7 +58,11 @@ public class EvApi : IEvApi
 
         var query = queryBuilder.ToString();
 
-        _logger.LogInformation("Initiating request to EV server at {Uri}", evUri);
+        _logger.LogInformation(
+            "Initiating request to EV server at {Uri}, method: {Method}",
+            evUri,
+            nameof(GetMethod)
+        );
 
         var response = await client.GetAsync(query);
         var responseBody = await response.Content.ReadAsStringAsync();
@@ -106,7 +110,11 @@ public class EvApi : IEvApi
 
         var query = queryBuilder.ToString();
 
-        _logger.LogInformation("Initiating request to EV server at {Uri}", evUri);
+        _logger.LogInformation(
+            "Initiating request to EV server at {Uri}, method: {Method}",
+            evUri,
+            nameof(UpdateMethod)
+        );
 
         var response = await client.GetAsync(query);
         var responseBody = await response.Content.ReadAsStringAsync();
@@ -146,7 +154,11 @@ public class EvApi : IEvApi
 
         var query = queryBuilder.ToString();
 
-        _logger.LogInformation("Initiating request to EV server at {Uri}", evUri);
+        _logger.LogInformation(
+            "Initiating request to EV server at {Uri}, method: {Method}",
+            evUri,
+            nameof(GetFieldMethod)
+        );
 
         var response = await client.GetStringAsync(query);
 
