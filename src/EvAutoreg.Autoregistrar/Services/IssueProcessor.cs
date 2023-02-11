@@ -1,10 +1,12 @@
 ﻿using EvAutoreg.Autoregistrar.Apis;
 using EvAutoreg.Autoregistrar.Domain;
+using EvAutoreg.Autoregistrar.Options;
 using EvAutoreg.Autoregistrar.Services.Interfaces;
 using EvAutoreg.Autoregistrar.Settings;
 using EvAutoreg.Autoregistrar.State;
 using EvAutoreg.Data.Models;
 using EvAutoreg.Data.Repository.Interfaces;
+using EvAutoreg.Extensions;
 using MapsterMapper;
 
 namespace EvAutoreg.Autoregistrar.Services;
@@ -17,6 +19,7 @@ public class IssueProcessor : IIssueProcessor
     private readonly ILogDispatcher<IssueProcessor> _logDispatcher;
     private readonly ILogger<IssueProcessor> _logger;
     private readonly IIssueAnalyzer _issueAnalyzer;
+    private readonly XmlIssueOptions _xmlIssueOptions;
 
     public IssueProcessor(
         IMapper mapper,
@@ -24,7 +27,8 @@ public class IssueProcessor : IIssueProcessor
         IServiceScopeFactory scopeFactory,
         ILogDispatcher<IssueProcessor> logDispatcher,
         IIssueAnalyzer issueAnalyzer,
-        ILogger<IssueProcessor> logger
+        ILogger<IssueProcessor> logger,
+        XmlIssueOptions xmlIssueOptions
     )
     {
         _mapper = mapper;
@@ -33,11 +37,13 @@ public class IssueProcessor : IIssueProcessor
         _logDispatcher = logDispatcher;
         _issueAnalyzer = issueAnalyzer;
         _logger = logger;
+        _xmlIssueOptions = xmlIssueOptions;
     }
 
     public async Task ProcessEvent(string issueNo)
     {
         var xmlIssue = await _evapi.GetIssue(issueNo);
+        await GetLackingIssueFields(xmlIssue);
 
         var issueTypeId = await _issueAnalyzer.AnalyzeIssue(xmlIssue);
 
@@ -94,6 +100,25 @@ public class IssueProcessor : IIssueProcessor
             };
 
             await _evapi.UpdateIssue(xmlIssue.Id, queryString);
+        }
+    }
+
+    private async Task GetLackingIssueFields(XmlIssue issue)
+    {
+        var xmlOptionsProperties = typeof(XmlIssueOptions).GetProperties();
+        var issueProperties = typeof(XmlIssue).GetProperties();
+
+        foreach (var property in issueProperties)
+        {
+            if (!property.IsValueNullOnObject(issue)) continue;
+
+            var xmlOptionsPropertyValue =
+                xmlOptionsProperties
+                    .Single(x => x.Name == property.Name)
+                    .GetValue(_xmlIssueOptions) as string;
+
+            var recoveredValue = await _evapi.GetFieldValue(issue.Id, xmlOptionsPropertyValue!);
+            property.SetValue(issue, recoveredValue);
         }
     }
 }

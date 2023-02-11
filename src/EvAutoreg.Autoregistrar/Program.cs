@@ -22,6 +22,7 @@ builder.InstallSerilog();
 builder.Configuration.AddJsonFile("xmlIssueOptions.json", optional: false);
 XmlIssueOptions xmlIssueOptions = new();
 builder.Configuration.Bind(nameof(XmlIssueOptions), xmlIssueOptions);
+builder.Services.AddSingleton(xmlIssueOptions);
 builder.AddIssueXmlSerializer(xmlIssueOptions);
 builder.Services.AddSingleton<IIssueDeserialzer, IssueDeserialzer>();
 
