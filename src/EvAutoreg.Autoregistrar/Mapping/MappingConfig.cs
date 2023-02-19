@@ -42,6 +42,8 @@ public static class MappingConfig
 
     public static void ConfigureXmlToModelMapping(this IApplicationBuilder app)
     {
+        DateTime dateTime;
+
         TypeAdapterConfig<XmlIssue, IssueModel>
             .NewConfig()
             .Map(dest => dest.Id, src => int.Parse(src.Id))
@@ -50,7 +52,9 @@ public static class MappingConfig
                 src =>
                     src.TimeCreated == null
                         ? DateTime.UtcNow
-                        : DateTime.Parse(src.TimeCreated).ToUniversalTime()
+                        : !DateTime.TryParse(src.TimeCreated, out dateTime)
+                            ? DateTime.UtcNow
+                            : dateTime.ToUniversalTime()
             )
             .Map(dest => dest.Author, src => src.Author)
             .Map(dest => dest.Company, src => src.Company)
