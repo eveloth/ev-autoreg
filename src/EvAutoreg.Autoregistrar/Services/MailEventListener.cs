@@ -56,7 +56,7 @@ public class MailEventListener : IMailEventListener
         foreach (var ev in args.Events)
         {
             var notification = (ItemEvent)ev;
-            var email = await EmailMessage.Bind(_exchange, notification.ItemId);
+            var email = await GetEmail(notification.ItemId);
 
             if (!newIssueRegex.IsMatch(email.Subject))
             {
@@ -181,5 +181,28 @@ public class MailEventListener : IMailEventListener
     private bool ConnectionIsOpen()
     {
         return _connection?.IsOpen ?? false;
+    }
+
+    private async Task<EmailMessage> GetEmail(ItemId emailId)
+    {
+        EmailMessage email = null!;
+
+        while (email is null)
+        {
+            try
+            {
+                email = await EmailMessage.Bind(_exchange, emailId);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(
+                    "Couldn't get an email from Exchange server: {ErrorMessage}, retrying...",
+                    e.Message
+                );
+                await Task.Delay(500);
+            }
+        }
+
+        return email;
     }
 }
