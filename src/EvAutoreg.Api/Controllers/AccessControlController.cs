@@ -3,11 +3,14 @@ using EvAutoreg.Api.Contracts.Dto;
 using EvAutoreg.Api.Contracts.Requests;
 using EvAutoreg.Api.Contracts.Responses;
 using EvAutoreg.Api.Domain;
+using EvAutoreg.Api.Exceptions;
+using EvAutoreg.Api.Extensions;
 using EvAutoreg.Api.Services.Interfaces;
 using FluentValidation;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using static EvAutoreg.Api.Errors.ErrorCodes;
 
 namespace EvAutoreg.Api.Controllers;
 
@@ -224,6 +227,7 @@ public class AccessControlController : ControllerBase
     /// </summary>
     /// <response code="200">Adds a permission to the role</response>
     /// <response code="400">If a validation error occured</response>
+    /// <response code="400">If a user has insuffitient rights to assign priveleged permissions</response>
     /// <response code="404">If role or permission doesn't exist</response>
     [Authorize(Policy = "UpdateRoles")]
     [Route("roles/{roleId:int}/permissions/{permissionId:int}")]
@@ -259,17 +263,19 @@ public class AccessControlController : ControllerBase
     }
 
     /// <summary>
-    /// Removes a permission from role
+    /// Adds a priveleged permission to the role
     /// </summary>
-    /// <response code="200">Removes a permission from role</response>
-    /// <response code="404">If role, or permission, or role-permission correlation doesn't exist</response>
-    [Authorize(Policy = "UpdateRoles")]
-    [Route("roles/{roleId:int}/permissions/{permissionId:int}")]
-    [HttpDelete]
+    /// <response code="200">Adds a priveleged permission to the role</response>
+    /// <response code="400">If a validation error occured</response>
+    /// <response code="404">If role or permission doesn't exist</response>
+    [Authorize(Policy = "AddPrivelegedPermissionToRole")]
+    [Route("roles/{roleId:int}/permissions/priveleged/{permissionId:int}")]
+    [HttpPost]
     [ProducesResponseType(typeof(Response<RolePermissionDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     [Produces("application/json")]
-    public async Task<IActionResult> RemovePermissionFromRole(
+    public async Task<IActionResult> AddPrivelegedPermissionToRole(
         [FromRoute] int roleId,
         [FromRoute] int permissionId,
         CancellationToken cts
@@ -278,8 +284,84 @@ public class AccessControlController : ControllerBase
         var rolePermissionrpModel = new RolePermission { Role = new Role { Id = roleId } };
         rolePermissionrpModel.Permissions.Add(new Permission { Id = permissionId });
 
-        var deletedCorrelation = await _rolePermissionService.RemovePermissionFromRole(
+        var createdCorrelation = await _rolePermissionService.AddPrivelegedPermissionToRole(
             rolePermissionrpModel,
+            cts
+        );
+
+        _logger.LogInformation(
+            "Priveleged permission ID {PermissionId} was added to role ID {RoleId}",
+            createdCorrelation.Permissions.First().Id,
+            createdCorrelation.Role.Id
+        );
+
+        var response = new Response<RolePermissionDto>(
+            _mapper.Map<RolePermissionDto>(createdCorrelation)
+        );
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Removes a permission from role
+    /// </summary>
+    /// <response code="200">Removes a permission from role</response>
+    /// <response code="400">If a user has insuffitient rights to remove priveleged permissions</response>
+    /// <response code="404">If role, or permission, or role-permission correlation doesn't exist</response>
+    [Authorize(Policy = "UpdateRoles")]
+    [Route("roles/{roleId:int}/permissions/{permissionId:int}")]
+    [HttpDelete]
+    [ProducesResponseType(typeof(Response<RolePermissionDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [Produces("application/json")]
+    public async Task<IActionResult> RemovePermissionFromRole(
+        [FromRoute] int roleId,
+        [FromRoute] int permissionId,
+        CancellationToken cts
+    )
+    {
+        var rolePermissionModel = new RolePermission { Role = new Role { Id = roleId } };
+        rolePermissionModel.Permissions.Add(new Permission { Id = permissionId });
+
+        var deletedCorrelation = await _rolePermissionService.RemovePermissionFromRole(
+            rolePermissionModel,
+            cts
+        );
+
+        _logger.LogInformation(
+            "Permission ID {PermissionId} was removed from ID {RoleId}",
+            deletedCorrelation.Permissions.First().Id,
+            deletedCorrelation.Role.Id
+        );
+
+        var response = new Response<RolePermissionDto>(
+            _mapper.Map<RolePermissionDto>(deletedCorrelation)
+        );
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Removes a priveleged permission from role
+    /// </summary>
+    /// <response code="200">Removes a priveleged permission from role</response>
+    /// <response code="404">If role, or permission, or role-permission correlation doesn't exist</response>
+    [Authorize(Policy = "RemovePrivelegedPermissionFromRole")]
+    [Route("roles/{roleId:int}/permissions/priveleged/{permissionId:int}")]
+    [HttpDelete]
+    [ProducesResponseType(typeof(Response<RolePermissionDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [Produces("application/json")]
+    public async Task<IActionResult> RemovePrivelegedPermissionFromRole(
+        [FromRoute] int roleId,
+        [FromRoute] int permissionId,
+        CancellationToken cts
+    )
+    {
+        var rolePermissionModel = new RolePermission { Role = new Role { Id = roleId } };
+        rolePermissionModel.Permissions.Add(new Permission { Id = permissionId });
+
+        var deletedCorrelation = await _rolePermissionService.RemovePrivelegedPermissionFromRole(
+            rolePermissionModel,
             cts
         );
 
@@ -299,11 +381,13 @@ public class AccessControlController : ControllerBase
     /// Assignes a role to the specified user
     /// </summary>
     /// <response code="200">Assignes a role to the specified user</response>
+    /// <response code="400">If a user has insuffitient rights to assign priveleged role</response>
     /// <response code="404">If user or role doesn't exist</response>
     [Authorize(Policy = "UpdateUsers")]
     [Route("users/{userId:int}/roles/{roleId:int}")]
     [HttpPost]
     [ProducesResponseType(typeof(Response<UserDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     [Produces("application/json")]
     public async Task<IActionResult> AddUserToRole(
@@ -331,19 +415,87 @@ public class AccessControlController : ControllerBase
     }
 
     /// <summary>
+    /// Assignes a priveleged role to the specified user
+    /// </summary>
+    /// <response code="200">Assignes a priveleged role to the specified user</response>
+    /// <response code="404">If user or role doesn't exist</response>
+    [Authorize(Policy = "AssignPrivelegedRole")]
+    [Route("users/{userId:int}/roles/priveleged/{roleId:int}")]
+    [HttpPost]
+    [ProducesResponseType(typeof(Response<UserDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [Produces("application/json")]
+    public async Task<IActionResult> AddUserToPrivelegedRole(
+        [FromRoute] int userId,
+        [FromRoute] int roleId,
+        CancellationToken cts
+    )
+    {
+        var user = new User
+        {
+            Id = userId,
+            Role = new Role { Id = roleId }
+        };
+
+        var updatedUser = await _userService.AddUserToPrivelegedRole(user, cts);
+
+        _logger.LogInformation(
+            "User ID {UserId} was added to role ID {RoleId}",
+            updatedUser.Id,
+            updatedUser.Role!.Id
+        );
+
+        var response = new Response<UserDto>(_mapper.Map<UserDto>(updatedUser));
+        return Ok(response);
+    }
+
+    /// <summary>
     /// Removes a user from their role
     /// </summary>
     /// <response code="200">Removes a user from their role</response>
+    /// <response code="400">If a user has insuffitient rights to remove from priveleged role</response>
     /// <response code="404">If user doesn't exist</response>
     [Authorize(Policy = "UpdateUsers")]
     [Route("users/{id:int}/roles")]
     [HttpDelete]
     [ProducesResponseType(typeof(Response<UserDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     [Produces("application/json")]
     public async Task<IActionResult> RemoveUserFromRole([FromRoute] int id, CancellationToken cts)
     {
         var updatedUser = await _userService.RemoveUserFromRole(id, cts);
+
+        _logger.LogInformation("User ID {UserId} was removed from their role", updatedUser.Id);
+
+        var response = new Response<UserDto>(_mapper.Map<UserDto>(updatedUser));
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Removes a user from priveleged role
+    /// </summary>
+    /// <response code="200">Removes a user from priveleged role</response>
+    /// <response code="404">If user doesn't exist</response>
+    [Authorize(Policy = "RemoveFromPrivelegedRole")]
+    [Route("users/{id:int}/roles/priveleged")]
+    [HttpDelete]
+    [ProducesResponseType(typeof(Response<UserDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [Produces("application/json")]
+    public async Task<IActionResult> RemoveUserFromPrivelegedRole(
+        [FromRoute] int id,
+        CancellationToken cts
+    )
+    {
+        var userId = HttpContext.GetUserId();
+
+        if (id == userId)
+        {
+            throw new ApiException().WithApiError(ErrorCode[2006]);
+        }
+
+        var updatedUser = await _userService.RemoveUserFromPrivelegedRole(id, cts);
 
         _logger.LogInformation("User ID {UserId} was removed from their role", updatedUser.Id);
 

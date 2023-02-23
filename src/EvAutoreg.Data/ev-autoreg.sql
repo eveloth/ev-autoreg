@@ -1,6 +1,7 @@
 CREATE TABLE IF NOT EXISTS role (
   id BIGSERIAL PRIMARY KEY, 
-  role_name VARCHAR(64) UNIQUE NOT NULL
+  role_name VARCHAR(64) UNIQUE NOT NULL,
+  is_priveleged_role BOOLEAN NOT NULL DEFAULT false
 );
 CREATE TABLE IF NOT EXISTS app_user (
   id BIGSERIAL PRIMARY KEY, 
@@ -17,7 +18,8 @@ CREATE TABLE IF NOT EXISTS app_user (
 CREATE TABLE IF NOT EXISTS permission (
   id BIGSERIAL PRIMARY KEY, 
   permission_name VARCHAR(256) UNIQUE NOT NULL, 
-  description VARCHAR(256)
+  description VARCHAR(256),
+  is_priveleged_permission BOOLEAN NOT NULL DEFAULT false
 );
 CREATE TABLE IF NOT EXISTS role_permission (
   role_id BIGINT REFERENCES role(id) ON DELETE CASCADE, 

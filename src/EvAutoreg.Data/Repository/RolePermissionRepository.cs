@@ -27,10 +27,12 @@ public class RolePermissionRepository : IRolePermissionRepository
             $@"SELECT r.role_id, r.role_name,
                         p.id AS permission_id, 
                         p.permission_name AS permission_name,
-                        p.description
+                        p.description,
+                        p.is_priveleged_permission
                         FROM
                         (SELECT id AS role_id,
-                        role_name AS role_name
+                        role_name AS role_name,
+                        is_priveleged_role
                         FROM role
                         ORDER BY id
                         LIMIT {take} OFFSET {skip}) AS r
@@ -46,9 +48,11 @@ public class RolePermissionRepository : IRolePermissionRepository
         const string sql =
             @"SELECT role.id AS role_id, 
                              role.role_name AS role_name, 
+                             is_priveleged_role,
                              p.id AS permission_id, 
                              p.permission_name AS permission_name,
-                             p.description
+                             p.description,
+                             p.is_priveleged_permission
                              FROM role 
                              LEFT JOIN role_permission rp ON role.id = rp.role_id
                              LEFT JOIN permission p ON rp.permission_id = p.id

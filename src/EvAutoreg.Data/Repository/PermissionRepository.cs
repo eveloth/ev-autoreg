@@ -28,11 +28,20 @@ public class PermissionRepository : IPermissionRepository
         return await _db.LoadAllData<PermissionModel>(sql, cts);
     }
 
+    public async Task<PermissionModel?> Get(int permissionId, CancellationToken cts)
+    {
+        const string sql = $@"SELECT * FROM permission WHERE id = @PermissionId";
+
+        var parameters = new DynamicParameters(new { PermissionId = permissionId });
+
+        return await _db.LoadSingle<PermissionModel?>(sql, parameters, cts);
+    }
+
     public async Task<PermissionModel> Add(PermissionModel permission, CancellationToken cts)
     {
         const string sql =
-            @"INSERT INTO permission (permission_name, description) 
-              VALUES (@PermissionName, @Description)
+            @"INSERT INTO permission (permission_name, description, is_priveleged_permission) 
+              VALUES (@PermissionName, @Description, @IsPrivelegedPermission)
               RETURNING *";
 
         var parameters = new DynamicParameters(permission);

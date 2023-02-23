@@ -13,11 +13,35 @@ public static class ErrorCodes
             { 1004, new ApiError(1004, "User not found") },
             { 1005, new ApiError(1005, "Authentication failed.") },
             { 1006, new ApiError(1006, "Token is invalid.") },
+            {
+                1007,
+                new ApiError(
+                    1007,
+                    "User in priveleged role cannot be deleted, remove them from role first."
+                )
+            },
+            {
+                1008,
+                new ApiError(
+                    1008,
+                    "User in priveleged role cannot be blocked, remove them from role first."
+                )
+            },
             { 1013, new ApiError(1013, "You cannot block or delete your own account.") },
             { 2001, new ApiError(2001, "Role name is already taken.") },
             { 2002, new ApiError(2002, "User is not assigned to any role.") },
+            { 2003, new ApiError(2003, "Role is priveleged, insufficient rights.") },
             { 2004, new ApiError(2004, "Role not found.") },
+            {
+                2005,
+                new ApiError(
+                    2005,
+                    "Priveleged role cannot be deleted, remove priveleged permissions first."
+                )
+            },
+            { 2006, new ApiError(2006, "You cannot remove yourself from priveleged role.") },
             { 3001, new ApiError(3001, "Permission already exists.") },
+            { 3002, new ApiError(3002, "Permission is priveleged, insufficient rights.") },
             { 3004, new ApiError(3004, "Permission not found.") },
             { 4001, new ApiError(4001, "Correlation already exists.") },
             { 4004, new ApiError(4004, "Correlation not found.") },

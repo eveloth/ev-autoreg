@@ -36,7 +36,7 @@ public class RoleRepository : IRoleRepository
 
     public async Task<RoleModel> Add(RoleModel role, CancellationToken cts)
     {
-        const string sql = @"INSERT INTO role (role_name) VALUES (@RoleName) RETURNING *";
+        const string sql = @"INSERT INTO role (role_name, is_priveleged_role) VALUES (@RoleName, @IsPrivelegedRole) RETURNING *";
 
         var parameters = new DynamicParameters(role);
 
@@ -51,6 +51,15 @@ public class RoleRepository : IRoleRepository
         //otherwise we have a little bit of obscurity.
         //If you attempt to change it for 'readability' or w/ever, it will break PUT /api/access-control/roles/{id}.
         const string sql = @"UPDATE role SET role_name = @RoleName WHERE id = @Id RETURNING *";
+
+        var parameters = new DynamicParameters(role);
+
+        return await _db.SaveData<RoleModel>(sql, parameters, cts);
+    }
+
+    public async Task<RoleModel> ChangePriveleges(RoleModel role, CancellationToken cts)
+    {
+        const string sql = @"UPDATE role SET is_priveleged_role = @IsPrivelegedRole WHERE id = @id RETURNING *";
 
         var parameters = new DynamicParameters(role);
 

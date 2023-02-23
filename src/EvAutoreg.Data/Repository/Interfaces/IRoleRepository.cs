@@ -9,6 +9,7 @@ public interface IRoleRepository
     Task<RoleModel?> Get(int id, CancellationToken cts);
     Task<RoleModel> Add(RoleModel role, CancellationToken cts);
     Task<RoleModel> ChangeName(RoleModel role, CancellationToken cts);
+    Task<RoleModel> ChangePriveleges(RoleModel role, CancellationToken cts);
     Task<RoleModel> Delete(int roleId, CancellationToken cts);
     Task<bool> DoesExist(int roleId, CancellationToken cts);
     Task<bool> DoesExist(string roleName, CancellationToken cts);

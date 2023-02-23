@@ -97,6 +97,11 @@ public class RoleService : IRoleService
             throw new ApiException().WithApiError(ErrorCode[2004]);
         }
 
+        if (existingRole.IsPrivelegedRole)
+        {
+            throw new ApiException().WithApiError(ErrorCode[2005]);
+        }
+
         var deletedRole = await _unitofWork.RoleRepository.Delete(id, cts);
         await _unitofWork.CommitAsync(cts);
         var result = _mapper.Map<Role>(deletedRole);

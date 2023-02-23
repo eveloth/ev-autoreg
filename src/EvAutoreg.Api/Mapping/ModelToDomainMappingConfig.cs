@@ -23,13 +23,14 @@ public static class ModelToDomainMappingConfig
             .Map(dest => dest.IsDeleted, src => src.Item1.IsDeleted)
             .Map(dest => dest.Role.Id, src => src.Item2.Id)
             .Map(dest => dest.Role.RoleName, src => src.Item2.RoleName)
+            .Map(dest => dest.Role.IsPrivelegedRole, src => src.Item2.IsPrivelegedRole)
             .IgnoreNullValues(true);
 
         TypeAdapterConfig<List<RolePermissionModel>, RolePermission>
             .NewConfig()
-            //.TwoWays()
             .Map(dest => dest.Role.Id, src => src.First().RoleId)
             .Map(dest => dest.Role.RoleName, src => src.First().RoleName)
+            .Map(dest => dest.Role.IsPrivelegedRole, src => src.First().IsPrivelegedRole)
             .Map(
                 dest => dest.Permissions,
                 src =>
@@ -41,7 +42,8 @@ public static class ModelToDomainMappingConfig
                                 {
                                     Id = x.PermissionId!.Value,
                                     PermissionName = x.PermissionName!,
-                                    Description = x.Description!
+                                    Description = x.Description!,
+                                    IsPrivelegedPermission = x.IsPrivelegedPermission
                                 }
                         )
             )

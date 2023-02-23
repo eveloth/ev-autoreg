@@ -12,9 +12,11 @@ public static class DomainToModelMappingConfig
             .NewConfig()
             .Map(dest => dest.RoleId, src => src.Role.Id)
             .Map(dest => dest.RoleName, src => src.Role.RoleName)
+            .Map(dest => dest.IsPrivelegedRole, src => src.Role.IsPrivelegedRole)
             .Map(dest => dest.PermissionId, src => src.Permissions.First().Id)
             .Map(dest => dest.PermissionName, src => src.Permissions.First().PermissionName)
             .Map(dest => dest.Description, src => src.Permissions.First().Description)
+            .Map(dest => dest.IsPrivelegedPermission, src => src.Permissions.First().IsPrivelegedPermission)
             .IgnoreNullValues(true);
 
         TypeAdapterConfig<Rule, RuleModel>

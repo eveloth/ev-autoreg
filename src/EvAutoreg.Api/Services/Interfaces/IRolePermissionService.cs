@@ -11,7 +11,12 @@ public interface IRolePermissionService
     );
     Task<RolePermission> Get(int id, CancellationToken cts);
     Task<RolePermission> AddPermissionToRole(RolePermission rolePermission, CancellationToken cts);
+    Task<RolePermission> AddPrivelegedPermissionToRole(RolePermission rolePermission, CancellationToken cts);
     Task<RolePermission> RemovePermissionFromRole(
+        RolePermission rolePermission,
+        CancellationToken cts
+    );
+    Task<RolePermission> RemovePrivelegedPermissionFromRole(
         RolePermission rolePermission,
         CancellationToken cts
     );
