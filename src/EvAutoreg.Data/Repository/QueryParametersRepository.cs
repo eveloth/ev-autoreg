@@ -16,15 +16,20 @@ public class QueryParametersRepository : IQueryParametersRepository
     }
 
     public async Task<IEnumerable<QueryParametersModel>> GetAll(
-        PaginationFilter filter,
-        CancellationToken cts
+        CancellationToken cts,
+        PaginationFilter? filter = null
     )
     {
-        var take = filter.PageSize;
-        var skip = (filter.PageNumber - 1) * filter.PageSize;
-
         var sql =
-            @$"SELECT * FROM registering_parameters ORDER BY issue_type_id LIMIT {take} OFFSET {skip}";
+            @"SELECT * FROM registering_parameters";
+
+        if (filter is not null)
+        {
+            var take = filter.PageSize;
+            var skip = (filter.PageNumber - 1) * filter.PageSize;
+            var paginator = $" ORDER BY issue_type_id LIMIT {take} offset {skip}";
+            sql += paginator;
+        }
 
         return await _db.LoadAllData<QueryParametersModel>(sql, cts);
     }

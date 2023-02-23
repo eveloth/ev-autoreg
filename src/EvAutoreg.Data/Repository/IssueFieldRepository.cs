@@ -25,15 +25,19 @@ public class IssueFieldRepository : IIssueFieldRepository
     }
 
     public async Task<IEnumerable<IssueFieldModel>> GetAll(
-        PaginationFilter filter,
-        CancellationToken cts
+        CancellationToken cts,
+        PaginationFilter? filter = null
     )
     {
-        var take = filter.PageSize;
-        var skip = (filter.PageNumber - 1) * filter.PageSize;
+        var sql = @"SELECT * FROM issue_field";
 
-        var sql = @$"SELECT * FROM issue_field ORDER BY id LIMIT {take} OFFSET {skip}";
-
+        if (filter is not null)
+        {
+            var take = filter.PageSize;
+            var skip = (filter.PageNumber - 1) * filter.PageSize;
+            var paginator = $" ORDER BY id LIMIT {take} offset {skip}";
+            sql += paginator;
+        }
         return await _db.LoadAllData<IssueFieldModel>(sql, cts);
     }
 

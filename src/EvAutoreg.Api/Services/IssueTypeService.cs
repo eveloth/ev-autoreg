@@ -25,7 +25,7 @@ public class IssueTypeService : IIssueTypeService
     {
         var filter = _mapper.Map<PaginationFilter>(paginationQuery);
 
-        var issueTypes = await _unitofWork.IssueTypeRepository.GetAll(filter, cts);
+        var issueTypes = await _unitofWork.IssueTypeRepository.GetAll(cts, filter);
         await _unitofWork.CommitAsync(cts);
         var result = _mapper.Map<IEnumerable<IssueType>>(issueTypes);
         return result;

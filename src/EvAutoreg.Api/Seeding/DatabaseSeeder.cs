@@ -124,9 +124,7 @@ public class DatabaseSeeder
         var ct = CancellationToken.None;
         var paginationDummy = new PaginationFilter(1, 100000);
 
-        var createdPermissions = (
-            await _unitofWork.PermissionRepository.GetAll(paginationDummy, ct)
-        ).ToList();
+        var createdPermissions = (await _unitofWork.PermissionRepository.GetAll(ct)).ToList();
         var availablePermissions = Permissions.GetPermissions();
 
         var lackingDiff = availablePermissions
@@ -161,11 +159,8 @@ public class DatabaseSeeder
         _logger.LogInformation("Ensuring issue fields are up to date...");
 
         var ct = CancellationToken.None;
-        var paginationDummy = new PaginationFilter(1, 100000);
 
-        var createdIssueFiels = (
-            await _unitofWork.IssueFieldRepository.GetAll(paginationDummy, ct)
-        ).ToList();
+        var createdIssueFiels = (await _unitofWork.IssueFieldRepository.GetAll(ct)).ToList();
         var availableIssueFields = IssueFields.DefaultIssueFileds;
 
         var lackingDiff = availableIssueFields

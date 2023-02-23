@@ -36,7 +36,7 @@ public class QueryParametersService : IQueryParametersService
     {
         var filter = _mapper.Map<PaginationFilter>(paginationQuery);
 
-        var queryParameters = await _unitofWork.QueryParametersRepository.GetAll(filter, cts);
+        var queryParameters = await _unitofWork.QueryParametersRepository.GetAll(cts, filter);
         await _unitofWork.CommitAsync(cts);
 
         var result = queryParameters.Select(x => _mappingHelper.JoinIssueType(x, cts).Result);

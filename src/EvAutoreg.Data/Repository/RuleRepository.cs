@@ -26,15 +26,20 @@ public class RuleRepository : IRuleRepository
 
     public async Task<IEnumerable<RuleModel>> GetAll(
         int userId,
-        PaginationFilter filter,
-        CancellationToken cts
+        CancellationToken cts,
+        PaginationFilter? filter = null
     )
     {
-        var take = filter.PageSize;
-        var skip = (filter.PageNumber - 1) * filter.PageSize;
-
         var sql =
-            @$"SELECT * FROM rule WHERE owner_user_id = @UserId ORDER BY id LIMIT {take} OFFSET {skip}";
+            @"SELECT * FROM rule WHERE owner_user_id = @UserId";
+
+        if (filter is not null)
+        {
+            var take = filter.PageSize;
+            var skip = (filter.PageNumber - 1) * filter.PageSize;
+            var paginator = $" ORDER BY id LIMIT {take} offset {skip}";
+            sql += paginator;
+        }
 
         var parameters = new DynamicParameters(new { UserId = userId });
 

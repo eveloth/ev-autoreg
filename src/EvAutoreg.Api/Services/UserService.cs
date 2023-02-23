@@ -42,7 +42,7 @@ public class UserService : IUserService
     {
         var filter = _mapper.Map<PaginationFilter>(paginationQuery);
 
-        var users = await _unitofWork.UserRepository.GetAll(filter, cts);
+        var users = await _unitofWork.UserRepository.GetAll(cts, filter: filter);
         await _unitofWork.CommitAsync(cts);
 
         var result = users.Select(x => _mappingHelper.JoinUserRole(x, cts).Result);

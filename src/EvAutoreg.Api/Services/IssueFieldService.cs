@@ -22,7 +22,7 @@ public class IssueFieldService : IIssueFieldService
     {
         var filter = _mapper.Map<PaginationFilter>(paginationQuery);
 
-        var issueFields = await _unitofWork.IssueFieldRepository.GetAll(filter, cts);
+        var issueFields = await _unitofWork.IssueFieldRepository.GetAll(cts, filter);
         await _unitofWork.CommitAsync(cts);
 
         var result = _mapper.Map<IEnumerable<IssueField>>(issueFields);

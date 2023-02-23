@@ -26,9 +26,9 @@ public class RoleService : IRoleService
         CancellationToken cts
     )
     {
-        var filer = _mapper.Map<PaginationFilter>(paginationQuery);
+        var filter = _mapper.Map<PaginationFilter>(paginationQuery);
 
-        var roles = await _unitofWork.RoleRepository.GetAll(filer, cts);
+        var roles = await _unitofWork.RoleRepository.GetAll(cts, filter);
         await _unitofWork.CommitAsync(cts);
 
         var result = _mapper.Map<IEnumerable<Role>>(roles);

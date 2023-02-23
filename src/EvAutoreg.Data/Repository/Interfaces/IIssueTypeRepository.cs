@@ -5,7 +5,10 @@ namespace EvAutoreg.Data.Repository.Interfaces;
 
 public interface IIssueTypeRepository
 {
-    Task<IEnumerable<IssueTypeModel>> GetAll(PaginationFilter filter, CancellationToken cts);
+    Task<IEnumerable<IssueTypeModel>> GetAll(
+        CancellationToken cts,
+        PaginationFilter? filter = null
+    );
     Task<IssueTypeModel?> Get(int issueTypeId, CancellationToken cts);
     Task<IssueTypeModel> Add(IssueTypeModel issueType, CancellationToken cts);
     Task<IssueTypeModel> ChangeName(IssueTypeModel issueType, CancellationToken cts);

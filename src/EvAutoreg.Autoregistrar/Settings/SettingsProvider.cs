@@ -42,13 +42,8 @@ public class SettingsProvider : ISettingsProvider
             (await unitofWork.ExtCredentialsRepository.GetEvCredentials(userId, cts))!
         );
 
-        var queryParams = (
-            await unitofWork.QueryParametersRepository.GetAll(new PaginationFilter(1, 1000), cts)
-        ).ToList();
-        var issueTypeSet = await unitofWork.IssueTypeRepository.GetAll(
-            new PaginationFilter(1, 1000),
-            cts
-        );
+        var queryParams = (await unitofWork.QueryParametersRepository.GetAll(cts)).ToList();
+        var issueTypeSet = await unitofWork.IssueTypeRepository.GetAll(cts);
         var issueTypes = new List<IssueType>();
 
         foreach (var type in issueTypeSet)
@@ -61,13 +56,8 @@ public class SettingsProvider : ISettingsProvider
             issueTypes.Add(_mapper.Map<IssueType>(aggregationTable));
         }
 
-        var rules = (
-            await unitofWork.RuleRepository.GetAll(userId, new PaginationFilter(1, 1000), cts)
-        ).ToList();
-        var issueFieldSet = await unitofWork.IssueFieldRepository.GetAll(
-            new PaginationFilter(1, 1000),
-            cts
-        );
+        var rules = (await unitofWork.RuleRepository.GetAll(userId, cts)).ToList();
+        var issueFieldSet = await unitofWork.IssueFieldRepository.GetAll(cts);
 
         var issueFields = new List<IssueField>();
 
@@ -129,10 +119,7 @@ public class SettingsProvider : ISettingsProvider
             return false;
         }
 
-        var issueTypes = await unitofWork.IssueTypeRepository.GetAll(
-            new PaginationFilter(1, 1000),
-            cts
-        );
+        var issueTypes = await unitofWork.IssueTypeRepository.GetAll(cts);
 
         foreach (var issueType in issueTypes)
         {

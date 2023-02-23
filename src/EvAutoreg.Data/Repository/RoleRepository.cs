@@ -15,12 +15,17 @@ public class RoleRepository : IRoleRepository
         _db = db;
     }
 
-    public async Task<IEnumerable<RoleModel>> GetAll(PaginationFilter filter, CancellationToken cts)
+    public async Task<IEnumerable<RoleModel>> GetAll(CancellationToken cts, PaginationFilter? filter = null)
     {
-        var take = filter.PageSize;
-        var skip = (filter.PageNumber - 1) * filter.PageSize;
+        var sql = @$"SELECT * FROM role";
 
-        var sql = @$"SELECT * FROM role ORDER BY id LIMIT {take} OFFSET {skip}";
+        if (filter is not null)
+        {
+            var take = filter.PageSize;
+            var skip = (filter.PageNumber - 1) * filter.PageSize;
+            var paginator = $" ORDER BY id LIMIT {take} offset {skip}";
+            sql += paginator;
+        }
 
         return await _db.LoadAllData<RoleModel>(sql, cts);
     }

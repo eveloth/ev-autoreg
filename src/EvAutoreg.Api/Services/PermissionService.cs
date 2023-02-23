@@ -22,7 +22,7 @@ public class PermissionService : IPermissionService
     {
         var filter = _mapper.Map<PaginationFilter>(paginationQuery);
 
-        var permissions = await _unitofWork.PermissionRepository.GetAll(filter, cts);
+        var permissions = await _unitofWork.PermissionRepository.GetAll(cts, filter);
 
         var result = _mapper.Map<IEnumerable<Permission>>(permissions);
         return result;

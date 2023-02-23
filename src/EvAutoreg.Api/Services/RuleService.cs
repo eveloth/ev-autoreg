@@ -32,7 +32,7 @@ public class RuleService : IRuleService
     {
         var filter = _mapper.Map<PaginationFilter>(paginationQuery);
 
-        var rules = await _unitofWork.RuleRepository.GetAll(userId, filter, cts);
+        var rules = await _unitofWork.RuleRepository.GetAll(userId, cts, filter);
         await _unitofWork.CommitAsync(cts);
 
         var result = rules.Select(x => _mappingHelper.JoinIssueTypeAndField(x, cts).Result);

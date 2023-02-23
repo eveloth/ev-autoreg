@@ -4,6 +4,8 @@ using EvAutoreg.Data.DataAccess;
 using EvAutoreg.Data.Filters;
 using EvAutoreg.Data.Models;
 using EvAutoreg.Data.Repository.Interfaces;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Primitives;
 
 namespace EvAutoreg.Data.Repository;
 
@@ -65,32 +67,36 @@ public class UserRepository : IUserRepository
     }
 
     public async Task<IEnumerable<UserModel>> GetAll(
-        PaginationFilter filter,
         CancellationToken cts,
-        bool includeDeleted = false
+        bool includeDeleted = false,
+        PaginationFilter? filter = null
     )
     {
-        var skip = (filter.PageNumber - 1) * filter.PageSize;
-        var take = filter.PageSize;
+        string resultingSql;
 
         var sqlTemplateBuilder = new StringBuilder(
             @"SELECT * FROM app_user
               LEFT JOIN role ON app_user.role_id = role.id"
         );
 
-        var paginator = $@"ORDER BY app_user.id LIMIT {take} OFFSET {skip}";
-
-        var resultingSql = includeDeleted switch
+        sqlTemplateBuilder = includeDeleted switch
         {
-            true
-                => sqlTemplateBuilder
-                    .Append(" WHERE")
-                    .Append(IncludeDeletedSql)
-                    .Append(' ')
-                    .Append(paginator)
-                    .ToString(),
-            false => sqlTemplateBuilder.Append(' ').Append(paginator).ToString()
+            true => sqlTemplateBuilder.Append(" WHERE").Append(IncludeDeletedSql).Append(' '),
+            false => sqlTemplateBuilder.Append(' ')
         };
+
+        if (filter is not null)
+        {
+            var skip = (filter.PageNumber - 1) * filter.PageSize;
+            var take = filter.PageSize;
+
+            var paginator = $@"ORDER BY app_user.id LIMIT {take} OFFSET {skip}";
+            resultingSql = sqlTemplateBuilder.Append(paginator).ToString();
+        }
+        else
+        {
+            resultingSql = sqlTemplateBuilder.ToString();
+        }
 
         return await _db.LoadAllData<UserModel, RoleModel>(resultingSql, cts);
     }

@@ -27,7 +27,7 @@ public class IssueService : IIssueService
     {
         var filter = _mapper.Map<PaginationFilter>(paginationQuery);
 
-        var issues = await _unitofWork.IssueRepository.GetAll(filter, cts);
+        var issues = await _unitofWork.IssueRepository.GetAll(cts, filter);
 
         var result = issues.Select(x => _mappingHelper.JoinIssueTypeAndUser(x, cts).Result);
         return result;

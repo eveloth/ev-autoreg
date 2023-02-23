@@ -6,9 +6,9 @@ namespace EvAutoreg.Data.Repository.Interfaces;
 public interface IUserRepository
 {
     Task<IEnumerable<UserModel>> GetAll(
-        PaginationFilter filter,
         CancellationToken cts,
-        bool includeDeleted = false
+        bool includeDeleted = false,
+        PaginationFilter? filter = null
     );
     Task<UserModel?> GetById(int userId, CancellationToken cts, bool includeDeleted = false);
     Task<UserModel?> GetByEmail(string email, CancellationToken cts, bool includeDeleted = false);

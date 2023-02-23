@@ -16,14 +16,19 @@ public class PermissionRepository : IPermissionRepository
     }
 
     public async Task<IEnumerable<PermissionModel>> GetAll(
-        PaginationFilter filter,
-        CancellationToken cts
+        CancellationToken cts,
+        PaginationFilter? filter = null
     )
     {
-        var take = filter.PageSize;
-        var skip = (filter.PageNumber - 1) * filter.PageSize;
+        var sql = @"SELECT * FROM permission";
 
-        var sql = @$"SELECT * FROM permission ORDER BY id LIMIT {take} OFFSET {skip}";
+        if (filter is not null)
+        {
+            var take = filter.PageSize;
+            var skip = (filter.PageNumber - 1) * filter.PageSize;
+            var paginator = $" ORDER BY id LIMIT {take} offset {skip}";
+            sql += paginator;
+        }
 
         return await _db.LoadAllData<PermissionModel>(sql, cts);
     }

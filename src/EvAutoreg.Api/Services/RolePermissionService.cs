@@ -29,7 +29,7 @@ public class RolePermissionService : IRolePermissionService
     {
         var filter = _mapper.Map<PaginationFilter>(paginationQuery);
 
-        var rolePermissions = await _unitofWork.RolePermissionRepository.GetAll(filter, cts);
+        var rolePermissions = await _unitofWork.RolePermissionRepository.GetAll(cts, filter);
         await _unitofWork.CommitAsync(cts);
 
         var listsOfRolePermissions = rolePermissions.GroupByIntoList(

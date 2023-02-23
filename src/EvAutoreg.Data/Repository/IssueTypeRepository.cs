@@ -24,14 +24,19 @@ public class IssueTypeRepository : IIssueTypeRepository
     }
 
     public async Task<IEnumerable<IssueTypeModel>> GetAll(
-        PaginationFilter filter,
-        CancellationToken cts
+        CancellationToken cts,
+        PaginationFilter? filter = null
     )
     {
-        var take = filter.PageSize;
-        var skip = (filter.PageNumber - 1) * filter.PageSize;
+        var sql = @"SELECT * FROM issue_type";
 
-        var sql = @$"SELECT * FROM issue_type ORDER BY id LIMIT {take} OFFSET {skip}";
+        if (filter is not null)
+        {
+            var take = filter.PageSize;
+            var skip = (filter.PageNumber - 1) * filter.PageSize;
+            var paginator = $" ORDER BY id LIMIT {take} offset {skip}";
+            sql += paginator;
+        }
 
         return await _db.LoadAllData<IssueTypeModel>(sql, cts);
     }
