@@ -11,4 +11,5 @@ public interface IRuleRepository
     Task<RuleModel> Update(RuleModel rule, CancellationToken cts);
     Task<RuleModel> Delete(int ruleId, int userId, CancellationToken cts);
     Task<bool> DoesExist(int ruleId, int userId, CancellationToken cts);
+    Task<int> Count(CancellationToken cts);
 }

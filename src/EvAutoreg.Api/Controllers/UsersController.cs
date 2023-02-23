@@ -52,10 +52,12 @@ public class UsersController : ControllerBase
     )
     {
         var users = await _userService.GetAll(pagination, cts);
+        var usersCount = await _userService.Count(cts);
 
         var response = new PagedResponse<UserDto>(
             _mapper.Map<IEnumerable<UserDto>>(users),
-            pagination
+            pagination,
+            usersCount
         );
 
         return Ok(response);

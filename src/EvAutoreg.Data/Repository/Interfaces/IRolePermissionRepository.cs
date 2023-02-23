@@ -16,4 +16,5 @@ public interface IRolePermissionRepository
         CancellationToken cts
     );
     Task<bool> DoesCorrelationExist(RolePermissionModel rolePermission, CancellationToken cts);
+    Task<int> Count(CancellationToken cts);
 }

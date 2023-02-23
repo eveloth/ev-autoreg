@@ -107,4 +107,11 @@ public class RoleService : IRoleService
         var result = _mapper.Map<Role>(deletedRole);
         return result;
     }
+
+    public async Task<int> Count(CancellationToken cts)
+    {
+        var result = await _unitofWork.RoleRepository.Count(cts);
+        await _unitofWork.CommitAsync(cts);
+        return result;
+    }
 }

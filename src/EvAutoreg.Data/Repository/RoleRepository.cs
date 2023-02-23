@@ -97,4 +97,10 @@ public class RoleRepository : IRoleRepository
 
         return await _db.LoadSingle<bool>(sql, parameters, cts);
     }
+
+    public async Task<int> Count(CancellationToken cts)
+    {
+        const string sql = "SELECT COUNT(*) from role";
+        return await _db.LoadScalar<int>(sql, cts);
+    }
 }

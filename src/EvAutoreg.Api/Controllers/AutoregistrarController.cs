@@ -200,10 +200,12 @@ public class AutoregistrarController : ControllerBase
     )
     {
         var issueTypes = await _issueTypeService.GetAll(pagination, cts);
+        var issueTypesCount = await _issueTypeService.Count(cts);
 
         var response = new PagedResponse<IssueTypeDto>(
             _mapper.Map<IEnumerable<IssueTypeDto>>(issueTypes),
-            pagination
+            pagination,
+            issueTypesCount
         );
         return Ok(response);
     }
@@ -331,10 +333,12 @@ public class AutoregistrarController : ControllerBase
     )
     {
         var issueFields = await _issueFieldService.GetAll(pagination, cts);
+        var issueFieldsCount = await _issueFieldService.Count(cts);
 
         var response = new PagedResponse<IssueFieldDto>(
             _mapper.Map<IEnumerable<IssueFieldDto>>(issueFields),
-            pagination
+            pagination,
+            issueFieldsCount
         );
         return Ok(response);
     }
@@ -354,10 +358,12 @@ public class AutoregistrarController : ControllerBase
     )
     {
         var queryParameters = await _queryParametersService.GetAll(pagination, cts);
+        var queryParametersCount = await _queryParametersService.Count(cts);
 
         var response = new PagedResponse<QueryParametersDto>(
             _mapper.Map<IEnumerable<QueryParametersDto>>(queryParameters),
-            pagination
+            pagination,
+            queryParametersCount
         );
         return Ok(response);
     }
@@ -370,7 +376,10 @@ public class AutoregistrarController : ControllerBase
     [Authorize(Policy = "UseRegistrar")]
     [Route("issue-types/{id:int}/ev-api-query-parameters")]
     [HttpGet]
-    [ProducesResponseType(typeof(Response<IEnumerable<QueryParametersDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(
+        typeof(Response<IEnumerable<QueryParametersDto>>),
+        StatusCodes.Status200OK
+    )]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     [Produces("application/json")]
     public async Task<IActionResult> GetEvApiQueryParametersForIssueType(
@@ -460,7 +469,10 @@ public class AutoregistrarController : ControllerBase
     [Authorize(Policy = "ConfigureRegistrar")]
     [Route("issue-types/{issueTypeId:int}/ev-api-query-parameters/{id:int}")]
     [HttpDelete]
-    [ProducesResponseType(typeof(Response<IEnumerable<QueryParametersDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(
+        typeof(Response<IEnumerable<QueryParametersDto>>),
+        StatusCodes.Status200OK
+    )]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     [Produces("application/json")]
     public async Task<IActionResult> DeleteEvApiQueryParametersForIssueType(

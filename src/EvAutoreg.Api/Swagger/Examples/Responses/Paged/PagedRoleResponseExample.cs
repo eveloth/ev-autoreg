@@ -15,6 +15,6 @@ public class PagedRoleResponseExample : IExamplesProvider<PagedResponse<RoleDto>
 
     public PagedResponse<RoleDto> GetExamples()
     {
-        return new PagedResponse<RoleDto>(_roles, PaginationTemplate.Example);
+        return new PagedResponse<RoleDto>(_roles, PaginationTemplate.Example, 2);
     }
 }

@@ -18,7 +18,10 @@ public class IssueFieldService : IIssueFieldService
         _unitofWork = unitofWork;
     }
 
-    public async Task<IEnumerable<IssueField>> GetAll(PaginationQuery paginationQuery, CancellationToken cts)
+    public async Task<IEnumerable<IssueField>> GetAll(
+        PaginationQuery paginationQuery,
+        CancellationToken cts
+    )
     {
         var filter = _mapper.Map<PaginationFilter>(paginationQuery);
 
@@ -26,6 +29,13 @@ public class IssueFieldService : IIssueFieldService
         await _unitofWork.CommitAsync(cts);
 
         var result = _mapper.Map<IEnumerable<IssueField>>(issueFields);
+        return result;
+    }
+
+    public async Task<int> Count(CancellationToken cts)
+    {
+        var result = await _unitofWork.IssueFieldRepository.Count(cts);
+        await _unitofWork.CommitAsync(cts);
         return result;
     }
 }

@@ -38,10 +38,12 @@ public class IssuesController : ControllerBase
     )
     {
         var issues = await _issueService.GetAll(pagination, cts);
+        var issuesCount = await _issueService.Count(cts);
 
         var response = new PagedResponse<IssueDto>(
             _mapper.Map<IEnumerable<IssueDto>>(issues),
-            pagination
+            pagination,
+            issuesCount
         );
         return Ok(response);
     }

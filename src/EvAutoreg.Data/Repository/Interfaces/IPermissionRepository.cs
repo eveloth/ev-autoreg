@@ -15,4 +15,5 @@ public interface IPermissionRepository
     Task<int> Clear(CancellationToken cts);
     Task<bool> DoesExist(int permissionId, CancellationToken cts);
     Task<bool> DoesExist(string permissionName, CancellationToken cts);
+    Task<int> Count(CancellationToken cts);
 }

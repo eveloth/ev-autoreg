@@ -23,7 +23,10 @@ public class IssueService : IIssueService
         _unitofWork = unitofWork;
     }
 
-    public async Task<IEnumerable<Issue>> GetAll(PaginationQuery paginationQuery, CancellationToken cts)
+    public async Task<IEnumerable<Issue>> GetAll(
+        PaginationQuery paginationQuery,
+        CancellationToken cts
+    )
     {
         var filter = _mapper.Map<PaginationFilter>(paginationQuery);
 
@@ -43,6 +46,13 @@ public class IssueService : IIssueService
         }
 
         var result = await _mappingHelper.JoinIssueTypeAndUser(existingIssue, cts);
+        return result;
+    }
+
+    public async Task<int> Count(CancellationToken cts)
+    {
+        var result = await _unitofWork.IssueRepository.Count(cts);
+        await _unitofWork.CommitAsync(cts);
         return result;
     }
 }

@@ -56,15 +56,17 @@ public class AccessControlController : ControllerBase
     [ProducesResponseType(typeof(PagedResponse<RoleDto>), StatusCodes.Status200OK)]
     [Produces("application/json")]
     public async Task<IActionResult> GetAllRoles(
-        [FromQuery] PaginationQuery pagination,
+        [FromQuery] PaginationQuery paginationQuery,
         CancellationToken cts
     )
     {
-        var roles = await _roleService.GetAll(pagination, cts);
+        var roles = await _roleService.GetAll(paginationQuery, cts);
+        var rolesCount = await _roleService.Count(cts);
 
         var response = new PagedResponse<RoleDto>(
             _mapper.Map<IEnumerable<RoleDto>>(roles),
-            pagination
+            paginationQuery,
+            rolesCount
         );
 
         return Ok(response);
@@ -172,10 +174,12 @@ public class AccessControlController : ControllerBase
     )
     {
         var permissions = await _permissionService.GetAll(pagination, cts);
+        var permissionsCount = await _permissionService.Count(cts);
 
         var response = new PagedResponse<PermissionDto>(
             _mapper.Map<IEnumerable<PermissionDto>>(permissions),
-            pagination
+            pagination,
+            permissionsCount
         );
         return Ok(response);
     }
@@ -195,10 +199,12 @@ public class AccessControlController : ControllerBase
     )
     {
         var rolePermissions = await _rolePermissionService.GetAll(pagination, cts);
+        var rolePermissionsCount = await _rolePermissionService.Count(cts);
 
         var response = new PagedResponse<RolePermissionDto>(
             _mapper.Map<IEnumerable<RolePermissionDto>>(rolePermissions),
-            pagination
+            pagination,
+            rolePermissionsCount
         );
         return Ok(response);
     }

@@ -98,4 +98,10 @@ public class RuleRepository : IRuleRepository
 
         return await _db.LoadSingle<bool>(sql, parameters, cts);
     }
+
+    public async Task<int> Count(CancellationToken cts)
+    {
+        const string sql = "SELECT COUNT(*) from rule";
+        return await _db.LoadScalar<int>(sql, cts);
+    }
 }

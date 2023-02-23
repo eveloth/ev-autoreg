@@ -4,8 +4,6 @@ using EvAutoreg.Data.DataAccess;
 using EvAutoreg.Data.Filters;
 using EvAutoreg.Data.Models;
 using EvAutoreg.Data.Repository.Interfaces;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.Primitives;
 
 namespace EvAutoreg.Data.Repository;
 
@@ -240,5 +238,11 @@ public class UserRepository : IUserRepository
         var parameters = new DynamicParameters(new { Email = email });
 
         return await _db.LoadSingle<bool>(sql, parameters, cts);
+    }
+
+    public async Task<int> Count(CancellationToken cts)
+    {
+        const string sql = "SELECT COUNT(*) from app_user";
+        return await _db.LoadScalar<int>(sql, cts);
     }
 }

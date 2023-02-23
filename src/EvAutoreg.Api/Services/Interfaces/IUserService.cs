@@ -19,4 +19,5 @@ public interface IUserService
     Task<User> Unblock(int id, CancellationToken cts);
     Task<User> Delete(int id, CancellationToken cts);
     Task<User> Restore(int id, CancellationToken cts);
+    Task<int> Count(CancellationToken cts);
 }

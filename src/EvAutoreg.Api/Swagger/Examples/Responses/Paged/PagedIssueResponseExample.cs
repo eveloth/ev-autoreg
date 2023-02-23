@@ -51,6 +51,6 @@ public class PagedIssueResponseExample : IExamplesProvider<PagedResponse<IssueDt
 
     public PagedResponse<IssueDto> GetExamples()
     {
-        return new PagedResponse<IssueDto>(_issues, PaginationTemplate.Example);
+        return new PagedResponse<IssueDto>(_issues, PaginationTemplate.Example, 2);
     }
 }

@@ -73,4 +73,11 @@ public class IssueRepository : IIssueRepository
 
         return await _db.SaveData<IssueModel>(sql, parameters, cts);
     }
+
+    public async Task<int> Count(CancellationToken cts)
+    {
+        const string sql = "SELECT COUNT(*) from issue";
+        return await _db.LoadScalar<int>(sql, cts);
+
+    }
 }

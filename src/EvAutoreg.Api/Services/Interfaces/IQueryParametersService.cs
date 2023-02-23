@@ -10,4 +10,5 @@ public interface IQueryParametersService
     Task<QueryParameters> Add(QueryParameters parameters, CancellationToken cts);
     Task<QueryParameters> Update(QueryParameters parameters, CancellationToken cts);
     Task<QueryParameters> Delete(int id, int issueTypeId, CancellationToken cts);
+    Task<int> Count(CancellationToken cts);
 }

@@ -13,4 +13,5 @@ public interface IRoleRepository
     Task<RoleModel> Delete(int roleId, CancellationToken cts);
     Task<bool> DoesExist(int roleId, CancellationToken cts);
     Task<bool> DoesExist(string roleName, CancellationToken cts);
+    Task<int> Count(CancellationToken cts);
 }

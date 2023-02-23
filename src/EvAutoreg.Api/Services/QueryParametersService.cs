@@ -150,4 +150,11 @@ public class QueryParametersService : IQueryParametersService
         var result = await _mappingHelper.JoinIssueType(deletedQueryParameters, cts);
         return result;
     }
+
+    public async Task<int> Count(CancellationToken cts)
+    {
+        var result = await _unitofWork.QueryParametersRepository.Count(cts);
+        await _unitofWork.CommitAsync(cts);
+        return result;
+    }
 }

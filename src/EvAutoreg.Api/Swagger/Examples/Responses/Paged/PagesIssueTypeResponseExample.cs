@@ -15,6 +15,6 @@ public class PagesIssueTypeResponseExample : IExamplesProvider<PagedResponse<Iss
 
     public PagedResponse<IssueTypeDto> GetExamples()
     {
-        return new PagedResponse<IssueTypeDto>(_issueTypes, PaginationTemplate.Example);
+        return new PagedResponse<IssueTypeDto>(_issueTypes, PaginationTemplate.Example, 2);
     }
 }

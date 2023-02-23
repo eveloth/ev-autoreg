@@ -15,4 +15,5 @@ public interface IIssueTypeRepository
     Task<IssueTypeModel> Delete(int issueTypeId, CancellationToken cts);
     Task<bool> DoesExist(int issueTypeId, CancellationToken cts);
     Task<bool> DoesExist(string issueTypeName, CancellationToken cts);
+    Task<int> Count(CancellationToken cts);
 }

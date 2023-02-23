@@ -10,4 +10,5 @@ public interface IIssueTypeService
     Task<IssueType> Add(IssueType type, CancellationToken cts);
     Task<IssueType> Rename(IssueType type, CancellationToken cts);
     Task<IssueType> Delete(int id, CancellationToken cts);
+    Task<int> Count(CancellationToken cts);
 }

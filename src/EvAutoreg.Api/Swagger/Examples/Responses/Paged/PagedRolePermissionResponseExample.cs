@@ -52,6 +52,6 @@ public class PagedRolePermissionResponseExample
 
     public PagedResponse<RolePermissionDto> GetExamples()
     {
-        return new PagedResponse<RolePermissionDto>(_rolePermissions, PaginationTemplate.Example);
+        return new PagedResponse<RolePermissionDto>(_rolePermissions, PaginationTemplate.Example, 2);
     }
 }

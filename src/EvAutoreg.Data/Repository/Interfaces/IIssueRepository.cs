@@ -9,4 +9,5 @@ public interface IIssueRepository
     Task<IssueModel?> Get(int issueId, CancellationToken cts);
     Task<IssueModel> Upsert(IssueModel issue, CancellationToken cts);
     Task<IssueModel> Delete(int issueId, CancellationToken cts);
+    Task<int> Count(CancellationToken cts);
 }

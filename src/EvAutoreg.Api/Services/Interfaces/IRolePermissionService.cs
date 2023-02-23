@@ -20,4 +20,5 @@ public interface IRolePermissionService
         RolePermission rolePermission,
         CancellationToken cts
     );
+    Task<int> Count(CancellationToken cts);
 }

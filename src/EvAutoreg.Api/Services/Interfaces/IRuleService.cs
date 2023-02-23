@@ -10,4 +10,5 @@ public interface IRuleService
     Task<Rule> Add(Rule rule, CancellationToken cts);
     Task<Rule> Update(Rule rule, CancellationToken cts);
     Task<Rule> Delete(int ruleId, int userId, CancellationToken cts);
+    Task<int> Count(CancellationToken cts);
 }

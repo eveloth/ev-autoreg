@@ -51,10 +51,12 @@ public class RulesController : ControllerBase
         var userId = HttpContext.GetUserId();
 
         var rules = await _ruleService.GetAll(userId, pagination, cts);
+        var rulesCount = await _ruleService.Count(cts);
 
         var response = new PagedResponse<RuleDto>(
             _mapper.Map<IEnumerable<RuleDto>>(rules),
-            pagination
+            pagination,
+            rulesCount
         );
         return Ok(response);
     }

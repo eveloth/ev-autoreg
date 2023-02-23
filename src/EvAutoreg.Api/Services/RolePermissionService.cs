@@ -250,4 +250,11 @@ public class RolePermissionService : IRolePermissionService
         result.Role.IsPrivelegedRole = false;
         return result;
     }
+
+    public async Task<int> Count(CancellationToken cts)
+    {
+        var result = await _unitofWork.RolePermissionRepository.Count(cts);
+        await _unitofWork.CommitAsync(cts);
+        return result;
+    }
 }

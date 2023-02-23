@@ -24,4 +24,5 @@ public interface IUserRepository
     Task<UserModel> Restore(int userId, CancellationToken cts);
     Task<bool> DoesExist(int userId, CancellationToken cts);
     Task<bool> DoesExist(string email, CancellationToken cts);
+    Task<int> Count(CancellationToken cts);
 }

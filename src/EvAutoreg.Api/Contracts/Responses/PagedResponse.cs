@@ -2,18 +2,17 @@ namespace EvAutoreg.Api.Contracts.Responses;
 
 public record PagedResponse<T>
 {
-    public PagedResponse(IEnumerable<T> data, PaginationQuery pagination)
+    public PagedResponse(IEnumerable<T> data, PaginationQuery pagination, int entitesCount)
     {
         Data = data;
         PageNumber = pagination.PageNumber;
         PageSize = pagination.PageSize;
-        NextPage = pagination.PageNumber + 1;
-        PreviousPage = pagination.PageNumber > 1 ? pagination.PageNumber - 1 : null;
+        Total = entitesCount;
     }
 
-    public IEnumerable<T> Data { get; init; }
-    public int? PageNumber { get; init; }
-    public int? PageSize { get; init; }
-    public int? NextPage { get; init; }
-    public int? PreviousPage { get; init; }
+    public IEnumerable<T> Data { get; }
+    public int PageNumber { get; }
+    public int PageSize { get; }
+    public int Total { get; }
+    public int PagesTotal => (int)Math.Ceiling((double)Total / PageSize);
 }

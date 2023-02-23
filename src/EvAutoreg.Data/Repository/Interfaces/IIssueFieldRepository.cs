@@ -13,4 +13,5 @@ public interface IIssueFieldRepository
     Task Add(IssueFieldModel issueField, CancellationToken cts);
     Task Delete(int issueFieldId, CancellationToken cts);
     Task<bool> DoesExist(int issueFieldId, CancellationToken cts);
+    Task<int> Count(CancellationToken cts);
 }

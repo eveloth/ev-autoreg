@@ -10,4 +10,5 @@ public interface IRoleService
     Task<Role> Add(Role role, CancellationToken cts);
     Task<Role> Rename(Role role, CancellationToken cts);
     Task<Role> Delete(int id, CancellationToken cts);
+    Task<int> Count(CancellationToken cts);
 }

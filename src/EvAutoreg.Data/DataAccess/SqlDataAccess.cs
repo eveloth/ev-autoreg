@@ -116,6 +116,13 @@ public class SqlDataAccess : ISqlDataAccess
         return result.SingleOrDefault();
     }
 
+    public async Task<TResult> LoadScalar<TResult>(string sql, CancellationToken cts)
+    {
+        return await _connection.ExecuteScalarAsync<TResult>(
+            new CommandDefinition(sql, cancellationToken: cts, transaction: _transaction)
+        );
+    }
+
     public async Task SaveData(string sql, DynamicParameters parameters, CancellationToken cts)
     {
         await _connection.ExecuteAsync(

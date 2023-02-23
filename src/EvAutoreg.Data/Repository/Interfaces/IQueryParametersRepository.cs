@@ -11,4 +11,5 @@ public interface IQueryParametersRepository
     Task<QueryParametersModel> Update(QueryParametersModel queryParameters, CancellationToken cts);
     Task<QueryParametersModel> Delete(int id, int issueTypeId, CancellationToken cts);
     Task<bool> DoQueryParametersExistFor(int issueTypeId, CancellationToken cts);
+    Task<int> Count(CancellationToken cts);
 }
