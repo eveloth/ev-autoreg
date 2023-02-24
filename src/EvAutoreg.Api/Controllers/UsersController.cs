@@ -115,7 +115,7 @@ public class UsersController : ControllerBase
     /// Blocks a user
     /// </summary>
     /// <response code="200">Blocks a user</response>
-    /// <response code="400">If a user tries to block themselves or if a user in is priveleged role</response>
+    /// <response code="400">If a user tries to block themselves or if a user is in priveleged role</response>
     /// <response code="404">If a user doesn't exist</response>
     [Authorize(Policy = "BlockUsers")]
     [Route("{id:int}/block")]
@@ -175,7 +175,7 @@ public class UsersController : ControllerBase
     /// Deletes a user
     /// </summary>
     /// <response code="200">Unblocks a user</response>
-    /// <response code="400">If a user tries to delete themselves or if a user in is priveleged role</response>
+    /// <response code="400">If a user tries to delete themselves or if a user is in priveleged role</response>
     /// <response code="404">If a user doesn't exist</response>
     [Authorize(Policy = "DeleteUsers")]
     [Route("{id:int}")]

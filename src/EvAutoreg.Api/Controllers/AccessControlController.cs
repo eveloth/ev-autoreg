@@ -275,7 +275,7 @@ public class AccessControlController : ControllerBase
     /// <response code="400">If a validation error occured</response>
     /// <response code="404">If role or permission doesn't exist</response>
     [Authorize(Policy = "AddPrivelegedPermissionToRole")]
-    [Route("roles/{roleId:int}/permissions/priveleged/{permissionId:int}")]
+    [Route("priveleged/roles/{roleId:int}/permissions/{permissionId:int}")]
     [HttpPost]
     [ProducesResponseType(typeof(Response<RolePermissionDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
@@ -352,7 +352,7 @@ public class AccessControlController : ControllerBase
     /// <response code="200">Removes a priveleged permission from role</response>
     /// <response code="404">If role, or permission, or role-permission correlation doesn't exist</response>
     [Authorize(Policy = "RemovePrivelegedPermissionFromRole")]
-    [Route("roles/{roleId:int}/permissions/priveleged/{permissionId:int}")]
+    [Route("priveleged/roles/{roleId:int}/permissions/{permissionId:int}")]
     [HttpDelete]
     [ProducesResponseType(typeof(Response<RolePermissionDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
@@ -426,7 +426,7 @@ public class AccessControlController : ControllerBase
     /// <response code="200">Assignes a priveleged role to the specified user</response>
     /// <response code="404">If user or role doesn't exist</response>
     [Authorize(Policy = "AssignPrivelegedRole")]
-    [Route("users/{userId:int}/roles/priveleged/{roleId:int}")]
+    [Route("priveleged/users/{userId:int}/roles/{roleId:int}")]
     [HttpPost]
     [ProducesResponseType(typeof(Response<UserDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
@@ -484,7 +484,7 @@ public class AccessControlController : ControllerBase
     /// <response code="200">Removes a user from priveleged role</response>
     /// <response code="404">If user doesn't exist</response>
     [Authorize(Policy = "RemoveFromPrivelegedRole")]
-    [Route("users/{id:int}/roles/priveleged")]
+    [Route("priveleged/users/{id:int}/roles")]
     [HttpDelete]
     [ProducesResponseType(typeof(Response<UserDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
