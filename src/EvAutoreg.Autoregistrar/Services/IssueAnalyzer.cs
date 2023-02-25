@@ -42,7 +42,7 @@ public class IssueAnalyzer : IIssueAnalyzer
 
             if (propertyValue is not string stringToAnalyze)
             {
-                await _logDispatcher.Log(
+                await _logDispatcher.DispatchWarning(
                     $"Parsing error occured for issue ID {issue.Id} in field name {field.FieldName}"
                 );
 

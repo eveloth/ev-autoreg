@@ -36,8 +36,8 @@ public class MailEventListener : IMailEventListener
 
         if (_connection!.IsOpen)
         {
-            await _logDispatcher.Log(
-                $"A connection was opened for user ID {StateManager.GetOperator()}"
+            await _logDispatcher.DispatchInternalMessage(
+                $"A connection was opened for user ID {StateRepository.GetOperator()}"
             );
         }
     }
@@ -65,7 +65,7 @@ public class MailEventListener : IMailEventListener
 
             var issueNo = issueNoRegex.Match(email.Subject).Groups[1].Value;
 
-            await _logDispatcher.Log($"Received new issue, ID {issueNo}");
+            await _logDispatcher.DispatchInfo($"Received new issue, ID {issueNo}");
 
             try
             {
@@ -73,7 +73,7 @@ public class MailEventListener : IMailEventListener
             }
             catch (Exception e) when (e is EvApiException or NpgsqlException)
             {
-                await _logDispatcher.Log($"Processing an issue {issueNo} resulted in an error");
+                await _logDispatcher.DispatchError($"Processing an issue {issueNo} resulted in an error");
                 _logger.LogError(
                     "Processing an issue ID {IssueId} resulted in an error: {Error}",
                     issueNo,
@@ -82,7 +82,7 @@ public class MailEventListener : IMailEventListener
             }
             catch (HttpRequestException e)
             {
-                await _logDispatcher.Log(
+                await _logDispatcher.DispatchError(
                     $"Processing an issue {issueNo} resulted in an error: couldn't connect to EV server"
                 );
                 _logger.LogError(
@@ -93,7 +93,7 @@ public class MailEventListener : IMailEventListener
             }
             catch (Exception e)
             {
-                await _logDispatcher.Log($"Processing an issue {issueNo} resulted in an error");
+                await _logDispatcher.DispatchError($"Processing an issue {issueNo} resulted in an error");
                 _logger.LogError(
                     "Processing an issue ID {Issueid} resulted in an error: {Error}",
                     issueNo,
@@ -105,16 +105,16 @@ public class MailEventListener : IMailEventListener
 
     private async void OnDisconnect(object sender, SubscriptionErrorEventArgs args)
     {
-        if (!StateManager.IsStarted())
+        if (!StateRepository.IsStarted())
         {
-            await _logDispatcher.Log(
-                $"The connection was gracefully closed for user ID {StateManager.GetOperator()}"
+            await _logDispatcher.DispatchInternalMessage(
+                $"The connection was gracefully closed for user ID {StateRepository.GetOperator()}"
             );
             return;
         }
 
-        await _logDispatcher.Log(
-            $"The connection was automatically closed for user ID {StateManager.GetOperator()}, reopening connection"
+        await _logDispatcher.DispatchInternalMessage(
+            $"The connection was automatically closed for user ID {StateRepository.GetOperator()}, reopening connection"
         );
 
         await ReconnectWithRetry(TimeSpan.FromSeconds(3));
@@ -122,7 +122,7 @@ public class MailEventListener : IMailEventListener
 
     private async void OnSubscriptionError(object sender, SubscriptionErrorEventArgs args)
     {
-        await _logDispatcher.Log("A subscription error occured, trying to recover...");
+        await _logDispatcher.DispatchWarning("A subscription error occured, trying to recover...");
         _logger.LogError("A subscription error occured: {Error}", args.Exception);
 
         await ReconnectWithRetry(TimeSpan.FromSeconds(3));
@@ -132,7 +132,7 @@ public class MailEventListener : IMailEventListener
     {
         while (!ConnectionIsOpen())
         {
-            if (!StateManager.IsStarted())
+            if (!StateRepository.IsStarted())
             {
                 break;
             }
@@ -143,7 +143,7 @@ public class MailEventListener : IMailEventListener
             }
             catch (Exception e)
             {
-                await _logDispatcher.Log(
+                await _logDispatcher.DispatchWarning(
                     $"Counldn't restore a connection, trying again in {delaySec:%s}s..."
                 );
                 _logger.LogError("Could not open connection, error: {Error}", e);
@@ -160,8 +160,8 @@ public class MailEventListener : IMailEventListener
 
         if (_connection.IsOpen)
         {
-            await _logDispatcher.Log(
-                $"A connection was opened for user ID {StateManager.GetOperator()}"
+            await _logDispatcher.DispatchInternalMessage(
+                $"A connection was opened for user ID {StateRepository.GetOperator()}"
             );
         }
     }

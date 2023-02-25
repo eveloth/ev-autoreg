@@ -4,6 +4,6 @@ using Microsoft.AspNetCore.SignalR;
 namespace EvAutoreg.Autoregistrar.Hubs;
 
 [Authorize(Policy = "UseRegistrar")]
-public class AutoregistrarHub : Hub<IAutoregistrarClient>
+public class AutoregistrarHub : Hub<IAutoregistrarHubClient>
 {
 }

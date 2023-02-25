@@ -1,41 +1,47 @@
-﻿namespace EvAutoreg.Autoregistrar.State;
+using EvAutoreg.Autoregistrar.Services.Interfaces;
 
-public static class StateManager
+namespace EvAutoreg.Autoregistrar.State;
+
+public class StateManager : IStateManager
 {
-    private static Status _status = Status.Stopped;
-    private static int _operatorId;
-    public static bool IsOperator(int userId)
+    private readonly ILogDispatcher<StateManager> _logDispatcher;
+
+    public StateManager(ILogDispatcher<StateManager> logDispatcher)
     {
-        return _operatorId == userId;
+        _logDispatcher = logDispatcher;
     }
 
-    public static int GetOperator()
+    public async Task SetStarted()
     {
-        return _operatorId;
+        const Status status = Status.Started;
+
+        StateRepository.SetStatus(status);
+        await _logDispatcher.DispatchStatus(status);
     }
 
-    public static void SetOperator(int userId)
+    public async Task SetPending()
     {
-        _operatorId = userId;
+        const Status status = Status.Pending;
+
+        StateRepository.SetStatus(status);
+        await _logDispatcher.DispatchStatus(status);
     }
 
-    public static Status GetStatus()
+    public async Task SetPending(int operatorId)
     {
-        return _status;
+        const Status status = Status.Pending;
+        
+        StateRepository.SetOperator(operatorId);
+        StateRepository.SetStatus(status);
+        await _logDispatcher.DispatchStatus(status);
     }
 
-    public static void SetStatus(Status status)
+    public async Task SetStopped()
     {
-        _status = status;
-    }
+        const Status status = Status.Stopped;
 
-    public static bool IsStarted()
-    {
-        return _status == Status.Started;
-    }
-
-    public static bool IsStopped()
-    {
-        return _status == Status.Stopped;
+        StateRepository.SetStatus(status);
+        StateRepository.DropOperator();
+        await _logDispatcher.DispatchStatus(status);
     }
 }

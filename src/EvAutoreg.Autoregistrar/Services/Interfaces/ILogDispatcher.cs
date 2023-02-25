@@ -1,6 +1,11 @@
-﻿namespace EvAutoreg.Autoregistrar.Services.Interfaces;
+namespace EvAutoreg.Autoregistrar.Services.Interfaces;
 
 public interface ILogDispatcher<T>
 {
-    Task Log(string log);
+    Task DispatchStatus(Status status);
+    Task DispatchInternalMessage(string message);
+    Task DispatchInfo(string message);
+    Task DispatchWarning(string message);
+    Task DispatchError(string message);
+    Task DispatchSuccess(string message);
 }
