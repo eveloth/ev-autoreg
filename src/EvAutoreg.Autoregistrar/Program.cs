@@ -1,3 +1,4 @@
+using System.Net;
 using EvAutoreg.Autoregistrar.Apis;
 using EvAutoreg.Autoregistrar.GrpcServices;
 using EvAutoreg.Autoregistrar.Hubs;
@@ -12,10 +13,23 @@ using EvAutoreg.Autoregistrar.State;
 using EvAutoreg.Data.Extensions;
 using MapsterMapper;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Listen(IPAddress.Any, 80,  listenOptions =>
+    {
+        listenOptions.Protocols = HttpProtocols.Http1;
+    });
+    options.Listen(IPAddress.Any, 8080, listenOptions =>
+    {
+        listenOptions.Protocols = HttpProtocols.Http2;
+    });
+});
 
 builder.InstallSerilog();
 
