@@ -12,7 +12,9 @@ public class RolePermissionResponseExample : IExamplesProvider<Response<RolePerm
         return new Response<RolePermissionDto>(
             new RolePermissionDto
             {
-                Role = new RoleDto { Id = 1, RoleName = "administrator" },
+                RoleId = 1,
+                RoleName = "administrator",
+                IsPrivelegedRole = false,
                 Permissions = new List<PermissionDto>
                 {
                     new()

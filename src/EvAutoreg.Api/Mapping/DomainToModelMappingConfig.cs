@@ -10,9 +10,9 @@ public static class DomainToModelMappingConfig
     {
         TypeAdapterConfig<RolePermission, RolePermissionModel>
             .NewConfig()
-            .Map(dest => dest.RoleId, src => src.Role.Id)
-            .Map(dest => dest.RoleName, src => src.Role.RoleName)
-            .Map(dest => dest.IsPrivelegedRole, src => src.Role.IsPrivelegedRole)
+            .Map(dest => dest.RoleId, src => src.RoleId)
+            .Map(dest => dest.RoleName, src => src.RoleName)
+            .Map(dest => dest.IsPrivelegedRole, src => src.IsPrivelegedRole)
             .Map(dest => dest.PermissionId, src => src.Permissions.First().Id)
             .Map(dest => dest.PermissionName, src => src.Permissions.First().PermissionName)
             .Map(dest => dest.Description, src => src.Permissions.First().Description)

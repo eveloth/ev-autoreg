@@ -63,8 +63,8 @@ public class AccessControlController : ControllerBase
         var roles = await _roleService.GetAll(paginationQuery, cts);
         var rolesCount = await _roleService.Count(cts);
 
-        var response = new PagedResponse<RoleDto>(
-            _mapper.Map<IEnumerable<RoleDto>>(roles),
+        var response = new PagedResponse<RolePermissionDto>(
+            _mapper.Map<IEnumerable<RolePermissionDto>>(roles),
             paginationQuery,
             rolesCount
         );
@@ -92,11 +92,11 @@ public class AccessControlController : ControllerBase
 
         _logger.LogInformation(
             "Role ID {RoleId} was added with name {RoleName}",
-            newRole.Id,
+            newRole.RoleId,
             newRole.RoleName
         );
 
-        var response = new Response<RoleDto>(_mapper.Map<RoleDto>(newRole));
+        var response = new Response<RolePermissionDto>(_mapper.Map<RolePermissionDto>(newRole));
         return Ok(response);
     }
 
@@ -126,11 +126,11 @@ public class AccessControlController : ControllerBase
 
         _logger.LogInformation(
             "Role ID {RoleId} name was changed to {RoleName}",
-            updatedRole.Id,
+            updatedRole.RoleId,
             updatedRole.RoleName
         );
 
-        var response = new Response<RoleDto>(_mapper.Map<RoleDto>(updatedRole));
+        var response = new Response<RolePermissionDto>(_mapper.Map<RolePermissionDto>(updatedRole));
         return Ok(response);
     }
 
@@ -151,11 +151,11 @@ public class AccessControlController : ControllerBase
 
         _logger.LogInformation(
             "Role ID {RoleId} with name {RoleName} was deleted",
-            deletedRole.Id,
+            deletedRole.RoleId,
             deletedRole.RoleName
         );
 
-        var response = new Response<RoleDto>(_mapper.Map<RoleDto>(deletedRole));
+        var response = new Response<RolePermissionDto>(_mapper.Map<RolePermissionDto>(deletedRole));
         return Ok(response);
     }
 
@@ -185,50 +185,6 @@ public class AccessControlController : ControllerBase
     }
 
     /// <summary>
-    /// Returns all role-permission correlations in the system
-    /// </summary>
-    /// <response code="200">Returns all role-permission correlations in the system</response>
-    [Authorize(Policy = "ReadRoles")]
-    [Route("roles/permissions")]
-    [HttpGet]
-    [ProducesResponseType(typeof(PagedResponse<RolePermissionDto>), StatusCodes.Status200OK)]
-    [Produces("application/json")]
-    public async Task<IActionResult> GetAllRolePermissions(
-        [FromQuery] PaginationQuery pagination,
-        CancellationToken cts
-    )
-    {
-        var rolePermissions = await _rolePermissionService.GetAll(pagination, cts);
-        var rolePermissionsCount = await _rolePermissionService.Count(cts);
-
-        var response = new PagedResponse<RolePermissionDto>(
-            _mapper.Map<IEnumerable<RolePermissionDto>>(rolePermissions),
-            pagination,
-            rolePermissionsCount
-        );
-        return Ok(response);
-    }
-
-    /// <summary>
-    /// Returns a role permissions correlation for the specified role
-    /// </summary>
-    /// <response code="200">Returns a role permissions correlation for the specified role</response>
-    /// <response code="404">If role or role-permission correlation doesn't exist</response>
-    [Authorize(Policy = "ReadRoles")]
-    [Route("roles/{id:int}/permissions")]
-    [HttpGet]
-    [ProducesResponseType(typeof(Response<RolePermissionDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    [Produces("application/json")]
-    public async Task<IActionResult> GetRolePermissions([FromRoute] int id, CancellationToken cts)
-    {
-        var rolePermission = await _rolePermissionService.Get(id, cts);
-
-        var response = _mapper.Map<RolePermissionDto>(rolePermission);
-        return Ok(response);
-    }
-
-    /// <summary>
     /// Adds a permission to the role
     /// </summary>
     /// <response code="200">Adds a permission to the role</response>
@@ -248,22 +204,22 @@ public class AccessControlController : ControllerBase
         CancellationToken cts
     )
     {
-        var rolePermissionrpModel = new RolePermission { Role = new Role { Id = roleId } };
-        rolePermissionrpModel.Permissions.Add(new Permission { Id = permissionId });
+        var rolePermissionModel = new RolePermission { RoleId = roleId};
+        rolePermissionModel.Permissions.Add(new Permission { Id = permissionId });
 
-        var createdCorrelation = await _rolePermissionService.AddPermissionToRole(
-            rolePermissionrpModel,
+        var updatedRole = await _rolePermissionService.AddPermissionToRole(
+            rolePermissionModel,
             cts
         );
 
         _logger.LogInformation(
             "Permission ID {PermissionId} was added to role ID {RoleId}",
-            createdCorrelation.Permissions.First().Id,
-            createdCorrelation.Role.Id
+            updatedRole.Permissions.First().Id,
+            updatedRole.RoleId
         );
 
         var response = new Response<RolePermissionDto>(
-            _mapper.Map<RolePermissionDto>(createdCorrelation)
+            _mapper.Map<RolePermissionDto>(updatedRole)
         );
         return Ok(response);
     }
@@ -287,22 +243,22 @@ public class AccessControlController : ControllerBase
         CancellationToken cts
     )
     {
-        var rolePermissionrpModel = new RolePermission { Role = new Role { Id = roleId } };
-        rolePermissionrpModel.Permissions.Add(new Permission { Id = permissionId });
+        var rolePermissionModel = new RolePermission { RoleId = roleId};
+        rolePermissionModel.Permissions.Add(new Permission { Id = permissionId });
 
-        var createdCorrelation = await _rolePermissionService.AddPrivelegedPermissionToRole(
-            rolePermissionrpModel,
+        var updatedRole = await _rolePermissionService.AddPrivelegedPermissionToRole(
+            rolePermissionModel,
             cts
         );
 
         _logger.LogInformation(
             "Priveleged permission ID {PermissionId} was added to role ID {RoleId}",
-            createdCorrelation.Permissions.First().Id,
-            createdCorrelation.Role.Id
+            updatedRole.Permissions.First().Id,
+            updatedRole.RoleId
         );
 
         var response = new Response<RolePermissionDto>(
-            _mapper.Map<RolePermissionDto>(createdCorrelation)
+            _mapper.Map<RolePermissionDto>(updatedRole)
         );
         return Ok(response);
     }
@@ -326,22 +282,22 @@ public class AccessControlController : ControllerBase
         CancellationToken cts
     )
     {
-        var rolePermissionModel = new RolePermission { Role = new Role { Id = roleId } };
+        var rolePermissionModel = new RolePermission { RoleId = roleId};
         rolePermissionModel.Permissions.Add(new Permission { Id = permissionId });
 
-        var deletedCorrelation = await _rolePermissionService.RemovePermissionFromRole(
+        var updatedRole = await _rolePermissionService.RemovePermissionFromRole(
             rolePermissionModel,
             cts
         );
 
         _logger.LogInformation(
             "Permission ID {PermissionId} was removed from ID {RoleId}",
-            deletedCorrelation.Permissions.First().Id,
-            deletedCorrelation.Role.Id
+            updatedRole.Permissions.First().Id,
+            updatedRole.RoleId
         );
 
         var response = new Response<RolePermissionDto>(
-            _mapper.Map<RolePermissionDto>(deletedCorrelation)
+            _mapper.Map<RolePermissionDto>(updatedRole)
         );
         return Ok(response);
     }
@@ -363,22 +319,22 @@ public class AccessControlController : ControllerBase
         CancellationToken cts
     )
     {
-        var rolePermissionModel = new RolePermission { Role = new Role { Id = roleId } };
+        var rolePermissionModel = new RolePermission { RoleId = roleId};
         rolePermissionModel.Permissions.Add(new Permission { Id = permissionId });
 
-        var deletedCorrelation = await _rolePermissionService.RemovePrivelegedPermissionFromRole(
+        var updatedRole = await _rolePermissionService.RemovePrivelegedPermissionFromRole(
             rolePermissionModel,
             cts
         );
 
         _logger.LogInformation(
             "Permission ID {PermissionId} was removed from ID {RoleId}",
-            deletedCorrelation.Permissions.First().Id,
-            deletedCorrelation.Role.Id
+            updatedRole.Permissions.First().Id,
+            updatedRole.RoleId
         );
 
         var response = new Response<RolePermissionDto>(
-            _mapper.Map<RolePermissionDto>(deletedCorrelation)
+            _mapper.Map<RolePermissionDto>(updatedRole)
         );
         return Ok(response);
     }

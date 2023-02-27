@@ -8,6 +8,11 @@ public static class DomainToDtoMappingConfig
 {
     public static void ConfigureDomainToDtoMapping(this IApplicationBuilder app)
     {
+        TypeAdapterConfig<RolePermission, RolePermissionDto>
+            .NewConfig()
+            .IgnoreNonMapped(false)
+            .IgnoreNullValues(true);
+
 #pragma warning disable CS8602
         TypeAdapterConfig<Issue, IssueDto>
             .NewConfig()

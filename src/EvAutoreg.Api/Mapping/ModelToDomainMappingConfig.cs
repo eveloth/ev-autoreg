@@ -28,9 +28,9 @@ public static class ModelToDomainMappingConfig
 
         TypeAdapterConfig<List<RolePermissionModel>, RolePermission>
             .NewConfig()
-            .Map(dest => dest.Role.Id, src => src.First().RoleId)
-            .Map(dest => dest.Role.RoleName, src => src.First().RoleName)
-            .Map(dest => dest.Role.IsPrivelegedRole, src => src.First().IsPrivelegedRole)
+            .Map(dest => dest.RoleId, src => src.First().RoleId)
+            .Map(dest => dest.RoleName, src => src.First().RoleName)
+            .Map(dest => dest.IsPrivelegedRole, src => src.First().IsPrivelegedRole)
             .Map(
                 dest => dest.Permissions,
                 src =>

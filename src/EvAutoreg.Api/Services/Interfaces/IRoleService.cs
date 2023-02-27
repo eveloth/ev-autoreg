@@ -5,10 +5,10 @@ namespace EvAutoreg.Api.Services.Interfaces;
 
 public interface IRoleService
 {
-    Task<IEnumerable<Role>> GetAll(PaginationQuery paginationQuery, CancellationToken cts);
-    Task<Role> Get(int id, CancellationToken cts);
-    Task<Role> Add(Role role, CancellationToken cts);
-    Task<Role> Rename(Role role, CancellationToken cts);
-    Task<Role> Delete(int id, CancellationToken cts);
+    Task<IEnumerable<RolePermission>> GetAll(PaginationQuery paginationQuery, CancellationToken cts);
+    Task<RolePermission> Get(int id, CancellationToken cts);
+    Task<RolePermission> Add(Role role, CancellationToken cts);
+    Task<RolePermission> Rename(Role role, CancellationToken cts);
+    Task<RolePermission> Delete(int id, CancellationToken cts);
     Task<int> Count(CancellationToken cts);
 }

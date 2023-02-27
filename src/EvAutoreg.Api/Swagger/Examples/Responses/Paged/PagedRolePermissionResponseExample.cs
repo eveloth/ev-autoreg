@@ -12,7 +12,9 @@ public class PagedRolePermissionResponseExample
     {
         new RolePermissionDto
         {
-            Role = new RoleDto { Id = 1, RoleName = "administrator" },
+            RoleId = 1,
+            RoleName = "administrator",
+            IsPrivelegedRole = false,
             Permissions = new List<PermissionDto>
             {
                 new()
@@ -37,7 +39,9 @@ public class PagedRolePermissionResponseExample
         },
         new RolePermissionDto
         {
-            Role = new RoleDto { Id = 3, RoleName = "manager" },
+            RoleId = 3,
+            RoleName = "manager",
+            IsPrivelegedRole = false,
             Permissions = new List<PermissionDto>
             {
                 new()
@@ -52,6 +56,10 @@ public class PagedRolePermissionResponseExample
 
     public PagedResponse<RolePermissionDto> GetExamples()
     {
-        return new PagedResponse<RolePermissionDto>(_rolePermissions, PaginationTemplate.Example, 2);
+        return new PagedResponse<RolePermissionDto>(
+            _rolePermissions,
+            PaginationTemplate.Example,
+            2
+        );
     }
 }

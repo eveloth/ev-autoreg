@@ -5,6 +5,7 @@ using EvAutoreg.Api.Services.Interfaces;
 using EvAutoreg.Data.Filters;
 using EvAutoreg.Data.Models;
 using EvAutoreg.Data.Repository.Interfaces;
+using EvAutoreg.Extensions;
 using MapsterMapper;
 using static EvAutoreg.Api.Errors.ErrorCodes;
 
@@ -21,21 +22,25 @@ public class RoleService : IRoleService
         _unitofWork = unitofWork;
     }
 
-    public async Task<IEnumerable<Role>> GetAll(
+    public async Task<IEnumerable<RolePermission>> GetAll(
         PaginationQuery paginationQuery,
         CancellationToken cts
     )
     {
         var filter = _mapper.Map<PaginationFilter>(paginationQuery);
 
-        var roles = await _unitofWork.RoleRepository.GetAll(cts, filter);
+        var rolePermissions = await _unitofWork.RolePermissionRepository.GetAll(cts, filter);
         await _unitofWork.CommitAsync(cts);
 
-        var result = _mapper.Map<IEnumerable<Role>>(roles);
+        var listsOfRolePermissions = rolePermissions.GroupByIntoList(
+            x => new { x.RoleId, x.RoleName }
+        );
+
+        var result = _mapper.Map<IEnumerable<RolePermission>>(listsOfRolePermissions);
         return result;
     }
 
-    public async Task<Role> Get(int id, CancellationToken cts)
+    public async Task<RolePermission> Get(int id, CancellationToken cts)
     {
         var role = await _unitofWork.RoleRepository.Get(id, cts);
         await _unitofWork.CommitAsync(cts);
@@ -45,11 +50,14 @@ public class RoleService : IRoleService
             throw new ApiException().WithApiError(ErrorCode[2004]);
         }
 
-        var result = _mapper.Map<Role>(role);
+        var rolePermissions = await _unitofWork.RolePermissionRepository.Get(id, cts);
+        await _unitofWork.CommitAsync(cts);
+
+        var result = _mapper.Map<RolePermission>(rolePermissions);
         return result;
     }
 
-    public async Task<Role> Add(Role role, CancellationToken cts)
+    public async Task<RolePermission> Add(Role role, CancellationToken cts)
     {
         var isRoleNameTaken = await _unitofWork.RoleRepository.DoesExist(role.RoleName, cts);
 
@@ -60,12 +68,14 @@ public class RoleService : IRoleService
 
         var roleModel = _mapper.Map<RoleModel>(role);
         var createdRole = await _unitofWork.RoleRepository.Add(roleModel, cts);
+        var rolePermissions = await _unitofWork.RolePermissionRepository.Get(createdRole.Id, cts);
         await _unitofWork.CommitAsync(cts);
-        var result = _mapper.Map<Role>(createdRole);
+
+        var result = _mapper.Map<RolePermission>(rolePermissions);
         return result;
     }
 
-    public async Task<Role> Rename(Role role, CancellationToken cts)
+    public async Task<RolePermission> Rename(Role role, CancellationToken cts)
     {
         var existingRole = await _unitofWork.RoleRepository.Get(role.Id, cts);
 
@@ -83,12 +93,14 @@ public class RoleService : IRoleService
 
         var roleModel = _mapper.Map<RoleModel>(role);
         var updatedRole = await _unitofWork.RoleRepository.ChangeName(roleModel, cts);
+        var rolePermissions = await _unitofWork.RolePermissionRepository.Get(updatedRole.Id, cts);
         await _unitofWork.CommitAsync(cts);
-        var result = _mapper.Map<Role>(updatedRole);
+
+        var result = _mapper.Map<RolePermission>(rolePermissions);
         return result;
     }
 
-    public async Task<Role> Delete(int id, CancellationToken cts)
+    public async Task<RolePermission> Delete(int id, CancellationToken cts)
     {
         var existingRole = await _unitofWork.RoleRepository.Get(id, cts);
 
@@ -102,9 +114,11 @@ public class RoleService : IRoleService
             throw new ApiException().WithApiError(ErrorCode[2005]);
         }
 
-        var deletedRole = await _unitofWork.RoleRepository.Delete(id, cts);
+        var rolePermissions = await _unitofWork.RolePermissionRepository.Get(id, cts);
+        await _unitofWork.RoleRepository.Delete(id, cts);
         await _unitofWork.CommitAsync(cts);
-        var result = _mapper.Map<Role>(deletedRole);
+
+        var result = _mapper.Map<RolePermission>(rolePermissions);
         return result;
     }
 

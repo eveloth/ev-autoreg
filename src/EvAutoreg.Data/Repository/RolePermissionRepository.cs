@@ -31,21 +31,21 @@ public class RolePermissionRepository : IRolePermissionRepository
                         role_name AS role_name,
                         is_priveleged_role
                         FROM role
-                        ) AS r
-                        LEFT JOIN role_permission rp ON r.role_id = rp.role_id 
-                        LEFT JOIN permission p ON rp.permission_id = p.id 
-                        ORDER BY r.role_id, p.id";
+                        ORDER BY id";
 
         if (filter is not null)
         {
             var take = filter.PageSize;
             var skip = (filter.PageNumber - 1) * filter.PageSize;
-            var paginator = $" ORDER BY id LIMIT {take} offset {skip}";
+            var paginator = $" LIMIT {take} offset {skip}";
             sql += paginator;
         }
 
+        sql += ") AS r";
+
+
         const string joins =
-            @" AS r LEFT JOIN role_permission rp ON r.role_id = rp.role_id
+            @" LEFT JOIN role_permission rp ON r.role_id = rp.role_id
                       LEFT JOIN permission p ON rp.permission_id = p.id
                       ORDER BY r.role_id, p.id";
 

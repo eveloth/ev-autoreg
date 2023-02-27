@@ -151,7 +151,7 @@ public class RolePermissionService : IRolePermissionService
         await _unitofWork.CommitAsync(cts);
 
         var result = _mapper.Map<RolePermission>(createdCorrelation);
-        result.Role.IsPrivelegedRole = true;
+        result.IsPrivelegedRole = true;
         return result;
     }
 
@@ -247,7 +247,7 @@ public class RolePermissionService : IRolePermissionService
         await _unitofWork.RoleRepository.ChangePriveleges(role, cts);
         await _unitofWork.CommitAsync(cts);
 
-        result.Role.IsPrivelegedRole = false;
+        result.IsPrivelegedRole = false;
         return result;
     }
 
