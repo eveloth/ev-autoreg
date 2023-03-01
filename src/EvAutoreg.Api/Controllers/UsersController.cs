@@ -69,7 +69,7 @@ public class UsersController : ControllerBase
     /// <response code="200">Returns a scecified user</response>
     /// <response code="404">If a user doesn't exist</response>
     [Cached(300)]
-    [Authorize]
+    [Authorize(Policy = "ReadUsers")]
     [Route("{id:int}")]
     [HttpGet]
     [ProducesResponseType(typeof(Response<UserDto>), StatusCodes.Status200OK)]

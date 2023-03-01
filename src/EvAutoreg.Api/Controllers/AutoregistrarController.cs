@@ -68,8 +68,9 @@ public class AutoregistrarController : ControllerBase
     public async Task<IActionResult> StartAutoregistrar(CancellationToken cts)
     {
         var userId = HttpContext.GetUserId();
-        var statusResponse = await _autoregistrarCallerService.Start(userId, cts);
         _logger.LogInformation("User ID {UserId} initiated autoregistrar start request", userId);
+
+        var statusResponse = await _autoregistrarCallerService.Start(userId, cts);
 
         var response = new Response<StatusResponse>(statusResponse);
         return Ok(response);
@@ -89,8 +90,9 @@ public class AutoregistrarController : ControllerBase
     public async Task<IActionResult> StopAutoregistar(CancellationToken cts)
     {
         var userId = HttpContext.GetUserId();
-        var statusResponse = await _autoregistrarCallerService.Stop(userId, cts);
         _logger.LogInformation("User ID {UserId} initiated autoregistrar stop request", userId);
+
+        var statusResponse = await _autoregistrarCallerService.Stop(userId, cts);
 
         var response = new Response<StatusResponse>(statusResponse);
         return Ok(response);
@@ -109,11 +111,12 @@ public class AutoregistrarController : ControllerBase
     [Produces("application/json")]
     public async Task<IActionResult> ForceStopAutoregistrar(CancellationToken cts)
     {
-        var statusResponse = await _autoregistrarCallerService.ForceStop(cts);
         _logger.LogInformation(
             "User ID {UserId} initiated autoregistrar force stop request",
             HttpContext.GetUserId()
         );
+
+        var statusResponse = await _autoregistrarCallerService.ForceStop(cts);
 
         var response = new Response<StatusResponse>(statusResponse);
         return Ok(response);
