@@ -12,6 +12,7 @@ using EvAutoreg.Data.Models;
 using EvAutoreg.Data.Repository.Interfaces;
 using MapsterMapper;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using static EvAutoreg.Api.Errors.ErrorCodes;
 
@@ -34,7 +35,7 @@ public class AuthenticationService : IAuthenticationService
         IUnitofWork unitofWork,
         ILogger<AuthenticationService> logger,
         IMappingHelper mappingHelper,
-        JwtOptions jwtOptions,
+        IOptions<JwtOptions> jwtOptions,
         TokenValidationParameters tokenValidationParameters,
         ITokenDb tokenDb
     )
@@ -44,7 +45,7 @@ public class AuthenticationService : IAuthenticationService
         _unitofWork = unitofWork;
         _logger = logger;
         _mappingHelper = mappingHelper;
-        _jwtOptions = jwtOptions;
+        _jwtOptions = jwtOptions.Value;
         _tokenValidationParameters = tokenValidationParameters;
         _tokenDb = tokenDb;
     }
@@ -224,10 +225,10 @@ public class AuthenticationService : IAuthenticationService
     private static bool IsValidSecurityAlgorythm(SecurityToken token)
     {
         return token is JwtSecurityToken securityToken
-               && securityToken.Header.Alg.Equals(
-                   SecurityAlgorithms.HmacSha256,
-                   StringComparison.InvariantCultureIgnoreCase
-               );
+            && securityToken.Header.Alg.Equals(
+                SecurityAlgorithms.HmacSha256,
+                StringComparison.InvariantCultureIgnoreCase
+            );
     }
 
     private static DateTime GetExpiryDateUtc(ClaimsPrincipal validatedToken)

@@ -8,13 +8,19 @@ public static class RedisInstaller
 {
     public static async Task<WebApplicationBuilder> AddRedis(this WebApplicationBuilder builder)
     {
+        builder.Services
+            .AddOptions<RedisOptions>()
+            .Bind(builder.Configuration.GetSection(RedisOptions.Redis))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        var redisOptions = builder.Configuration
+            .GetRequiredSection(RedisOptions.Redis)
+            .Get<RedisOptions>()!;
+
         var redisCs =
             builder.Configuration.GetConnectionString("Redis")
             ?? throw new NullConfigurationEntryException();
-
-        var redisOptions = new RedisOptions();
-        builder.Configuration.Bind(nameof(redisOptions), redisOptions);
-        builder.Services.AddSingleton(redisOptions);
 
         var redis = await ConnectionMultiplexer.ConnectAsync(
             redisCs,

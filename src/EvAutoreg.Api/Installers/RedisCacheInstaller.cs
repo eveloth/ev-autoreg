@@ -8,15 +8,24 @@ public static class RedisCacheInstaller
 {
     public static WebApplicationBuilder AddRedisCache(this WebApplicationBuilder builder)
     {
-        var redisCacheOptions = new RedisCacheOptions();
-        builder.Configuration.Bind(nameof(redisCacheOptions), redisCacheOptions);
-        builder.Services.AddSingleton(redisCacheOptions);
+        builder.Services
+            .AddOptions<RedisCacheOptions>()
+            .Bind(builder.Configuration.GetSection(RedisCacheOptions.RedisCache))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        var redisCacheOptions = builder.Configuration
+            .GetRequiredSection(RedisCacheOptions.RedisCache)
+            .Get<RedisCacheOptions>()!;
 
         if (!redisCacheOptions.Enabled)
+        {
             return builder;
+        }
 
-        var redisOptions = new RedisOptions();
-        builder.Configuration.Bind(nameof(redisOptions), redisOptions);
+        var redisOptions = builder.Configuration
+            .GetRequiredSection(RedisOptions.Redis)
+            .Get<RedisOptions>()!;
 
         var redisConnectionString = builder.Configuration.GetConnectionString("RedisCache");
         var config = ConfigurationOptions.Parse(redisConnectionString!);

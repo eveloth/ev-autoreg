@@ -10,25 +10,20 @@ public static class JwtInstaller
 {
     public static WebApplicationBuilder AddJwtAuthentication(this WebApplicationBuilder builder)
     {
-        var jwt = new JwtOptions();
-        builder.Configuration.Bind(nameof(jwt), jwt);
-        builder.Services.AddSingleton(jwt);
+        builder.Services
+            .AddOptions<JwtOptions>()
+            .Bind(builder.Configuration.GetSection(JwtOptions.Jwt))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        var jwtOptions = builder.Configuration
+            .GetRequiredSection(JwtOptions.Jwt)
+            .Get<JwtOptions>()!;
 
         var tokenValidationParameters = new TokenValidationParameters
         {
-            ValidIssuer =
-                builder.Configuration["Jwt:Issuer"]
-                ?? throw new NullConfigurationEntryException(
-                    "Could not read configuration for JWT"
-                ),
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(
-                    builder.Configuration["Jwt:Key"]
-                        ?? throw new NullConfigurationEntryException(
-                            "Could not read configuration for JWT"
-                        )
-                )
-            ),
+            ValidIssuer = jwtOptions.Issuer,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.Key)),
             ValidateIssuer = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,

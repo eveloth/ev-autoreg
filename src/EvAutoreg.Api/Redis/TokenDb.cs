@@ -1,5 +1,6 @@
 ﻿using EvAutoreg.Api.Options;
 using EvAutoreg.Api.Redis.Entities;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using StackExchange.Redis;
 
@@ -11,11 +12,15 @@ public class TokenDb : ITokenDb
     private readonly ConnectionMultiplexer _redis;
     private readonly RedisOptions _redisOptions;
 
-    public TokenDb(ConnectionMultiplexer redis, RedisOptions redisOptions, JwtOptions jwtOptions)
+    public TokenDb(
+        ConnectionMultiplexer redis,
+        IOptions<RedisOptions> redisOptions,
+        IOptions<JwtOptions> jwtOptions
+    )
     {
         _redis = redis;
-        _redisOptions = redisOptions;
-        _jwtOptions = jwtOptions;
+        _redisOptions = redisOptions.Value;
+        _jwtOptions = jwtOptions.Value;
     }
 
     public async Task SaveRefreshToken(int userId, RefreshToken token)

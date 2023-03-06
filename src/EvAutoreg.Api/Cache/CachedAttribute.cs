@@ -2,6 +2,7 @@ using System.Text;
 using EvAutoreg.Api.Options;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.Extensions.Options;
 
 namespace EvAutoreg.Api.Cache;
 
@@ -21,8 +22,9 @@ public class CachedAttribute : Attribute, IAsyncActionFilter
     )
     {
         //before
-        var cacheSettings =
-            context.HttpContext.RequestServices.GetRequiredService<RedisCacheOptions>();
+        var cacheSettings = context.HttpContext.RequestServices
+            .GetRequiredService<IOptions<RedisCacheOptions>>()
+            .Value;
 
         if (!cacheSettings.Enabled)
         {
@@ -52,7 +54,11 @@ public class CachedAttribute : Attribute, IAsyncActionFilter
 
         if (executedContext.Result is OkObjectResult okObjectResult)
         {
-            await cacheService.CacheResponse(cacheKey, okObjectResult.Value!, TimeSpan.FromSeconds(_ttlSec));
+            await cacheService.CacheResponse(
+                cacheKey,
+                okObjectResult.Value!,
+                TimeSpan.FromSeconds(_ttlSec)
+            );
         }
     }
 
