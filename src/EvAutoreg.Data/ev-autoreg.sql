@@ -67,7 +67,7 @@ CREATE TABLE IF NOT EXISTS issue_field (
 
 CREATE TABLE IF NOT EXISTS rule_set (
   id BIGSERIAL PRIMARY KEY,
-  owner_user_id BIGINT NOT NULL REFERENCES app_user(id) ON DELETE CASCASDE,
+  owner_user_id BIGINT NOT NULL REFERENCES app_user(id) ON DELETE CASCADE,
   issue_type_id BIGINT REFERENCES issue_type(id) ON DELETE CASCADE
 );
 
