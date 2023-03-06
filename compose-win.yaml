@@ -32,7 +32,6 @@ services:
       - "evautoreg.api"
     ports:
       - "${AUTOREG_HOST:-127.0.0.1}:${AUTOREG_WEBSOCKET_PORT}:80"
-      - "${AUTOREG_HOST:-127.0.0.1}:${AUTOREG_PORT}:8080"
     networks:
       - ev-autoreg
     env_file:
