@@ -1,6 +1,5 @@
 using System.Security.Cryptography;
 using System.Text;
-using EvAutoreg.Api.Contracts.Dto;
 using EvAutoreg.Api.Domain;
 using EvAutoreg.Api.Exceptions;
 using EvAutoreg.Api.Services.Interfaces;

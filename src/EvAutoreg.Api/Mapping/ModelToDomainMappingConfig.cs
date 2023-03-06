@@ -62,19 +62,17 @@ public static class ModelToDomainMappingConfig
             .Map(dest => dest.ExecutionOrder, src => src.Item1.ExecutionOrder)
             .IgnoreNullValues(true);
 
-        TypeAdapterConfig<(RuleModel, IssueTypeModel?, IssueFieldModel?), Rule>
+        TypeAdapterConfig<FilledRuleModel, Rule>
             .NewConfig()
             .TwoWays()
-            .Map(dest => dest.Id, src => src.Item1.Id)
-            .Map(dest => dest.OwnerUserId, src => src.Item1.OwnerUserId)
-            .Map(dest => dest.RuleSubstring, src => src.Item1.Rule)
-            .Map(dest => dest.IssueType.Id, src => src.Item2.Id)
-            .Map(dest => dest.IssueType.IssueTypeName, src => src.Item2.IssueTypeName)
-            .Map(dest => dest.IssueField.Id, src => src.Item3.Id)
-            .Map(dest => dest.IssueField.FieldName, src => src.Item3.FieldName)
-            .Map(dest => dest.IsRegex, src => src.Item1.IsRegex)
-            .Map(dest => dest.IsNegative, src => src.Item1.IsNegative)
-            .IgnoreNullValues(true);
+            .Map(dest => dest.IssueField, src => src.IssueField)
+            .Map(dest => dest.RuleSubstring, src => src.Rule)
+            .IgnoreNonMapped(false);
+
+        TypeAdapterConfig<FilledRuleSetModel, RuleSet>
+            .NewConfig()
+            .Map(dest => dest.IssueType, src => src.IssueType)
+            .Map(dest => dest.Rules, src => src.Rules);
 
         TypeAdapterConfig<(IssueModel, UserModel, IssueTypeModel), Issue>
             .NewConfig()

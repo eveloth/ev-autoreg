@@ -1,4 +1,3 @@
-using EvAutoreg.Api.Domain;
 using EvAutoreg.Data.Models;
 
 namespace EvAutoreg.Api.Seeding;

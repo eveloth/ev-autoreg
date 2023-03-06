@@ -29,15 +29,6 @@ public class MappingHelper : IMappingHelper
         return _mapper.Map<User>((userModel, roleModel!));
     }
 
-    public async Task<Rule> JoinIssueTypeAndField(RuleModel ruleModel, CancellationToken cts)
-    {
-        var issueType = await _unitofWork.IssueTypeRepository.Get(ruleModel.IssueTypeId, cts);
-        var issueField = await _unitofWork.IssueFieldRepository.Get(ruleModel.IssueFieldId, cts);
-        await _unitofWork.CommitAsync(cts);
-
-        return _mapper.Map<Rule>((ruleModel, issueType, issueField));
-    }
-
     public async Task<Issue> JoinIssueTypeAndUser(IssueModel issueModel, CancellationToken cts)
     {
         var registrar = await _unitofWork.UserRepository.GetById(issueModel.RegistrarId!.Value, cts);

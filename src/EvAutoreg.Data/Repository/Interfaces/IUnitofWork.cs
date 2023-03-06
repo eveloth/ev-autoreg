@@ -10,7 +10,7 @@ public interface IUnitofWork
     IExtCredentialsRepository ExtCredentialsRepository { get; set; }
     IIssueTypeRepository IssueTypeRepository { get; set; }
     IIssueRepository IssueRepository { get; set; }
-    IRuleRepository RuleRepository { get; set; }
+    IRuleSetRepository RuleSetRepository { get; set; }
     IQueryParametersRepository QueryParametersRepository { get; set; }
     IAutoregistrarSettingsRepository AutoregistrarSettingsRepository { get; set; }
     IIssueFieldRepository IssueFieldRepository { get; set; }

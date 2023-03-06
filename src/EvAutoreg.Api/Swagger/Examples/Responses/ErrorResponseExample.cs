@@ -1,5 +1,4 @@
-﻿using EvAutoreg.Api.Errors;
-using EvAutoreg.Api.Contracts.Responses;
+﻿using EvAutoreg.Api.Contracts.Responses;
 using Swashbuckle.AspNetCore.Filters;
 using static EvAutoreg.Api.Errors.ErrorCodes;
 

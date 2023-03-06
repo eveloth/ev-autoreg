@@ -1,7 +1,7 @@
 using EvAutoreg.Api.Extensions;
 using EvAutoreg.Api.Cache;
-using EvAutoreg.Api.Contracts;
 using EvAutoreg.Api.Contracts.Dto;
+using EvAutoreg.Api.Contracts.Queries;
 using EvAutoreg.Api.Contracts.Requests;
 using EvAutoreg.Api.Contracts.Responses;
 using EvAutoreg.Api.Exceptions;
@@ -91,7 +91,7 @@ public class UsersController : ControllerBase
     [Authorize(Policy = "ResetUserPasswords")]
     [Route("{id:int}/password/reset")]
     [HttpPost]
-    [ProducesResponseType(typeof(SuccessResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     [Produces("application/json")]
@@ -107,8 +107,7 @@ public class UsersController : ControllerBase
 
         _logger.LogInformation("Password was reset for user ID {UserId}", updatedUserId);
 
-        var response = new SuccessResponse(true);
-        return Ok(response);
+        return Ok();
     }
 
     /// <summary>

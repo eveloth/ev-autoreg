@@ -7,7 +7,6 @@ using FluentValidation;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using ExchangeCredentials = EvAutoreg.Api.Domain.ExchangeCredentials;
 
 namespace EvAutoreg.Api.Controllers;
 
@@ -42,7 +41,7 @@ public class ExternalCredentialsController : ControllerBase
     [Authorize(Policy = "UseRegistrar")]
     [Route("exchange")]
     [HttpPost]
-    [ProducesResponseType(typeof(SuccessResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [Produces("application/json")]
     public async Task<IActionResult> SaveExchangeCredentials(
         [FromBody] ExternalCredentialsRequest credentials,
@@ -64,8 +63,7 @@ public class ExternalCredentialsController : ControllerBase
             updatedForUserId
         );
 
-        var response = new SuccessResponse(true);
-        return Ok(response);
+        return Ok();
     }
 
     /// <summary>
@@ -75,7 +73,7 @@ public class ExternalCredentialsController : ControllerBase
     [Authorize(Policy = "UseRegistrar")]
     [Route("ev")]
     [HttpPost]
-    [ProducesResponseType(typeof(SuccessResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [Produces("application/json")]
     public async Task<IActionResult> SaveEvCredentials(
         [FromBody] ExternalCredentialsRequest credentials,
@@ -97,7 +95,6 @@ public class ExternalCredentialsController : ControllerBase
             updatedForUserId
         );
 
-        var response = new SuccessResponse(true);
-        return Ok(response);
+        return Ok();
     }
 }

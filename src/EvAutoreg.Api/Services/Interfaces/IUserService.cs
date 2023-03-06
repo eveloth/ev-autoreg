@@ -1,4 +1,4 @@
-using EvAutoreg.Api.Contracts;
+using EvAutoreg.Api.Contracts.Queries;
 using EvAutoreg.Api.Domain;
 
 namespace EvAutoreg.Api.Services.Interfaces;

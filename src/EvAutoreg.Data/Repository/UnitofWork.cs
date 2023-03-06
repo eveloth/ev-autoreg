@@ -17,7 +17,7 @@ public sealed class UnitofWork : IUnitofWork
     public IExtCredentialsRepository ExtCredentialsRepository { get; set; }
     public IIssueTypeRepository IssueTypeRepository { get; set; }
     public IIssueRepository IssueRepository { get; set; }
-    public IRuleRepository RuleRepository { get; set; }
+    public IRuleSetRepository RuleSetRepository { get; set; }
     public IQueryParametersRepository QueryParametersRepository { get; set; }
     public IAutoregistrarSettingsRepository AutoregistrarSettingsRepository { get; set; }
     public IIssueFieldRepository IssueFieldRepository { get; set; }
@@ -33,10 +33,10 @@ public sealed class UnitofWork : IUnitofWork
         IExtCredentialsRepository extCredentialsRepository,
         IIssueTypeRepository issueTypeRepository,
         IIssueRepository issueRepository,
-        IRuleRepository ruleRepository,
         IQueryParametersRepository queryParametersRepository,
         IAutoregistrarSettingsRepository mailAnalysisRulesRepository,
-        IIssueFieldRepository issueFieldRepository
+        IIssueFieldRepository issueFieldRepository,
+        IRuleSetRepository ruleSetRepository
     )
     {
         _logger = logger;
@@ -49,10 +49,10 @@ public sealed class UnitofWork : IUnitofWork
         ExtCredentialsRepository = extCredentialsRepository;
         IssueTypeRepository = issueTypeRepository;
         IssueRepository = issueRepository;
-        RuleRepository = ruleRepository;
         QueryParametersRepository = queryParametersRepository;
         AutoregistrarSettingsRepository = mailAnalysisRulesRepository;
         IssueFieldRepository = issueFieldRepository;
+        RuleSetRepository = ruleSetRepository;
     }
 
     public async Task CommitAsync(CancellationToken cts)

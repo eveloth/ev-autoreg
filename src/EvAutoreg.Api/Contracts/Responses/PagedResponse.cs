@@ -1,3 +1,5 @@
+using EvAutoreg.Api.Contracts.Queries;
+
 namespace EvAutoreg.Api.Contracts.Responses;
 
 public record PagedResponse<T>

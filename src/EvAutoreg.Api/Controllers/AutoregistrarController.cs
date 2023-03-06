@@ -1,6 +1,6 @@
 using EvAutoreg.Api.Extensions;
-using EvAutoreg.Api.Contracts;
 using EvAutoreg.Api.Contracts.Dto;
+using EvAutoreg.Api.Contracts.Queries;
 using EvAutoreg.Api.Contracts.Requests;
 using EvAutoreg.Api.Contracts.Responses;
 using EvAutoreg.Api.Domain;
