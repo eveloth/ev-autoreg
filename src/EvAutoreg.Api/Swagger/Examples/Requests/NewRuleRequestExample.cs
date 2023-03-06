@@ -3,10 +3,10 @@ using Swashbuckle.AspNetCore.Filters;
 
 namespace EvAutoreg.Api.Swagger.Examples.Requests;
 
-public class RuleRequestExample : IExamplesProvider<RuleRequest>
+public class NewRuleRequestExample : IExamplesProvider<RuleRequest>
 {
     public RuleRequest GetExamples()
     {
-        return new RuleRequest("server is not responding", 5, 9, false, false);
+        return new RuleRequest("server is not respondnig", 5, false, false);
     }
 }

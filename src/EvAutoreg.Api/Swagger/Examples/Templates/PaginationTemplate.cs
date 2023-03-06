@@ -1,4 +1,4 @@
-﻿using EvAutoreg.Api.Contracts;
+﻿using EvAutoreg.Api.Contracts.Queries;
 
 namespace EvAutoreg.Api.Swagger.Examples.Templates;
 

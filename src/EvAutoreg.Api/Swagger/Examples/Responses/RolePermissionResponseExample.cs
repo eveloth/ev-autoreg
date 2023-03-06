@@ -1,5 +1,4 @@
-﻿using EvAutoreg.Api.Domain;
-using EvAutoreg.Api.Contracts.Dto;
+﻿using EvAutoreg.Api.Contracts.Dto;
 using EvAutoreg.Api.Contracts.Responses;
 using Swashbuckle.AspNetCore.Filters;
 

@@ -47,6 +47,7 @@ public static class ErrorCodes
             { 4004, new ApiError(4004, "Correlation not found.") },
             { 5004, new ApiError(5004, "Issue not found") },
             { 6004, new ApiError(6004, "Rule not found.") },
+            { 6014, new ApiError(6014, "Rule set not found.") },
             { 7001, new ApiError(7001, "Issue type with the specified name already exists.") },
             { 7004, new ApiError(7004, "Issue type not found.") },
             { 8004, new ApiError(8004, "Issue field not found.") },

@@ -19,9 +19,9 @@ public static class ServicesInstaller
         builder.Services.AddScoped<IAutoregistrarSettingsService, AutoregistrarSettingsService>();
         builder.Services.AddScoped<IIssueTypeService, IssueTypeService>();
         builder.Services.AddScoped<IIssueFieldService, IssueFieldService>();
-        builder.Services.AddScoped<IRuleService, RuleService>();
         builder.Services.AddScoped<IIssueService, IssueService>();
         builder.Services.AddScoped<IQueryParametersService, QueryParametersService>();
+        builder.Services.AddScoped<IRuleSetService, RuleSetService>();
 
         #endregion
 

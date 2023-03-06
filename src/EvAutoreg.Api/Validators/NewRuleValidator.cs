@@ -3,9 +3,9 @@ using FluentValidation;
 
 namespace EvAutoreg.Api.Validators;
 
-public class RuleValidator : AbstractValidator<RuleRequest>
+public class NewRuleValidator : AbstractValidator<RuleRequest>
 {
-    public RuleValidator()
+    public NewRuleValidator()
     {
         RuleFor(x => x.RuleSubstring).NotNull().NotEmpty().MaximumLength(256);
     }

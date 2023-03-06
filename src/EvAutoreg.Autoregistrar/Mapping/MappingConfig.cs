@@ -9,14 +9,6 @@ public static class MappingConfig
 {
     public static void ConfigureDbToDomainMapping(this IApplicationBuilder app)
     {
-        TypeAdapterConfig<RuleModel, Rule>
-            .NewConfig()
-            .Map(dest => dest.RuleSubstring, src => src.Rule)
-            .Map(dest => dest.IssueTypeId, src => src.IssueTypeId)
-            .Map(dest => dest.IsNegative, src => src.IsNegative)
-            .Map(dest => dest.IsRegex, src => src.IsRegex)
-            .IgnoreNullValues(true);
-
         TypeAdapterConfig<AutoregstrarSettingsModel, AutoregistrarSettings>
             .NewConfig()
             .Map(dest => dest.ExchangeServerUri, src => src.ExchangeServerUri)
@@ -25,19 +17,28 @@ public static class MappingConfig
             .Map(dest => dest.IssueNoRegex, src => new Regex(src.IssueNoRegex))
             .IgnoreNullValues(true);
 
-        TypeAdapterConfig<(IssueFieldModel, IEnumerable<RuleModel>), IssueField>
-            .NewConfig()
-            .Map(dest => dest.Id, src => src.Item1.Id)
-            .Map(dest => dest.FieldName, src => src.Item1.FieldName)
-            .Map(dest => dest.Rules, src => src.Item2.Where(x => x.IssueFieldId == src.Item1.Id))
-            .IgnoreNullValues(true);
-
-        TypeAdapterConfig<(IssueTypeModel, IEnumerable<QueryParametersModel>), IssueType>
+        TypeAdapterConfig<
+            (IssueTypeModel, IEnumerable<QueryParametersModel>, IEnumerable<FilledRuleSetModel>),
+            IssueTypeInfo
+        >
             .NewConfig()
             .Map(dest => dest.Id, src => src.Item1.Id)
             .Map(dest => dest.IssueTypeName, src => src.Item1.IssueTypeName)
             .Map(dest => dest.QueryParameters, src => src.Item2)
+            .Map(dest => dest.RuleSets, src => src.Item3)
             .IgnoreNullValues(true);
+
+        TypeAdapterConfig<FilledRuleModel, Rule>
+            .NewConfig()
+            .TwoWays()
+            .Map(dest => dest.IssueField, src => src.IssueField)
+            .Map(dest => dest.RuleSubstring, src => src.Rule)
+            .IgnoreNonMapped(false);
+
+        TypeAdapterConfig<FilledRuleSetModel, RuleSet>
+            .NewConfig()
+            .Map(dest => dest.IssueType, src => src.IssueType)
+            .Map(dest => dest.Rules, src => src.Rules);
     }
 
     public static void ConfigureXmlToModelMapping(this IApplicationBuilder app)

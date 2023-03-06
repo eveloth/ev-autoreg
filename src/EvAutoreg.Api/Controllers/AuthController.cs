@@ -5,7 +5,6 @@ using FluentValidation;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Token = EvAutoreg.Api.Domain.Token;
 
 namespace EvAutoreg.Api.Controllers;
 

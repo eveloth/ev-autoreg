@@ -84,6 +84,8 @@ public class ListenerProxy : IListenerProxy
 
     private async Task InitializeSettings(int operatorId, CancellationToken cts)
     {
+        _logger.LogInformation("Initializing settings for user ID {UserId}", operatorId);
+
         try
         {
             await _settingsProvider.InitializeSettings(operatorId, cts);

@@ -1,4 +1,4 @@
-namespace EvAutoreg.Api.Contracts;
+namespace EvAutoreg.Api.Contracts.Queries;
 
 public record PaginationQuery
 {

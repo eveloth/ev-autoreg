@@ -22,11 +22,5 @@ public static class DomainToDtoMappingConfig
             .IgnoreNonMapped(false)
             .IgnoreNullValues(true);
 #pragma warning restore CS8602
-
-        TypeAdapterConfig<Rule, RuleDto>
-            .NewConfig()
-            .Map(dest => dest.Rule, src => src.RuleSubstring)
-            .IgnoreNonMapped(false)
-            .IgnoreNullValues(true);
     }
 }

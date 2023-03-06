@@ -1,6 +1,6 @@
 using EvAutoreg.Api.Cache;
-using EvAutoreg.Api.Contracts;
 using EvAutoreg.Api.Contracts.Dto;
+using EvAutoreg.Api.Contracts.Queries;
 using EvAutoreg.Api.Contracts.Responses;
 using EvAutoreg.Api.Services.Interfaces;
 using MapsterMapper;

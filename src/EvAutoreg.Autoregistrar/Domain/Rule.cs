@@ -2,8 +2,10 @@
 
 public class Rule
 {
-    public required string RuleSubstring { get; set; }
-    public required int IssueTypeId { get; set; }
-    public required bool IsRegex { get; set; }
-    public required bool IsNegative { get; set; }
+    public int Id { get; set; }
+    public int RuleSetId { get; set; }
+    public string RuleSubstring { get; set; } = default!;
+    public IssueField IssueField { get; set; } = default!;
+    public bool IsRegex { get; set; }
+    public bool IsNegative { get; set; }
 }
