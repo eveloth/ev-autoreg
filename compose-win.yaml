@@ -46,7 +46,7 @@ services:
       POSTGRES_PASSWORD: "${PG_PASS}"
       PGDATA: "/var/lib/pgsql/data"
     volumes:
-      - C:/opt/ev-autoreg/pgsql/data:/var/lib/pgsql/data
+      - ${PG_DATA:-C:/opt/ev-autoreg/pgsql/data}:/data
     ports:
       - "${POSTGRES_HOST:-127.0.0.1}:${POSTGRES_PORT}:5432"
     networks:
@@ -62,7 +62,7 @@ services:
     ports:
       - "${REDIS_HOST:-127.0.0.1}:${REDIS_PORT}:6379"
     volumes:
-      - C:/opt/ev-autoreg/redis:/data
+      - ${REDIS_DATA:-C:/opt/ev-autoreg/redis}:/data
     networks:
       - ev-autoreg
     env_file:
