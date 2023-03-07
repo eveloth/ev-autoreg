@@ -1,0 +1,81 @@
+include: 
+  - 'ci/prod.yaml'
+  - 'ci/testbench.yaml'
+
+###############
+### ANCHORS ###
+###############
+
+.master_rule: &master_rule
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      variables:
+        API_IMAGE_TAG: ${CI_REGISTRY_IMAGE}-api:latest
+        AUTOREG_IMAGE_TAG: ${CI_REGISTRY_IMAGE}-registrar:latest
+
+.testbench_rule: &testbench_rule
+  rules:
+    - if: $CI_COMMIT_BRANCH == "testbench"
+      variables:
+        API_IMAGE_TAG: ${CI_REGISTRY_IMAGE}-api:testbench
+        AUTOREG_IMAGE_TAG: ${CI_REGISTRY_IMAGE}-registrar:testbench
+
+.master_def: &master_def
+  environment: production
+  image: docker:latest
+  <<: *master_rule
+
+.testbench_def: &testbench_def
+  environment: testbench
+  image: docker:latest
+  <<: *testbench_rule
+
+.registry_login: &registry_login
+  - echo "Logging into registry as $CI_DEPLOY_USER"
+  - docker login -u $CI_DEPLOY_USER -p $CI_DEPLOY_PASSWORD $CI_REGISTRY
+
+.install_rsync_alpine: &install_rsync_alpine
+  - apk update && apk add rsync
+
+.copy_files: &copy_files
+  - chmod 400 $SSH_KEY
+  - rsync -av -e "ssh -o StrictHostKeyChecking=no -i $SSH_KEY -p $SSH_PORT" .envexample $COMPOSE_FILE $SSH_USER@$HOST_ADDRESS:$APP_DIR
+  
+################
+###   JOBS   ###
+################
+
+stages:     
+  - build
+  - deploy
+
+build_testbench:
+  stage: build
+  before_script:
+    - echo "Starting test bench build process..."
+    - *registry_login
+  <<: *testbench_def
+
+deploy_testbench:
+  stage: deploy
+  before_script:
+    - echo "Deploying test bench..."
+    - *install_rsync_alpine
+    - *copy_files
+  <<: *testbench_def
+
+build_prod:
+  stage: build
+  before_script:
+    - echo "Starting production build process..."
+    - *registry_login
+  <<: *master_def
+
+deploy_prod:
+  stage: deploy
+  before_script:
+    - echo "Deploying to production..."
+    - *install_rsync_alpine
+    - *copy_files
+  <<: *master_def
+

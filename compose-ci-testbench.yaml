@@ -6,10 +6,8 @@ networks:
 
 services:
   evautoreg.api:
-    image: evautoreg.api
-    build:
-      context: ./
-      dockerfile: src/EvAutoreg.Api/Dockerfile
+    container_name: ev-autoreg-api-${ENV_NAME:-default}
+    image: registry.gitlab.com/eveloth/ev-autoreg-api:testbench
     restart: unless-stopped
     depends_on: 
       - "evautoreg.postgres"
@@ -22,10 +20,8 @@ services:
       - .env
 
   evautoreg.autoregistrar:
-    image: evautoreg.autoregistrar
-    build:
-      context: ./
-      dockerfile: src/EvAutoreg.Autoregistrar/Dockerfile
+    container_name: ev-autoreg-autoregistrar-${ENV_NAME:-default}
+    image: registry.gitlab.com/eveloth/ev-autoreg-registrar:testbench
     restart: unless-stopped
     depends_on: 
       - "evautoreg.postgres"
@@ -38,6 +34,7 @@ services:
       - .env
 
   evautoreg.postgres:
+    container_name: ev-autoreg-postgres-${ENV_NAME:-default}
     image: postgres:15
     restart: unless-stopped
     environment:
@@ -46,7 +43,7 @@ services:
       POSTGRES_PASSWORD: "${PG_PASS}"
       PGDATA: "/var/lib/pgsql/data"
     volumes:
-      - /opt/ev-autoreg/pgsql/data:/var/lib/pgsql/data
+      - ${PG_DATA}:/data
     ports:
       - "${POSTGRES_HOST:-127.0.0.1}:${POSTGRES_PORT}:5432"
     networks:
@@ -55,6 +52,7 @@ services:
       - .env
 
   evautoreg.redis:
+    container_name: ev-autoreg-redis-${ENV_NAME:-default}
     image: redis:7.0
     restart: unless-stopped
     command: >
@@ -62,7 +60,7 @@ services:
     ports:
       - "${REDIS_HOST:-127.0.0.1}:${REDIS_PORT}:6379"
     volumes:
-      - /opt/ev-autoreg/redis:/data
+      - ${REDIS_DATA}:/data
     networks:
       - ev-autoreg
     env_file:

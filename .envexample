@@ -1,8 +1,18 @@
+# ENVIRONMENT
+
+ENV_NAME='default'
+
 # DATABASE
 
 PG_DB='ev_autoreg_db'
 PG_USER='autoregpguser'
 PG_PASS=''
+
+
+# VOLUMES
+
+PG_DATA='/opt/ev-autoreg/pgsql/data'
+REDIS_DATA='/opt/ev-autoreg/redis'
 
 # CRYPTOGRAPHY
 

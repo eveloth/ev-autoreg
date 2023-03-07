@@ -1,0 +1,47 @@
+variables:
+  RENAME_FILES: >-
+    mv -v .envexample .env &&
+    mv -v $COMPOSE_FILE docker-compose.yml
+
+  INITIALIZE_ENV_PGSQL: >-
+    sed -i "/PG_PASS/s/''/'$PG_PASS'/" .env &&
+    sed -i "/POSTGRES_PORT/s/[0-9]\+/$POSTGRES_PORT/" .env &&
+    sed -i "/PG_DATA/s/'.*'/'$PG_DATA'/" .env &&
+
+  INITIALIZE_ENV_REDIS: >-
+    sed -i "/REDIS__PASSWORD/s/'.*'/'$REDIS_PASSWORD'/" .env &&
+    sed -i "/REDIS_DATA/s/'.*'/'$REDIS_DATA'/" .env &&
+    sed -i "/REDIS_PORT/s/[0-9]\+/$REDIS_PORT/" .env &&
+    sed -i "/REDISCACHE__ENABLED/s/'.*'/'$REDISCAHCHE_ENABLED'/" .env &&
+
+  INITIALIZE_ENV_JWT: >-
+    sed -i "/JWT__ISSUER/s/'.*'/'$JWT_ISSUER'/" .env &&
+    sed -i "/JWT__KEY/s/'.*'/'$JWT_KEY'/" .env &&
+    sed -i "/JWT__LIFETIME/s/'.*'/'$JWT_LIFETIME'/" .env &&
+    sed -i "/JWT__REFRESHTOKENLIFETIME/s/'.*'/'$JWT_REFRESHTOKENLIFETIME'/" .env &&
+
+  INITIALIZE_ENV_SERILOG: >-
+    sed -i "/SERILOGOPTIONS__ENABLECONSOLE/s/'.*'/'$SERILOGOPTIONS_ENABLECONSOLE'/" .env &&
+    sed -i "/SERILOGOPTIONS__ENABLEFILE/s/'.*'/'$SERILOGOPTIONS_ENABLEFILE'/" .env &&
+    sed -i "/SERILOGOPTIONS__ENABLESEQ/s/'.*'/'$SERILOGOPTIONS_ENABLESEQ'/" .env &&
+
+  INITIALIZE_ENV_SEQ: >-
+    sed -i "/SEQOPTIONS__URL/s/'.*'/'$SEQ_URL'/" .env &&
+    sed -i "/SEQOPTIONS__APIKEY/s/'.*'/'$SEQ_APIKEY'/" .env &&
+
+  INITIALIZE_ENV_NETWORKING: >-
+    sed -i "/API_PORT/s/[0-9]\+/$API_PORT/" .env &&
+    sed -i "/AUTOREG_WEBSOCKET_PORT/s/[0-9]\+/$AUTOREG_WEBSOCKET_PORT/" .env &&
+    sed -i "/SWAGGEROPTIONS__ENABLED/s/'.*'/'$SWAGGEROPTIONS_ENABLED'/" .env &&
+    sed -i "/GRPCREFLECTIONOPTIONS__ENABLED/s/'.*'/'$GRPCREFLECTIONOPTIONS__ENABLED'/" .env &&
+
+  INITIALIZE_ENV: >-
+    sed -i "/ENV_NAME/s/'.*'/'$CI_ENVIRONMENT_NAME'/" .env &&
+    sed -i "/SYMMETRICSECURITYKEY/s/'.*'/'$SYMMETRICSECURITYKEY'/" .env &&
+    $INITIALIZE_ENV_PGSQL
+    $INITIALIZE_ENV_REDIS
+    $INITIALIZE_ENV_SERILOG
+    $INITIALIZE_ENV_JWT
+    $INITIALIZE_ENV_SEQ
+    $INITIALIZE_ENV_NETWORKING
+
