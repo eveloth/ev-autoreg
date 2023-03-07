@@ -49,7 +49,7 @@ REDISCACHE__ENABLED="true"
 
 # AUTOREGISTRAR
 
-AUTOREGISTRARURI='http://evautoreg.autoregistrar'
+AUTOREGISTRARURI='http://evautoreg.autoregistrar:8080'
 
 # SWAGGER AND GRPC REFLECTION
 
