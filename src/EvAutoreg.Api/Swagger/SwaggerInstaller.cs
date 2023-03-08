@@ -11,7 +11,7 @@ public static class SwaggerInstaller
     {
         builder.Services.AddSwaggerGen(options =>
         {
-            options.SwaggerDoc("v1", new OpenApiInfo { Title = "EvAutoreg", Version = "v0.4.0" });
+            options.SwaggerDoc("v1", new OpenApiInfo { Title = "EvAutoreg", Version = "v1.0.0" });
 
             options.AddSecurityDefinition(
                 "Bearer",

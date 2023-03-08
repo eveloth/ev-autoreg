@@ -33,7 +33,7 @@ variables:
     sed -i "/API_PORT/s/[0-9]\+/$API_PORT/" .env &&
     sed -i "/AUTOREG_WEBSOCKET_PORT/s/[0-9]\+/$AUTOREG_WEBSOCKET_PORT/" .env &&
     sed -i "/SWAGGEROPTIONS__ENABLED/s/'.*'/'$SWAGGEROPTIONS_ENABLED'/" .env &&
-    sed -i "/GRPCREFLECTIONOPTIONS__ENABLED/s/'.*'/'$GRPCREFLECTIONOPTIONS__ENABLED'/" .env
+    sed -i "/GRPCREFLECTIONOPTIONS__ENABLED/s/'.*'/'$GRPCREFLECTIONOPTIONS_ENABLED'/" .env
 
   INITIALIZE_ENV: >-
     sed -i "/ENV_NAME/s/'.*'/'$CI_ENVIRONMENT_NAME'/" .env &&
