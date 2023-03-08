@@ -65,32 +65,36 @@ public class UserRepository : IUserRepository
     }
 
     public async Task<IEnumerable<UserModel>> GetAll(
-        PaginationFilter filter,
         CancellationToken cts,
-        bool includeDeleted = false
+        bool includeDeleted = false,
+        PaginationFilter? filter = null
     )
     {
-        var skip = (filter.PageNumber - 1) * filter.PageSize;
-        var take = filter.PageSize;
+        string resultingSql;
 
         var sqlTemplateBuilder = new StringBuilder(
             @"SELECT * FROM app_user
               LEFT JOIN role ON app_user.role_id = role.id"
         );
 
-        var paginator = $@"ORDER BY app_user.id LIMIT {take} OFFSET {skip}";
-
-        var resultingSql = includeDeleted switch
+        sqlTemplateBuilder = includeDeleted switch
         {
-            true
-                => sqlTemplateBuilder
-                    .Append(" WHERE")
-                    .Append(IncludeDeletedSql)
-                    .Append(' ')
-                    .Append(paginator)
-                    .ToString(),
-            false => sqlTemplateBuilder.Append(' ').Append(paginator).ToString()
+            true => sqlTemplateBuilder.Append(" WHERE").Append(IncludeDeletedSql).Append(' '),
+            false => sqlTemplateBuilder.Append(' ')
         };
+
+        if (filter is not null)
+        {
+            var skip = (filter.PageNumber - 1) * filter.PageSize;
+            var take = filter.PageSize;
+
+            var paginator = $@"ORDER BY app_user.id LIMIT {take} OFFSET {skip}";
+            resultingSql = sqlTemplateBuilder.Append(paginator).ToString();
+        }
+        else
+        {
+            resultingSql = sqlTemplateBuilder.ToString();
+        }
 
         return await _db.LoadAllData<UserModel, RoleModel>(resultingSql, cts);
     }
@@ -234,5 +238,11 @@ public class UserRepository : IUserRepository
         var parameters = new DynamicParameters(new { Email = email });
 
         return await _db.LoadSingle<bool>(sql, parameters, cts);
+    }
+
+    public async Task<int> Count(CancellationToken cts)
+    {
+        const string sql = "SELECT COUNT(*) from app_user";
+        return await _db.LoadScalar<int>(sql, cts);
     }
 }

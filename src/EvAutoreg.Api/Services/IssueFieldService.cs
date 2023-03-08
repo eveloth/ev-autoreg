@@ -1,4 +1,4 @@
-﻿using EvAutoreg.Api.Contracts;
+﻿using EvAutoreg.Api.Contracts.Queries;
 using EvAutoreg.Api.Domain;
 using EvAutoreg.Api.Services.Interfaces;
 using EvAutoreg.Data.Filters;
@@ -18,14 +18,24 @@ public class IssueFieldService : IIssueFieldService
         _unitofWork = unitofWork;
     }
 
-    public async Task<IEnumerable<IssueField>> GetAll(PaginationQuery paginationQuery, CancellationToken cts)
+    public async Task<IEnumerable<IssueField>> GetAll(
+        PaginationQuery paginationQuery,
+        CancellationToken cts
+    )
     {
         var filter = _mapper.Map<PaginationFilter>(paginationQuery);
 
-        var issueFields = await _unitofWork.IssueFieldRepository.GetAll(filter, cts);
+        var issueFields = await _unitofWork.IssueFieldRepository.GetAll(cts, filter);
         await _unitofWork.CommitAsync(cts);
 
         var result = _mapper.Map<IEnumerable<IssueField>>(issueFields);
+        return result;
+    }
+
+    public async Task<int> Count(CancellationToken cts)
+    {
+        var result = await _unitofWork.IssueFieldRepository.Count(cts);
+        await _unitofWork.CommitAsync(cts);
         return result;
     }
 }

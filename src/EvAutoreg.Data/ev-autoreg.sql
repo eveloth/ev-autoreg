@@ -1,6 +1,7 @@
 CREATE TABLE IF NOT EXISTS role (
   id BIGSERIAL PRIMARY KEY, 
-  role_name VARCHAR(64) UNIQUE NOT NULL
+  role_name VARCHAR(64) UNIQUE NOT NULL,
+  is_priveleged_role BOOLEAN NOT NULL DEFAULT false
 );
 CREATE TABLE IF NOT EXISTS app_user (
   id BIGSERIAL PRIMARY KEY, 
@@ -17,7 +18,8 @@ CREATE TABLE IF NOT EXISTS app_user (
 CREATE TABLE IF NOT EXISTS permission (
   id BIGSERIAL PRIMARY KEY, 
   permission_name VARCHAR(256) UNIQUE NOT NULL, 
-  description VARCHAR(256)
+  description VARCHAR(256),
+  is_priveleged_permission BOOLEAN NOT NULL DEFAULT false
 );
 CREATE TABLE IF NOT EXISTS role_permission (
   role_id BIGINT REFERENCES role(id) ON DELETE CASCADE, 
@@ -62,15 +64,22 @@ CREATE TABLE IF NOT EXISTS issue_field (
   id BIGSERIAL PRIMARY KEY, 
   field_name VARCHAR(20) NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS rule_set (
+  id BIGSERIAL PRIMARY KEY,
+  owner_user_id BIGINT NOT NULL REFERENCES app_user(id) ON DELETE CASCADE,
+  issue_type_id BIGINT REFERENCES issue_type(id) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS rule (
-  id BIGSERIAL PRIMARY KEY, 
-  rule VARCHAR(256) NOT NULL, 
-  owner_user_id BIGINT NOT NULL REFERENCES app_user(id) ON DELETE CASCADE, 
-  issue_type_id BIGINT NOT NULL REFERENCES issue_type(id) ON DELETE CASCADE, 
+  id BIGSERIAL PRIMARY KEY,
+  rule_set_id BIGINT NOT NULL REFERENCES rule_set(id) ON DELETE CASCADE,
+  rule VARCHAR(256) NOT NULL,
   issue_field_id BIGINT NOT NULL REFERENCES issue_field(id) ON DELETE CASCADE,
-  is_regex BOOLEAN NOT NULL DEFAULT false, 
+  is_regex BOOLEAN NOT NULL DEFAULT false,
   is_negative BOOLEAN NOT NULL DEFAULT false
 );
+
 CREATE TABLE IF NOT EXISTS registering_parameters (
   id BIGSERIAL PRIMARY KEY,
   issue_type_id BIGINT REFERENCES issue_type(id) ON DELETE CASCADE,

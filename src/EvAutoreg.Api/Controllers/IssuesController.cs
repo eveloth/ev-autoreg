@@ -1,6 +1,6 @@
 using EvAutoreg.Api.Cache;
-using EvAutoreg.Api.Contracts;
 using EvAutoreg.Api.Contracts.Dto;
+using EvAutoreg.Api.Contracts.Queries;
 using EvAutoreg.Api.Contracts.Responses;
 using EvAutoreg.Api.Services.Interfaces;
 using MapsterMapper;
@@ -38,10 +38,12 @@ public class IssuesController : ControllerBase
     )
     {
         var issues = await _issueService.GetAll(pagination, cts);
+        var issuesCount = await _issueService.Count(cts);
 
         var response = new PagedResponse<IssueDto>(
             _mapper.Map<IEnumerable<IssueDto>>(issues),
-            pagination
+            pagination,
+            issuesCount
         );
         return Ok(response);
     }

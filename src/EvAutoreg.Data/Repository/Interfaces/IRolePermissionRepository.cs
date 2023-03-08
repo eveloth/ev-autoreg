@@ -5,7 +5,7 @@ namespace EvAutoreg.Data.Repository.Interfaces;
 
 public interface IRolePermissionRepository
 {
-    Task<IEnumerable<RolePermissionModel>> GetAll(PaginationFilter filter, CancellationToken cts);
+    Task<IEnumerable<RolePermissionModel>> GetAll(CancellationToken cts, PaginationFilter? filter = null);
     Task<IEnumerable<RolePermissionModel>> Get(int roleId, CancellationToken cts);
     Task<IEnumerable<RolePermissionModel>> AddPermissionToRole(
         RolePermissionModel rolePermission,
@@ -16,4 +16,5 @@ public interface IRolePermissionRepository
         CancellationToken cts
     );
     Task<bool> DoesCorrelationExist(RolePermissionModel rolePermission, CancellationToken cts);
+    Task<int> Count(CancellationToken cts);
 }

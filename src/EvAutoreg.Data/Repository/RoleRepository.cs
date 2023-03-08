@@ -15,12 +15,17 @@ public class RoleRepository : IRoleRepository
         _db = db;
     }
 
-    public async Task<IEnumerable<RoleModel>> GetAll(PaginationFilter filter, CancellationToken cts)
+    public async Task<IEnumerable<RoleModel>> GetAll(CancellationToken cts, PaginationFilter? filter = null)
     {
-        var take = filter.PageSize;
-        var skip = (filter.PageNumber - 1) * filter.PageSize;
+        var sql = @$"SELECT * FROM role";
 
-        var sql = @$"SELECT * FROM role ORDER BY id LIMIT {take} OFFSET {skip}";
+        if (filter is not null)
+        {
+            var take = filter.PageSize;
+            var skip = (filter.PageNumber - 1) * filter.PageSize;
+            var paginator = $" ORDER BY id LIMIT {take} offset {skip}";
+            sql += paginator;
+        }
 
         return await _db.LoadAllData<RoleModel>(sql, cts);
     }
@@ -36,7 +41,7 @@ public class RoleRepository : IRoleRepository
 
     public async Task<RoleModel> Add(RoleModel role, CancellationToken cts)
     {
-        const string sql = @"INSERT INTO role (role_name) VALUES (@RoleName) RETURNING *";
+        const string sql = @"INSERT INTO role (role_name, is_priveleged_role) VALUES (@RoleName, @IsPrivelegedRole) RETURNING *";
 
         var parameters = new DynamicParameters(role);
 
@@ -51,6 +56,15 @@ public class RoleRepository : IRoleRepository
         //otherwise we have a little bit of obscurity.
         //If you attempt to change it for 'readability' or w/ever, it will break PUT /api/access-control/roles/{id}.
         const string sql = @"UPDATE role SET role_name = @RoleName WHERE id = @Id RETURNING *";
+
+        var parameters = new DynamicParameters(role);
+
+        return await _db.SaveData<RoleModel>(sql, parameters, cts);
+    }
+
+    public async Task<RoleModel> ChangePriveleges(RoleModel role, CancellationToken cts)
+    {
+        const string sql = @"UPDATE role SET is_priveleged_role = @IsPrivelegedRole WHERE id = @id RETURNING *";
 
         var parameters = new DynamicParameters(role);
 
@@ -82,5 +96,11 @@ public class RoleRepository : IRoleRepository
         var parameters = new DynamicParameters(new { RoleName = roleName });
 
         return await _db.LoadSingle<bool>(sql, parameters, cts);
+    }
+
+    public async Task<int> Count(CancellationToken cts)
+    {
+        const string sql = "SELECT COUNT(*) from role";
+        return await _db.LoadScalar<int>(sql, cts);
     }
 }

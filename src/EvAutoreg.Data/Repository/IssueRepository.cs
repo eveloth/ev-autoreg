@@ -25,15 +25,19 @@ public class IssueRepository : IIssueRepository
     }
 
     public async Task<IEnumerable<IssueModel>> GetAll(
-        PaginationFilter filter,
-        CancellationToken cts
+        CancellationToken cts,
+        PaginationFilter? filter = null
     )
     {
-        var take = filter.PageSize;
-        var skip = (filter.PageNumber - 1) * filter.PageSize;
+        var sql = @"SELECT * FROM issue";
 
-        var sql = @$"SELECT * FROM issue ORDER BY id LIMIT {take} OFFSET {skip}";
-
+        if (filter is not null)
+        {
+            var take = filter.PageSize;
+            var skip = (filter.PageNumber - 1) * filter.PageSize;
+            var paginator = $" ORDER BY id LIMIT {take} offset {skip}";
+            sql += paginator;
+        }
         return await _db.LoadAllData<IssueModel>(sql, cts);
     }
 
@@ -68,5 +72,12 @@ public class IssueRepository : IIssueRepository
         var parameters = new DynamicParameters(new { IssueId = issueId });
 
         return await _db.SaveData<IssueModel>(sql, parameters, cts);
+    }
+
+    public async Task<int> Count(CancellationToken cts)
+    {
+        const string sql = "SELECT COUNT(*) from issue";
+        return await _db.LoadScalar<int>(sql, cts);
+
     }
 }

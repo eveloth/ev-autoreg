@@ -1,11 +1,11 @@
-namespace EvAutoreg.Api.Contracts.Dto;
+﻿namespace EvAutoreg.Api.Contracts.Dto;
 
 public class RuleDto
 {
-    public required int Id { get; set; }
-    public required string Rule { get; set; }
-    public required IssueTypeDto? IssueType { get; set; }
-    public required IssueFieldDto? IssueField { get; set; }
-    public required bool IsRegex { get; set; }
-    public required bool IsNegative { get; set; }
+    public int Id { get; set; }
+    public int RuleSetId { get; set; }
+    public string RuleSubstring { get; set; } = default!;
+    public IssueFieldDto IssueField { get; set; } = default!;
+    public bool IsRegex { get; set; }
+    public bool IsNegative { get; set; }
 }

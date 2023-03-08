@@ -6,6 +6,7 @@ public class Roles
 {
     public static RoleModel DefaultRole { get; } = new()
     {
-        RoleName = "superadmin"
+        RoleName = "superadmin",
+        IsPrivelegedRole = true
     };
 }

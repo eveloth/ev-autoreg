@@ -16,27 +16,40 @@ public class RolePermissionRepository : IRolePermissionRepository
     }
 
     public async Task<IEnumerable<RolePermissionModel>> GetAll(
-        PaginationFilter filter,
-        CancellationToken cts
+        CancellationToken cts,
+        PaginationFilter? filter = null
     )
     {
-        var take = filter.PageSize;
-        var skip = (filter.PageNumber - 1) * filter.PageSize;
-
         var sql =
-            $@"SELECT r.role_id, r.role_name,
+            @"SELECT r.role_id, r.role_name,
                         p.id AS permission_id, 
                         p.permission_name AS permission_name,
-                        p.description
+                        p.description,
+                        p.is_priveleged_permission
                         FROM
                         (SELECT id AS role_id,
-                        role_name AS role_name
+                        role_name AS role_name,
+                        is_priveleged_role
                         FROM role
-                        ORDER BY id
-                        LIMIT {take} OFFSET {skip}) AS r
-                        LEFT JOIN role_permission rp ON r.role_id = rp.role_id 
-                        LEFT JOIN permission p ON rp.permission_id = p.id 
-                        ORDER BY r.role_id, p.id";
+                        ORDER BY id";
+
+        if (filter is not null)
+        {
+            var take = filter.PageSize;
+            var skip = (filter.PageNumber - 1) * filter.PageSize;
+            var paginator = $" LIMIT {take} offset {skip}";
+            sql += paginator;
+        }
+
+        sql += ") AS r";
+
+
+        const string joins =
+            @" LEFT JOIN role_permission rp ON r.role_id = rp.role_id
+                      LEFT JOIN permission p ON rp.permission_id = p.id
+                      ORDER BY r.role_id, p.id";
+
+        sql += joins;
 
         return await _db.LoadAllData<RolePermissionModel>(sql, cts);
     }
@@ -46,9 +59,11 @@ public class RolePermissionRepository : IRolePermissionRepository
         const string sql =
             @"SELECT role.id AS role_id, 
                              role.role_name AS role_name, 
+                             is_priveleged_role,
                              p.id AS permission_id, 
                              p.permission_name AS permission_name,
-                             p.description
+                             p.description,
+                             p.is_priveleged_permission
                              FROM role 
                              LEFT JOIN role_permission rp ON role.id = rp.role_id
                              LEFT JOIN permission p ON rp.permission_id = p.id
@@ -103,5 +118,11 @@ public class RolePermissionRepository : IRolePermissionRepository
         var parameters = new DynamicParameters(rolePermission);
 
         return await _db.LoadSingle<bool>(sql, parameters, cts);
+    }
+
+    public async Task<int> Count(CancellationToken cts)
+    {
+        const string sql = "SELECT COUNT(*) from role_permission";
+        return await _db.LoadScalar<int>(sql, cts);
     }
 }

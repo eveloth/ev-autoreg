@@ -1,5 +1,4 @@
-﻿using EvAutoreg.Api.Domain;
-using EvAutoreg.Api.Contracts.Dto;
+﻿using EvAutoreg.Api.Contracts.Dto;
 using EvAutoreg.Api.Contracts.Responses;
 using Swashbuckle.AspNetCore.Filters;
 
@@ -12,7 +11,9 @@ public class RolePermissionResponseExample : IExamplesProvider<Response<RolePerm
         return new Response<RolePermissionDto>(
             new RolePermissionDto
             {
-                Role = new RoleDto { Id = 1, RoleName = "administrator" },
+                RoleId = 1,
+                RoleName = "administrator",
+                IsPrivelegedRole = false,
                 Permissions = new List<PermissionDto>
                 {
                     new()

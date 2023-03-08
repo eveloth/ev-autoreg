@@ -1,4 +1,4 @@
-using EvAutoreg.Api.Contracts;
+using EvAutoreg.Api.Contracts.Queries;
 using EvAutoreg.Api.Domain;
 using EvAutoreg.Api.Exceptions;
 using EvAutoreg.Api.Mapping;
@@ -8,7 +8,6 @@ using EvAutoreg.Data.Filters;
 using EvAutoreg.Data.Models;
 using EvAutoreg.Data.Repository.Interfaces;
 using MapsterMapper;
-using Microsoft.VisualBasic.CompilerServices;
 using static EvAutoreg.Api.Errors.ErrorCodes;
 
 namespace EvAutoreg.Api.Services;
@@ -43,7 +42,7 @@ public class UserService : IUserService
     {
         var filter = _mapper.Map<PaginationFilter>(paginationQuery);
 
-        var users = await _unitofWork.UserRepository.GetAll(filter, cts);
+        var users = await _unitofWork.UserRepository.GetAll(cts, filter: filter);
         await _unitofWork.CommitAsync(cts);
 
         var result = users.Select(x => _mappingHelper.JoinUserRole(x, cts).Result);
@@ -57,9 +56,7 @@ public class UserService : IUserService
 
         if (user is null)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[1004]);
-            throw e;
+            throw new ApiException().WithApiError(ErrorCode[1004]);
         }
 
         var result = await _mappingHelper.JoinUserRole(user, cts);
@@ -73,9 +70,7 @@ public class UserService : IUserService
 
         if (user is null)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[1004]);
-            throw e;
+            throw new ApiException().WithApiError(ErrorCode[1004]);
         }
 
         var result = await _mappingHelper.JoinUserRole(user, cts);
@@ -88,9 +83,7 @@ public class UserService : IUserService
 
         if (existingUser is null)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[1004]);
-            throw e;
+            throw new ApiException().WithApiError(ErrorCode[1004]);
         }
 
         var userModel = _mapper.Map<UserModel>(user);
@@ -107,18 +100,14 @@ public class UserService : IUserService
 
         if (existingUser is null)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[1004]);
-            throw e;
+            throw new ApiException().WithApiError(ErrorCode[1004]);
         }
 
         var sameEmailUser = await _unitofWork.UserRepository.GetByEmail(user.Email, cts);
 
         if (sameEmailUser is not null)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[1001]);
-            throw e;
+            throw new ApiException().WithApiError(ErrorCode[1001]);
         }
 
         var userModel = _mapper.Map<UserModel>(user);
@@ -136,16 +125,12 @@ public class UserService : IUserService
 
         if (existingUser is null)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[1004]);
-            throw e;
+            throw new ApiException().WithApiError(ErrorCode[1004]);
         }
 
         if (password == existingUser.Email)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[1002]);
-            throw e;
+            throw new ApiException().WithApiError(ErrorCode[1002]);
         }
 
         var passwordHash = _hasher.HashPassword(password);
@@ -163,18 +148,49 @@ public class UserService : IUserService
 
         if (existingUser is null)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[1004]);
-            throw e;
+            throw new ApiException().WithApiError(ErrorCode[1004]);
         }
 
         var doesRoleExist = await _unitofWork.RoleRepository.DoesExist(user.Role!.Id, cts);
 
         if (!doesRoleExist)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[2004]);
-            throw e;
+            throw new ApiException().WithApiError(ErrorCode[2004]);
+        }
+
+        if (existingUser.RoleId is not null && existingUser.RoleId == user.Role.Id)
+        {
+            return await _mappingHelper.JoinUserRole(existingUser, cts);
+        }
+
+        var role = await _unitofWork.RoleRepository.Get(user.Role!.Id, cts);
+
+        if (role!.IsPrivelegedRole)
+        {
+            throw new ApiException().WithApiError(ErrorCode[2003]);
+        }
+
+        var userModel = _mapper.Map<UserModel>(user);
+        var updatedUser = await _unitofWork.UserRepository.AddUserToRole(userModel, cts);
+
+        var result = await _mappingHelper.JoinUserRole(updatedUser, cts);
+        return result;
+    }
+
+    public async Task<User> AddUserToPrivelegedRole(User user, CancellationToken cts)
+    {
+        var existingUser = await _unitofWork.UserRepository.GetById(user.Id, cts);
+
+        if (existingUser is null)
+        {
+            throw new ApiException().WithApiError(ErrorCode[1004]);
+        }
+
+        var doesRoleExist = await _unitofWork.RoleRepository.DoesExist(user.Role!.Id, cts);
+
+        if (!doesRoleExist)
+        {
+            throw new ApiException().WithApiError(ErrorCode[2004]);
         }
 
         if (existingUser.RoleId is not null && existingUser.RoleId == user.Role.Id)
@@ -195,9 +211,35 @@ public class UserService : IUserService
 
         if (existingUser is null)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[1004]);
-            throw e;
+            throw new ApiException().WithApiError(ErrorCode[1004]);
+        }
+
+        if (existingUser.RoleId is null)
+        {
+            return _mapper.Map<User>(existingUser);
+        }
+
+        var role = await _unitofWork.RoleRepository.Get(existingUser.RoleId.Value, cts);
+
+        if (role!.IsPrivelegedRole)
+        {
+            throw new ApiException().WithApiError(ErrorCode[2003]);
+        }
+
+        var updatedUser = await _unitofWork.UserRepository.RemoveUserFromRole(id, cts);
+        await _unitofWork.CommitAsync(cts);
+
+        var result = await _mappingHelper.JoinUserRole(updatedUser, cts);
+        return result;
+    }
+
+    public async Task<User> RemoveUserFromPrivelegedRole(int id, CancellationToken cts)
+    {
+        var existingUser = await _unitofWork.UserRepository.GetById(id, cts);
+
+        if (existingUser is null)
+        {
+            throw new ApiException().WithApiError(ErrorCode[1004]);
         }
 
         if (existingUser.RoleId is null)
@@ -218,14 +260,22 @@ public class UserService : IUserService
 
         if (existingUser is null)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[1004]);
-            throw e;
+            throw new ApiException().WithApiError(ErrorCode[1004]);
         }
 
         if (existingUser.IsBlocked)
         {
             return await _mappingHelper.JoinUserRole(existingUser, cts);
+        }
+
+        if (existingUser.RoleId is not null)
+        {
+            var role = await _unitofWork.RoleRepository.Get(existingUser.RoleId.Value, cts);
+
+            if (role is not null && role.IsPrivelegedRole)
+            {
+                throw new ApiException().WithApiError(ErrorCode[1008]);
+            }
         }
 
         var updatedUser = await _unitofWork.UserRepository.Block(id, cts);
@@ -241,9 +291,7 @@ public class UserService : IUserService
 
         if (existingUser is null)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[1004]);
-            throw e;
+            throw new ApiException().WithApiError(ErrorCode[1004]);
         }
 
         if (!existingUser.IsBlocked)
@@ -263,9 +311,17 @@ public class UserService : IUserService
 
         if (existingUser is null)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[1004]);
-            throw e;
+            throw new ApiException().WithApiError(ErrorCode[1004]);
+        }
+
+        if (existingUser.RoleId is not null)
+        {
+            var role = await _unitofWork.RoleRepository.Get(existingUser.RoleId.Value, cts);
+
+            if (role is not null && role.IsPrivelegedRole)
+            {
+                throw new ApiException().WithApiError(ErrorCode[1007]);
+            }
         }
 
         var updatedUser = await _unitofWork.UserRepository.Delete(id, cts);
@@ -281,9 +337,7 @@ public class UserService : IUserService
 
         if (existingUser is null)
         {
-            var e = new ApiException();
-            e.Data.Add("ApiError", ErrorCode[1004]);
-            throw e;
+            throw new ApiException().WithApiError(ErrorCode[1004]);
         }
 
         if (!existingUser.IsDeleted)
@@ -294,6 +348,13 @@ public class UserService : IUserService
         var updatedUser = await _unitofWork.UserRepository.Restore(id, cts);
 
         var result = await _mappingHelper.JoinUserRole(updatedUser, cts);
+        return result;
+    }
+
+    public async Task<int> Count(CancellationToken cts)
+    {
+        var result = await _unitofWork.UserRepository.Count(cts);
+        await _unitofWork.CommitAsync(cts);
         return result;
     }
 }

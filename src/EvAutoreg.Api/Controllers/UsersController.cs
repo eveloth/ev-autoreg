@@ -1,7 +1,7 @@
 using EvAutoreg.Api.Extensions;
 using EvAutoreg.Api.Cache;
-using EvAutoreg.Api.Contracts;
 using EvAutoreg.Api.Contracts.Dto;
+using EvAutoreg.Api.Contracts.Queries;
 using EvAutoreg.Api.Contracts.Requests;
 using EvAutoreg.Api.Contracts.Responses;
 using EvAutoreg.Api.Exceptions;
@@ -52,10 +52,12 @@ public class UsersController : ControllerBase
     )
     {
         var users = await _userService.GetAll(pagination, cts);
+        var usersCount = await _userService.Count(cts);
 
         var response = new PagedResponse<UserDto>(
             _mapper.Map<IEnumerable<UserDto>>(users),
-            pagination
+            pagination,
+            usersCount
         );
 
         return Ok(response);
@@ -67,7 +69,7 @@ public class UsersController : ControllerBase
     /// <response code="200">Returns a scecified user</response>
     /// <response code="404">If a user doesn't exist</response>
     [Cached(300)]
-    [Authorize]
+    [Authorize(Policy = "ReadUsers")]
     [Route("{id:int}")]
     [HttpGet]
     [ProducesResponseType(typeof(Response<UserDto>), StatusCodes.Status200OK)]
@@ -89,7 +91,7 @@ public class UsersController : ControllerBase
     [Authorize(Policy = "ResetUserPasswords")]
     [Route("{id:int}/password/reset")]
     [HttpPost]
-    [ProducesResponseType(typeof(SuccessResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     [Produces("application/json")]
@@ -105,15 +107,14 @@ public class UsersController : ControllerBase
 
         _logger.LogInformation("Password was reset for user ID {UserId}", updatedUserId);
 
-        var response = new SuccessResponse(true);
-        return Ok(response);
+        return Ok();
     }
 
     /// <summary>
     /// Blocks a user
     /// </summary>
     /// <response code="200">Blocks a user</response>
-    /// <response code="400">If a user tries to block themselves</response>
+    /// <response code="400">If a user tries to block themselves or if a user is in priveleged role</response>
     /// <response code="404">If a user doesn't exist</response>
     [Authorize(Policy = "BlockUsers")]
     [Route("{id:int}/block")]
@@ -143,7 +144,7 @@ public class UsersController : ControllerBase
     /// Unblocks a user
     /// </summary>
     /// <response code="200">Unblocks a user</response>
-    /// <response code="400">If a user tries to block themselves</response>
+    /// <response code="400">If a user tries to unblock themselves</response>
     /// <response code="404">If a user doesn't exist</response>
     [Authorize(Policy = "BlockUsers")]
     [Route("{id:int}/unblock")]
@@ -173,7 +174,7 @@ public class UsersController : ControllerBase
     /// Deletes a user
     /// </summary>
     /// <response code="200">Unblocks a user</response>
-    /// <response code="400">If a user tries to delete themselves</response>
+    /// <response code="400">If a user tries to delete themselves or if a user is in priveleged role</response>
     /// <response code="404">If a user doesn't exist</response>
     [Authorize(Policy = "DeleteUsers")]
     [Route("{id:int}")]

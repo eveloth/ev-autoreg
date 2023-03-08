@@ -1,4 +1,3 @@
-using EvAutoreg.Api.Contracts.Dto;
 using EvAutoreg.Api.Domain;
 using EvAutoreg.Data.Models;
 

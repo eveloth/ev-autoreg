@@ -16,23 +16,37 @@ public class PermissionRepository : IPermissionRepository
     }
 
     public async Task<IEnumerable<PermissionModel>> GetAll(
-        PaginationFilter filter,
-        CancellationToken cts
+        CancellationToken cts,
+        PaginationFilter? filter = null
     )
     {
-        var take = filter.PageSize;
-        var skip = (filter.PageNumber - 1) * filter.PageSize;
+        var sql = @"SELECT * FROM permission";
 
-        var sql = @$"SELECT * FROM permission ORDER BY id LIMIT {take} OFFSET {skip}";
+        if (filter is not null)
+        {
+            var take = filter.PageSize;
+            var skip = (filter.PageNumber - 1) * filter.PageSize;
+            var paginator = $" ORDER BY id LIMIT {take} offset {skip}";
+            sql += paginator;
+        }
 
         return await _db.LoadAllData<PermissionModel>(sql, cts);
+    }
+
+    public async Task<PermissionModel?> Get(int permissionId, CancellationToken cts)
+    {
+        const string sql = $@"SELECT * FROM permission WHERE id = @PermissionId";
+
+        var parameters = new DynamicParameters(new { PermissionId = permissionId });
+
+        return await _db.LoadSingle<PermissionModel?>(sql, parameters, cts);
     }
 
     public async Task<PermissionModel> Add(PermissionModel permission, CancellationToken cts)
     {
         const string sql =
-            @"INSERT INTO permission (permission_name, description) 
-              VALUES (@PermissionName, @Description)
+            @"INSERT INTO permission (permission_name, description, is_priveleged_permission) 
+              VALUES (@PermissionName, @Description, @IsPrivelegedPermission)
               RETURNING *";
 
         var parameters = new DynamicParameters(permission);
@@ -77,5 +91,11 @@ public class PermissionRepository : IPermissionRepository
         var parameters = new DynamicParameters(new { PermissionName = permissionName });
 
         return await _db.LoadSingle<bool>(sql, parameters, cts);
+    }
+
+    public async Task<int> Count(CancellationToken cts)
+    {
+        const string sql = "SELECT COUNT(*) from permission";
+        return await _db.LoadScalar<int>(sql, cts);
     }
 }

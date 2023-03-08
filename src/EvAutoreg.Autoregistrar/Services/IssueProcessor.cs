@@ -53,7 +53,9 @@ public class IssueProcessor : IIssueProcessor
 
         if (issueTypeId is null)
         {
-            await _logDispatcher.Log($"Issue ID {issueNo} doesn't match any rules, skipping");
+            await _logDispatcher.DispatchInfo(
+                $"Issue ID {issueNo} doesn't match any rules, skipping"
+            );
             return;
         }
 
@@ -65,7 +67,7 @@ public class IssueProcessor : IIssueProcessor
         var loadedIssueType = GlobalSettings.IssueTypes!.First(x => x.Id == issueTypeId);
         var queryParameters = loadedIssueType.QueryParameters;
 
-        await _logDispatcher.Log(
+        await _logDispatcher.DispatchInfo(
             $"Registering an issue ID {xmlIssue.Id} as: {loadedIssueType.IssueTypeName}"
         );
 
@@ -73,7 +75,7 @@ public class IssueProcessor : IIssueProcessor
         _logger.LogInformation("Inserted issue ID {IssueId} into the database", xmlIssue.Id);
 
         await UpdateIssue(queryParameters, xmlIssue);
-        await _logDispatcher.Log($"Issue ID {xmlIssue.Id} was updated");
+        await _logDispatcher.DispatchSuccess($"Issue ID {xmlIssue.Id} was updated");
     }
 
     private async Task InsertIssueIntoDatabase(XmlIssue xmlIssue, int issueTypeId)
@@ -81,7 +83,7 @@ public class IssueProcessor : IIssueProcessor
         var issue = _mapper.Map<IssueModel>(xmlIssue);
 
         issue.IssueTypeId = issueTypeId;
-        issue.RegistrarId = StateManager.GetOperator();
+        issue.RegistrarId = StateRepository.GetOperator();
 
         using var scope = _scopeFactory.CreateScope();
         var unitofWork = scope.ServiceProvider.GetRequiredService<IUnitofWork>();

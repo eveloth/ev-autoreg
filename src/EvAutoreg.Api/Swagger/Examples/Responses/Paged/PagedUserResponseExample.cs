@@ -33,6 +33,6 @@ public class PagedUserResponseExample : IExamplesProvider<PagedResponse<UserDto>
 
     public PagedResponse<UserDto> GetExamples()
     {
-        return new PagedResponse<UserDto>(_users, PaginationTemplate.Example);
+        return new PagedResponse<UserDto>(_users, PaginationTemplate.Example, 2);
     }
 }

@@ -10,12 +10,13 @@ public static class RequestToDomainMappingConfig
     {
         TypeAdapterConfig<RuleRequest, Rule>
             .NewConfig()
-            .Map(dest => dest.IssueType.Id, src => src.IssueTypeId)
             .Map(dest => dest.IssueField.Id, src => src.IssueFieldId)
-            .Ignore(dest => dest.IssueType.IssueTypeName)
-            .Ignore(dest => dest.IssueField.FieldName)
-            .IgnoreNonMapped(false)
-            .IgnoreNullValues(true);
+            .IgnoreNonMapped(false);
+
+        TypeAdapterConfig<RuleSetRequest, RuleSet>
+            .NewConfig()
+            .Map(dest => dest.IssueType.Id, src => src.IssueTypeId)
+            .IgnoreNonMapped(false);
 
         TypeAdapterConfig<QueryParametersRequest, QueryParameters>
             .NewConfig()

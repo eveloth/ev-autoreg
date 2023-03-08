@@ -1,11 +1,8 @@
-using EvAutoreg.Autoregistrar.Domain;
+﻿using EvAutoreg.Autoregistrar.Domain;
 using EvAutoreg.Autoregistrar.Services.Interfaces;
-using EvAutoreg.Data.Filters;
 using EvAutoreg.Data.Models;
 using EvAutoreg.Data.Repository.Interfaces;
 using MapsterMapper;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration.EnvironmentVariables;
 
 namespace EvAutoreg.Autoregistrar.Settings;
 
@@ -18,15 +15,15 @@ public class SettingsProvider : ISettingsProvider
 
     public SettingsProvider(
         ILogger<SettingsProvider> logger,
-        IServiceScopeFactory scopeFactory,
-        ICredentialsDecryptor decryptor,
-        IMapper mapper
+        IMapper mapper,
+        ICredentialsDecryptor credentialsDecryptor,
+        IServiceScopeFactory serviceScopeFactory
     )
     {
         _logger = logger;
-        _scopeFactory = scopeFactory;
-        _decryptor = decryptor;
         _mapper = mapper;
+        _decryptor = credentialsDecryptor;
+        _scopeFactory = serviceScopeFactory;
     }
 
     public async Task InitializeSettings(int userId, CancellationToken cts)
@@ -42,43 +39,34 @@ public class SettingsProvider : ISettingsProvider
             (await unitofWork.ExtCredentialsRepository.GetEvCredentials(userId, cts))!
         );
 
-        var queryParams = (
-            await unitofWork.QueryParametersRepository.GetAll(new PaginationFilter(1, 1000), cts)
-        ).ToList();
-        var issueTypeSet = await unitofWork.IssueTypeRepository.GetAll(
-            new PaginationFilter(1, 1000),
-            cts
-        );
-        var issueTypes = new List<IssueType>();
+        var queryParams = (await unitofWork.QueryParametersRepository.GetAll(cts)).ToList();
+
+        var issueTypeSet = await unitofWork.IssueTypeRepository.GetAll(cts);
+        var issueTypes = new List<IssueTypeInfo>();
 
         foreach (var type in issueTypeSet)
         {
             var queryParamsForIssueType = queryParams.Where(x => x.IssueTypeId == type.Id);
+
+            var ruleSetsForIssueType = await unitofWork.RuleSetRepository.GetAllForIssueType(
+                userId,
+                type.Id,
+                CancellationToken.None
+            );
+
             var aggregationTable = new ValueTuple<
                 IssueTypeModel,
-                IEnumerable<QueryParametersModel>
-            >(type, queryParamsForIssueType);
-            issueTypes.Add(_mapper.Map<IssueType>(aggregationTable));
+                IEnumerable<QueryParametersModel>,
+                IEnumerable<FilledRuleSetModel>
+            >(type, queryParamsForIssueType, ruleSetsForIssueType);
+
+            issueTypes.Add(_mapper.Map<IssueTypeInfo>(aggregationTable));
         }
 
-        var rules = (
-            await unitofWork.RuleRepository.GetAll(userId, new PaginationFilter(1, 1000), cts)
-        ).ToList();
-        var issueFieldSet = await unitofWork.IssueFieldRepository.GetAll(
-            new PaginationFilter(1, 1000),
-            cts
+        var issueFieldsModels = await unitofWork.IssueFieldRepository.GetAll(
+            CancellationToken.None
         );
-
-        var issueFields = new List<IssueField>();
-
-        foreach (var field in issueFieldSet)
-        {
-            var aggregationTable = new ValueTuple<IssueFieldModel, IEnumerable<RuleModel>>(
-                field,
-                rules
-            );
-            issueFields.Add(_mapper.Map<IssueField>(aggregationTable));
-        }
+        var issueFields = _mapper.Map<IEnumerable<IssueField>>(issueFieldsModels).ToList();
 
         await unitofWork.CommitAsync(cts);
 
@@ -105,8 +93,7 @@ public class SettingsProvider : ISettingsProvider
     public async Task<bool> CheckSettingsIntegrity(int userId, CancellationToken cts)
     {
         using var scope = _scopeFactory.CreateScope();
-        var unitofWork =
-            scope.ServiceProvider.GetService<IUnitofWork>() ?? throw new NullReferenceException();
+        var unitofWork = scope.ServiceProvider.GetRequiredService<IUnitofWork>();
 
         var areAutoregSettingsEmpty = await unitofWork.GpRepository.IsTableEmpty(
             "autoregistrar_settings",
@@ -129,10 +116,7 @@ public class SettingsProvider : ISettingsProvider
             return false;
         }
 
-        var issueTypes = await unitofWork.IssueTypeRepository.GetAll(
-            new PaginationFilter(1, 1000),
-            cts
-        );
+        var issueTypes = await unitofWork.IssueTypeRepository.GetAll(cts);
 
         foreach (var issueType in issueTypes)
         {

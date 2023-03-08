@@ -8,6 +8,7 @@ using FluentValidation;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 
 namespace EvAutoreg.Api.Controllers;
 
@@ -98,9 +99,10 @@ public class MeController : ControllerBase
     /// <response code="400">If a validation error occured</response>
     [Route("password")]
     [HttpPost]
-    [ProducesResponseType(typeof(SuccessResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [Produces("application/json")]
+    [ProducesDefaultResponseType]
     public async Task<IActionResult> UpdatePassword(
         [FromBody] UserPasswordRequest request,
         CancellationToken cts
@@ -114,8 +116,7 @@ public class MeController : ControllerBase
 
         _logger.LogInformation("Password was changed for user ID {UserId}", updatedUserId);
 
-        var response = new SuccessResponse(true);
-        return Ok(response);
+        return Ok();
     }
 
     /// <summary>

@@ -71,7 +71,7 @@ public static class WebApplicationBuilderDataExtensions
         builder.Services.AddScoped<IExtCredentialsRepository, ExtCredentialsRepository>();
         builder.Services.AddScoped<IIssueTypeRepository, IssueTypeRepository>();
         builder.Services.AddScoped<IIssueRepository, IssueRepository>();
-        builder.Services.AddScoped<IRuleRepository, RuleRepository>();
+        builder.Services.AddScoped<IRuleSetRepository, RuleSetRepository>();
         builder.Services.AddScoped<IQueryParametersRepository, QueryParametersRepository>();
         builder.Services.AddScoped<
             IAutoregistrarSettingsRepository,

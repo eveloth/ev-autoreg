@@ -1,3 +1,4 @@
+using System.Net;
 using EvAutoreg.Autoregistrar.Apis;
 using EvAutoreg.Autoregistrar.GrpcServices;
 using EvAutoreg.Autoregistrar.Hubs;
@@ -8,13 +9,27 @@ using EvAutoreg.Autoregistrar.Reflection;
 using EvAutoreg.Autoregistrar.Services;
 using EvAutoreg.Autoregistrar.Services.Interfaces;
 using EvAutoreg.Autoregistrar.Settings;
+using EvAutoreg.Autoregistrar.State;
 using EvAutoreg.Data.Extensions;
 using MapsterMapper;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Listen(IPAddress.Any, 80,  listenOptions =>
+    {
+        listenOptions.Protocols = HttpProtocols.Http1;
+    });
+    options.Listen(IPAddress.Any, 8080, listenOptions =>
+    {
+        listenOptions.Protocols = HttpProtocols.Http2;
+    });
+});
 
 builder.InstallSerilog();
 
@@ -54,6 +69,8 @@ builder.InstallEvApiHttpClient();
 builder.Services.AddSingleton<IMapper, Mapper>();
 builder.Services.AddSingleton<ICredentialsDecryptor, CredentialsDecryptor>();
 builder.Services.AddSingleton<ISettingsProvider, SettingsProvider>();
+builder.Services.AddSingleton<IListenerProxy, ListenerProxy>();
+builder.Services.AddSingleton<IStateManager, StateManager>();
 builder.Services.AddSingleton<IMailEventListener, MailEventListener>();
 builder.Services.AddSingleton<IEvApi, EvApi>();
 builder.Services.AddSingleton<IIssueProcessor, IssueProcessor>();

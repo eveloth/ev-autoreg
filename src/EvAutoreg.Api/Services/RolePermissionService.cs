@@ -1,4 +1,4 @@
-﻿using EvAutoreg.Api.Contracts;
+﻿using EvAutoreg.Api.Contracts.Queries;
 using EvAutoreg.Api.Domain;
 using EvAutoreg.Api.Exceptions;
 using EvAutoreg.Api.Services.Interfaces;
@@ -29,7 +29,7 @@ public class RolePermissionService : IRolePermissionService
     {
         var filter = _mapper.Map<PaginationFilter>(paginationQuery);
 
-        var rolePermissions = await _unitofWork.RolePermissionRepository.GetAll(filter, cts);
+        var rolePermissions = await _unitofWork.RolePermissionRepository.GetAll(cts, filter);
         await _unitofWork.CommitAsync(cts);
 
         var listsOfRolePermissions = rolePermissions.GroupByIntoList(
@@ -71,18 +71,25 @@ public class RolePermissionService : IRolePermissionService
             throw new ApiException().WithApiError(ErrorCode[2004]);
         }
 
-        var doesPermissionExist = await _unitofWork.PermissionRepository.DoesExist(
+        var permission = await _unitofWork.PermissionRepository.Get(
             rolePermissionModel.PermissionId!.Value,
             cts
         );
 
-        if (!doesPermissionExist)
+        if (permission is null)
         {
             throw new ApiException().WithApiError(ErrorCode[3004]);
         }
 
-        var doesCorrelationExist =
-            await _unitofWork.RolePermissionRepository.DoesCorrelationExist(rolePermissionModel, cts);
+        if (permission.IsPrivelegedPermission)
+        {
+            throw new ApiException().WithApiError(ErrorCode[3002]);
+        }
+
+        var doesCorrelationExist = await _unitofWork.RolePermissionRepository.DoesCorrelationExist(
+            rolePermissionModel,
+            cts
+        );
 
         if (doesCorrelationExist)
         {
@@ -96,6 +103,55 @@ public class RolePermissionService : IRolePermissionService
         await _unitofWork.CommitAsync(cts);
 
         var result = _mapper.Map<RolePermission>(createdCorrelation);
+        return result;
+    }
+
+    public async Task<RolePermission> AddPrivelegedPermissionToRole(
+        RolePermission rolePermission,
+        CancellationToken cts
+    )
+    {
+        var rolePermissionModel = _mapper.Map<RolePermissionModel>(rolePermission);
+
+        var role = await _unitofWork.RoleRepository.Get(rolePermissionModel.RoleId, cts);
+
+        if (role is null)
+        {
+            throw new ApiException().WithApiError(ErrorCode[2004]);
+        }
+
+        var permission = await _unitofWork.PermissionRepository.Get(
+            rolePermissionModel.PermissionId!.Value,
+            cts
+        );
+
+        if (permission is null)
+        {
+            throw new ApiException().WithApiError(ErrorCode[3004]);
+        }
+
+        var doesCorrelationExist = await _unitofWork.RolePermissionRepository.DoesCorrelationExist(
+            rolePermissionModel,
+            cts
+        );
+
+        if (doesCorrelationExist)
+        {
+            throw new ApiException().WithApiError(ErrorCode[4001]);
+        }
+
+        var createdCorrelation = await _unitofWork.RolePermissionRepository.AddPermissionToRole(
+            rolePermissionModel,
+            cts
+        );
+
+        role.IsPrivelegedRole = true;
+        await _unitofWork.RoleRepository.ChangePriveleges(role, cts);
+
+        await _unitofWork.CommitAsync(cts);
+
+        var result = _mapper.Map<RolePermission>(createdCorrelation);
+        result.IsPrivelegedRole = true;
         return result;
     }
 
@@ -113,21 +169,92 @@ public class RolePermissionService : IRolePermissionService
             throw new ApiException().WithApiError(ErrorCode[2004]);
         }
 
-        var doesCorrelationExist =
-            await _unitofWork.RolePermissionRepository.DoesCorrelationExist(rolePermissionModel, cts);
+        var doesCorrelationExist = await _unitofWork.RolePermissionRepository.DoesCorrelationExist(
+            rolePermissionModel,
+            cts
+        );
+
+        if (!doesCorrelationExist)
+        {
+            throw new ApiException().WithApiError(ErrorCode[4004]);
+        }
+        var permission = await _unitofWork.PermissionRepository.Get(
+            rolePermissionModel.PermissionId!.Value,
+            cts
+        );
+
+        if (permission!.IsPrivelegedPermission)
+        {
+            throw new ApiException().WithApiError(ErrorCode[3002]);
+        }
+
+        var deletedCorrelation =
+            await _unitofWork.RolePermissionRepository.RemovePermissionFromRole(
+                rolePermissionModel,
+                cts
+            );
+        await _unitofWork.CommitAsync(cts);
+
+        var result = _mapper.Map<RolePermission>(deletedCorrelation);
+        return result;
+    }
+
+    public async Task<RolePermission> RemovePrivelegedPermissionFromRole(
+        RolePermission rolePermission,
+        CancellationToken cts
+    )
+    {
+        var rolePermissionModel = _mapper.Map<RolePermissionModel>(rolePermission);
+
+        var role = await _unitofWork.RoleRepository.Get(rolePermissionModel.RoleId, cts);
+
+        if (role is null)
+        {
+            throw new ApiException().WithApiError(ErrorCode[2004]);
+        }
+
+        var doesCorrelationExist = await _unitofWork.RolePermissionRepository.DoesCorrelationExist(
+            rolePermissionModel,
+            cts
+        );
 
         if (!doesCorrelationExist)
         {
             throw new ApiException().WithApiError(ErrorCode[4004]);
         }
 
-        var deletedCorrelation = await _unitofWork.RolePermissionRepository.RemovePermissionFromRole(
-            rolePermissionModel,
-            cts
-        );
+        var deletedCorrelation =
+            await _unitofWork.RolePermissionRepository.RemovePermissionFromRole(
+                rolePermissionModel,
+                cts
+            );
         await _unitofWork.CommitAsync(cts);
 
         var result = _mapper.Map<RolePermission>(deletedCorrelation);
+
+        var rolePermissionsModelsToCheck = await _unitofWork.RolePermissionRepository.Get(
+            rolePermissionModel.RoleId,
+            cts
+        );
+        var rolePermissionsToCheck = _mapper.Map<RolePermission>(rolePermissionsModelsToCheck);
+
+        if (rolePermissionsToCheck.Permissions.Any(x => x.IsPrivelegedPermission))
+        {
+            return result;
+        }
+
+        role.IsPrivelegedRole = false;
+        await _unitofWork.RoleRepository.ChangePriveleges(role, cts);
+        await _unitofWork.CommitAsync(cts);
+
+        result.IsPrivelegedRole = false;
+        return result;
+    }
+
+    public async Task<int> Count(CancellationToken cts)
+    {
+        var result = await _unitofWork.RolePermissionRepository.Count(cts);
+        await _unitofWork.CommitAsync(cts);
         return result;
     }
 }

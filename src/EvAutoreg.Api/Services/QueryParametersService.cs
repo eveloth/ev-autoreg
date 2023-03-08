@@ -1,4 +1,4 @@
-﻿using EvAutoreg.Api.Contracts;
+﻿using EvAutoreg.Api.Contracts.Queries;
 using EvAutoreg.Api.Domain;
 using EvAutoreg.Api.Exceptions;
 using EvAutoreg.Api.Mapping;
@@ -36,7 +36,7 @@ public class QueryParametersService : IQueryParametersService
     {
         var filter = _mapper.Map<PaginationFilter>(paginationQuery);
 
-        var queryParameters = await _unitofWork.QueryParametersRepository.GetAll(filter, cts);
+        var queryParameters = await _unitofWork.QueryParametersRepository.GetAll(cts, filter);
         await _unitofWork.CommitAsync(cts);
 
         var result = queryParameters.Select(x => _mappingHelper.JoinIssueType(x, cts).Result);
@@ -148,6 +148,13 @@ public class QueryParametersService : IQueryParametersService
         );
         await _unitofWork.CommitAsync(cts);
         var result = await _mappingHelper.JoinIssueType(deletedQueryParameters, cts);
+        return result;
+    }
+
+    public async Task<int> Count(CancellationToken cts)
+    {
+        var result = await _unitofWork.QueryParametersRepository.Count(cts);
+        await _unitofWork.CommitAsync(cts);
         return result;
     }
 }

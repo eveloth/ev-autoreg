@@ -1,4 +1,4 @@
-﻿using EvAutoreg.Api.Contracts;
+﻿using EvAutoreg.Api.Contracts.Queries;
 using EvAutoreg.Api.Domain;
 using EvAutoreg.Api.Exceptions;
 using EvAutoreg.Api.Mapping;
@@ -23,11 +23,14 @@ public class IssueService : IIssueService
         _unitofWork = unitofWork;
     }
 
-    public async Task<IEnumerable<Issue>> GetAll(PaginationQuery paginationQuery, CancellationToken cts)
+    public async Task<IEnumerable<Issue>> GetAll(
+        PaginationQuery paginationQuery,
+        CancellationToken cts
+    )
     {
         var filter = _mapper.Map<PaginationFilter>(paginationQuery);
 
-        var issues = await _unitofWork.IssueRepository.GetAll(filter, cts);
+        var issues = await _unitofWork.IssueRepository.GetAll(cts, filter);
 
         var result = issues.Select(x => _mappingHelper.JoinIssueTypeAndUser(x, cts).Result);
         return result;
@@ -43,6 +46,13 @@ public class IssueService : IIssueService
         }
 
         var result = await _mappingHelper.JoinIssueTypeAndUser(existingIssue, cts);
+        return result;
+    }
+
+    public async Task<int> Count(CancellationToken cts)
+    {
+        var result = await _unitofWork.IssueRepository.Count(cts);
+        await _unitofWork.CommitAsync(cts);
         return result;
     }
 }

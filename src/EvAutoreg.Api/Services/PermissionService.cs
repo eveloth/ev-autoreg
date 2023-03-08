@@ -1,4 +1,4 @@
-﻿using EvAutoreg.Api.Contracts;
+﻿using EvAutoreg.Api.Contracts.Queries;
 using EvAutoreg.Api.Domain;
 using EvAutoreg.Api.Services.Interfaces;
 using EvAutoreg.Data.Filters;
@@ -18,13 +18,23 @@ public class PermissionService : IPermissionService
         _unitofWork = unitofWork;
     }
 
-    public async Task<IEnumerable<Permission>> GetAll(PaginationQuery paginationQuery, CancellationToken cts)
+    public async Task<IEnumerable<Permission>> GetAll(
+        PaginationQuery paginationQuery,
+        CancellationToken cts
+    )
     {
         var filter = _mapper.Map<PaginationFilter>(paginationQuery);
 
-        var permissions = await _unitofWork.PermissionRepository.GetAll(filter, cts);
+        var permissions = await _unitofWork.PermissionRepository.GetAll(cts, filter);
 
         var result = _mapper.Map<IEnumerable<Permission>>(permissions);
+        return result;
+    }
+
+    public async Task<int> Count(CancellationToken cts)
+    {
+        var result = await _unitofWork.PermissionRepository.Count(cts);
+        await _unitofWork.CommitAsync(cts);
         return result;
     }
 }

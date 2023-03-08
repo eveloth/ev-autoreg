@@ -1,0 +1,19 @@
+include: 
+  - 'ci/bash-commands.yaml'
+
+build_testbench:
+  script:
+    - docker build --pull --platform linux/amd64 --file ./src/EvAutoreg.Api/arm64.Dockerfile -t $API_IMAGE_TAG .
+    - docker push $API_IMAGE_TAG
+    - docker build --pull --platform linux/amd64 --file ./src/EvAutoreg.Autoregistrar/arm64.Dockerfile -t $AUTOREG_IMAGE_TAG .
+    - docker push $AUTOREG_IMAGE_TAG
+
+deploy_testbench:
+  script:
+    - ssh -o StrictHostKeyChecking=no -i $SSH_KEY -p $SSH_PORT $SSH_USER@$HOST_ADDRESS "
+      docker login -u $CI_DEPLOY_USER -p $CI_DEPLOY_PASSWORD $CI_REGISTRY &&
+      cd $APP_DIR &&
+      $RENAME_FILES &&
+      docker compose down &&
+      $INITIALIZE_ENV &&
+      docker compose up -d --pull=always --build"

@@ -1,4 +1,4 @@
-﻿using EvAutoreg.Api.Contracts;
+﻿using EvAutoreg.Api.Contracts.Queries;
 using EvAutoreg.Api.Domain;
 using EvAutoreg.Api.Exceptions;
 using EvAutoreg.Api.Services.Interfaces;
@@ -21,11 +21,14 @@ public class IssueTypeService : IIssueTypeService
         _unitofWork = unitofWork;
     }
 
-    public async Task<IEnumerable<IssueType>> GetAll(PaginationQuery paginationQuery, CancellationToken cts)
+    public async Task<IEnumerable<IssueType>> GetAll(
+        PaginationQuery paginationQuery,
+        CancellationToken cts
+    )
     {
         var filter = _mapper.Map<PaginationFilter>(paginationQuery);
 
-        var issueTypes = await _unitofWork.IssueTypeRepository.GetAll(filter, cts);
+        var issueTypes = await _unitofWork.IssueTypeRepository.GetAll(cts, filter);
         await _unitofWork.CommitAsync(cts);
         var result = _mapper.Map<IEnumerable<IssueType>>(issueTypes);
         return result;
@@ -47,7 +50,10 @@ public class IssueTypeService : IIssueTypeService
 
     public async Task<IssueType> Add(IssueType type, CancellationToken cts)
     {
-        var issueTypeNameTaken = await _unitofWork.IssueTypeRepository.DoesExist(type.IssueTypeName, cts);
+        var issueTypeNameTaken = await _unitofWork.IssueTypeRepository.DoesExist(
+            type.IssueTypeName,
+            cts
+        );
 
         if (issueTypeNameTaken)
         {
@@ -63,7 +69,10 @@ public class IssueTypeService : IIssueTypeService
 
     public async Task<IssueType> Rename(IssueType type, CancellationToken cts)
     {
-        var issueTypeNameTaken = await _unitofWork.IssueTypeRepository.DoesExist(type.IssueTypeName, cts);
+        var issueTypeNameTaken = await _unitofWork.IssueTypeRepository.DoesExist(
+            type.IssueTypeName,
+            cts
+        );
 
         if (issueTypeNameTaken)
         {
@@ -71,7 +80,10 @@ public class IssueTypeService : IIssueTypeService
         }
 
         var issueTypeModel = _mapper.Map<IssueTypeModel>(type);
-        var updatedIssueType = await _unitofWork.IssueTypeRepository.ChangeName(issueTypeModel, cts);
+        var updatedIssueType = await _unitofWork.IssueTypeRepository.ChangeName(
+            issueTypeModel,
+            cts
+        );
         await _unitofWork.CommitAsync(cts);
         var result = _mapper.Map<IssueType>(updatedIssueType);
         return result;
@@ -89,6 +101,13 @@ public class IssueTypeService : IIssueTypeService
         var deletedIssueType = await _unitofWork.IssueTypeRepository.Delete(id, cts);
         await _unitofWork.CommitAsync(cts);
         var result = _mapper.Map<IssueType>(deletedIssueType);
+        return result;
+    }
+
+    public async Task<int> Count(CancellationToken cts)
+    {
+        var result = await _unitofWork.IssueTypeRepository.Count(cts);
+        await _unitofWork.CommitAsync(cts);
         return result;
     }
 }

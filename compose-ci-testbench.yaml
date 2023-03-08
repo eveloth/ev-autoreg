@@ -1,0 +1,67 @@
+﻿version: '3.8'
+
+networks:
+  ev-autoreg:
+    name: ev-autoreg
+
+services:
+  evautoreg.api:
+    container_name: ev-autoreg-api-${ENV_NAME:-default}
+    image: registry.gitlab.com/eveloth/ev-autoreg/api:testbench
+    restart: unless-stopped
+    depends_on: 
+      - "evautoreg.postgres"
+      - "evautoreg.redis"
+    ports:
+      - "${API_HOST:-127.0.0.1}:${API_PORT}:80"
+    networks:
+      - ev-autoreg
+    env_file:
+      - .env
+
+  evautoreg.autoregistrar:
+    container_name: ev-autoreg-autoregistrar-${ENV_NAME:-default}
+    image: registry.gitlab.com/eveloth/ev-autoreg/registrar:testbench
+    restart: unless-stopped
+    depends_on: 
+      - "evautoreg.postgres"
+      - "evautoreg.api"
+    ports:
+      - "${AUTOREG_HOST:-127.0.0.1}:${AUTOREG_WEBSOCKET_PORT}:80"
+    networks:
+      - ev-autoreg
+    env_file:
+      - .env
+
+  evautoreg.postgres:
+    container_name: ev-autoreg-postgres-${ENV_NAME:-default}
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: "${PG_DB:-ev_autoreg_db}"
+      POSTGRES_USER: "${PG_USER}"
+      POSTGRES_PASSWORD: "${PG_PASS}"
+      PGDATA: "/var/lib/pgsql/data"
+    volumes:
+      - ${PG_DATA:-/opt/ev-autoreg/pgsql/data}:/data
+    ports:
+      - "${POSTGRES_HOST:-127.0.0.1}:${POSTGRES_PORT}:5432"
+    networks:
+      - ev-autoreg
+    env_file:
+      - .env
+
+  evautoreg.redis:
+    container_name: ev-autoreg-redis-${ENV_NAME:-default}
+    image: redis:7.0
+    restart: unless-stopped
+    command: >
+      --requirepass ${REDIS__PASSWORD}
+    ports:
+      - "${REDIS_HOST:-127.0.0.1}:${REDIS_PORT}:6379"
+    volumes:
+      - ${REDIS_DATA:-/opt/ev-autoreg/redis}:/data
+    networks:
+      - ev-autoreg
+    env_file:
+      - .env

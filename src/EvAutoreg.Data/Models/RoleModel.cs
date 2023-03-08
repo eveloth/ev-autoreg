@@ -6,6 +6,7 @@ public class RoleModel
 
     public int Id { get; set; }
     public string RoleName { get; set; }
+    public bool IsPrivelegedRole { get; set; }
 
 #pragma warning restore
 }
