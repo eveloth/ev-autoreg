@@ -4,19 +4,19 @@ variables:
     mv -v $COMPOSE_FILE docker-compose.yml
 
   INITIALIZE_ENV_PGSQL: >-
-    sed -i "/PG_PASS/s/''/'$PG_PASS'/" .env &&
+    sed -i "/PG_PASS/s|''|'$PG_PASS'|" .env &&
     sed -i "/POSTGRES_PORT/s/[0-9]\+/$POSTGRES_PORT/" .env &&
-    sed -i "/PG_DATA/s/'.*'/'$PG_DATA'/" .env &&
+    sed -i "/PG_DATA/s|'.*'|'$PG_DATA'|" .env &&
 
   INITIALIZE_ENV_REDIS: >-
     sed -i "/REDIS__PASSWORD/s/'.*'/'$REDIS_PASSWORD'/" .env &&
-    sed -i "/REDIS_DATA/s/'.*'/'$REDIS_DATA'/" .env &&
+    sed -i "/REDIS_DATA/s|'.*'|'$REDIS_DATA'|" .env &&
     sed -i "/REDIS_PORT/s/[0-9]\+/$REDIS_PORT/" .env &&
     sed -i "/REDISCACHE__ENABLED/s/'.*'/'$REDISCAHCHE_ENABLED'/" .env &&
 
   INITIALIZE_ENV_JWT: >-
-    sed -i "/JWT__ISSUER/s/'.*'/'$JWT_ISSUER'/" .env &&
-    sed -i "/JWT__KEY/s/'.*'/'$JWT_KEY'/" .env &&
+    sed -i "/JWT__ISSUER/s|'.*'|'$JWT_ISSUER'|" .env &&
+    sed -i "/JWT__KEY/s|'.*'|'$JWT_KEY'|" .env &&
     sed -i "/JWT__LIFETIME/s/'.*'/'$JWT_LIFETIME'/" .env &&
     sed -i "/JWT__REFRESHTOKENLIFETIME/s/'.*'/'$JWT_REFRESHTOKENLIFETIME'/" .env &&
 
@@ -33,11 +33,11 @@ variables:
     sed -i "/API_PORT/s/[0-9]\+/$API_PORT/" .env &&
     sed -i "/AUTOREG_WEBSOCKET_PORT/s/[0-9]\+/$AUTOREG_WEBSOCKET_PORT/" .env &&
     sed -i "/SWAGGEROPTIONS__ENABLED/s/'.*'/'$SWAGGEROPTIONS_ENABLED'/" .env &&
-    sed -i "/GRPCREFLECTIONOPTIONS__ENABLED/s/'.*'/'$GRPCREFLECTIONOPTIONS__ENABLED'/" .env &&
+    sed -i "/GRPCREFLECTIONOPTIONS__ENABLED/s/'.*'/'$GRPCREFLECTIONOPTIONS__ENABLED'/" .env
 
   INITIALIZE_ENV: >-
     sed -i "/ENV_NAME/s/'.*'/'$CI_ENVIRONMENT_NAME'/" .env &&
-    sed -i "/SYMMETRICSECURITYKEY/s/'.*'/'$SYMMETRICSECURITYKEY'/" .env &&
+    sed -i "/SYMMETRICSECURITYKEY/s|'.*'|'$SYMMETRICSECURITYKEY'|" .env &&
     $INITIALIZE_ENV_PGSQL
     $INITIALIZE_ENV_REDIS
     $INITIALIZE_ENV_SERILOG

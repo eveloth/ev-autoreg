@@ -3,9 +3,9 @@ include:
 
 build_testbench:
   script:
-    - docker buildx build --pull --platform linux/amd64 --file ./src/EvAutoreg.Api/arm64.Dockerfile -t $API_IMAGE_TAG ./src/EvAutoreg.Api/
+    - docker build --pull --platform linux/amd64 --file ./src/EvAutoreg.Api/arm64.Dockerfile -t $API_IMAGE_TAG .
     - docker push $API_IMAGE_TAG
-    - docker buildx build --pull --platform linux/amd64 --file ./src/EvAutoreg.Autoregistrar/arm64.Dockerfile -t $AUTOREG_IMAGE_TAG ./src/EvAutoreg.Autoregistrar/
+    - docker build --pull --platform linux/amd64 --file ./src/EvAutoreg.Autoregistrar/arm64.Dockerfile -t $AUTOREG_IMAGE_TAG .
     - docker push $AUTOREG_IMAGE_TAG
 
 deploy_testbench:

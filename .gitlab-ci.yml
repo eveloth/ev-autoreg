@@ -10,15 +10,15 @@ include:
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       variables:
-        API_IMAGE_TAG: ${CI_REGISTRY_IMAGE}-api:latest
-        AUTOREG_IMAGE_TAG: ${CI_REGISTRY_IMAGE}-registrar:latest
+        API_IMAGE_TAG: ${CI_REGISTRY_IMAGE}/api:latest
+        AUTOREG_IMAGE_TAG: ${CI_REGISTRY_IMAGE}/registrar:latest
 
 .testbench_rule: &testbench_rule
   rules:
     - if: $CI_COMMIT_BRANCH == "testbench"
       variables:
-        API_IMAGE_TAG: ${CI_REGISTRY_IMAGE}-api:testbench
-        AUTOREG_IMAGE_TAG: ${CI_REGISTRY_IMAGE}-registrar:testbench
+        API_IMAGE_TAG: ${CI_REGISTRY_IMAGE}/api:testbench
+        AUTOREG_IMAGE_TAG: ${CI_REGISTRY_IMAGE}/registrar:testbench
 
 .master_def: &master_def
   environment: production

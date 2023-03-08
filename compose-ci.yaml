@@ -7,7 +7,7 @@ networks:
 services:
   evautoreg.api:
     container_name: ev-autoreg-api-${ENV_NAME:-default}
-    image: registry.gitlab.com/eveloth/ev-autoreg-api:latest
+    image: registry.gitlab.com/eveloth/ev-autoreg/api:latest
     restart: unless-stopped
     depends_on: 
       - "evautoreg.postgres"
@@ -21,7 +21,7 @@ services:
 
   evautoreg.autoregistrar:
     container_name: ev-autoreg-autoregistrar-${ENV_NAME:-default}
-    image: registry.gitlab.com/eveloth/ev-autoreg-autoregistrar:latest
+    image: registry.gitlab.com/eveloth/ev-autoreg/registrar:latest
     restart: unless-stopped
     depends_on: 
       - "evautoreg.postgres"
