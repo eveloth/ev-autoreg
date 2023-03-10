@@ -1,4 +1,5 @@
-﻿using Dapper;
+﻿using System.Text;
+using Dapper;
 using EvAutoreg.Data.DataAccess;
 using EvAutoreg.Data.Filters;
 using EvAutoreg.Data.Models;
@@ -9,10 +10,12 @@ namespace EvAutoreg.Data.Repository;
 public class RolePermissionRepository : IRolePermissionRepository
 {
     private readonly ISqlDataAccess _db;
+    private readonly IFilterQueryBuilder _filterQueryBuilder;
 
-    public RolePermissionRepository(ISqlDataAccess db)
+    public RolePermissionRepository(ISqlDataAccess db, IFilterQueryBuilder filterQueryBuilder)
     {
         _db = db;
+        _filterQueryBuilder = filterQueryBuilder;
     }
 
     public async Task<IEnumerable<RolePermissionModel>> GetAll(
@@ -20,7 +23,7 @@ public class RolePermissionRepository : IRolePermissionRepository
         PaginationFilter? filter = null
     )
     {
-        var sql =
+        var sqlBuilder = new StringBuilder(
             @"SELECT r.role_id, r.role_name,
                         p.id AS permission_id, 
                         p.permission_name AS permission_name,
@@ -31,27 +34,21 @@ public class RolePermissionRepository : IRolePermissionRepository
                         role_name AS role_name,
                         is_priveleged_role
                         FROM role
-                        ORDER BY id";
+                        ORDER BY id"
+        );
 
-        if (filter is not null)
-        {
-            var take = filter.PageSize;
-            var skip = (filter.PageNumber - 1) * filter.PageSize;
-            var paginator = $" LIMIT {take} offset {skip}";
-            sql += paginator;
-        }
+        _filterQueryBuilder.ApplyPaginationFilter(sqlBuilder, filter);
 
-        sql += ") AS r";
-
+        sqlBuilder.Append(") AS r");
 
         const string joins =
             @" LEFT JOIN role_permission rp ON r.role_id = rp.role_id
                       LEFT JOIN permission p ON rp.permission_id = p.id
                       ORDER BY r.role_id, p.id";
 
-        sql += joins;
+        sqlBuilder.Append(joins);
 
-        return await _db.LoadAllData<RolePermissionModel>(sql, cts);
+        return await _db.LoadAllData<RolePermissionModel>(sqlBuilder.ToString(), cts);
     }
 
     public async Task<IEnumerable<RolePermissionModel>> Get(int roleId, CancellationToken cts)
