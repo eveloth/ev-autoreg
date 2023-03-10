@@ -7,4 +7,4 @@ Copy-Item -Path ".envexample" -Destination ".env"
 (Get-Content .env) -replace "(SYMMETRICSECURITYKEY=)'.*'", "`$1'74bcb7ac-fde0-485d-b47b-ccaf88c8ca6f'" | Out-File .env
 (Get-Content .env) -replace "(JWT__KEY=)'.*'", "`$1'2409eb94-fd47-4f84-9c14-2588199c0879'" | Out-File .env
 
-docker compose up -d --build
+docker compose -f compose-win.yaml up -d --build
