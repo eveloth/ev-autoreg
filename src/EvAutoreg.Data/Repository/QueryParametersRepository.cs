@@ -1,3 +1,4 @@
+using System.Text;
 using Dapper;
 using EvAutoreg.Data.DataAccess;
 using EvAutoreg.Data.Filters;
@@ -9,10 +10,12 @@ namespace EvAutoreg.Data.Repository;
 public class QueryParametersRepository : IQueryParametersRepository
 {
     private readonly ISqlDataAccess _db;
+    private readonly IFilterQueryBuilder _filterQueryBuilder;
 
-    public QueryParametersRepository(ISqlDataAccess db)
+    public QueryParametersRepository(ISqlDataAccess db, IFilterQueryBuilder filterQueryBuilder)
     {
         _db = db;
+        _filterQueryBuilder = filterQueryBuilder;
     }
 
     public async Task<IEnumerable<QueryParametersModel>> GetAll(
@@ -20,18 +23,10 @@ public class QueryParametersRepository : IQueryParametersRepository
         PaginationFilter? filter = null
     )
     {
-        var sql =
-            @"SELECT * FROM registering_parameters";
+        var sqlBuilder = new StringBuilder("SELECT * FROM registering_parameters");
+        _filterQueryBuilder.ApplyPaginationFilter(sqlBuilder, filter, "issue_type_id");
 
-        if (filter is not null)
-        {
-            var take = filter.PageSize;
-            var skip = (filter.PageNumber - 1) * filter.PageSize;
-            var paginator = $" ORDER BY issue_type_id LIMIT {take} offset {skip}";
-            sql += paginator;
-        }
-
-        return await _db.LoadAllData<QueryParametersModel>(sql, cts);
+        return await _db.LoadAllData<QueryParametersModel>(sqlBuilder.ToString(), cts);
     }
 
     public async Task<IEnumerable<QueryParametersModel>> Get(int issueTypeId, CancellationToken cts)

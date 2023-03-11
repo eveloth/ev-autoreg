@@ -1,4 +1,5 @@
-﻿using Dapper;
+﻿using System.Text;
+using Dapper;
 using EvAutoreg.Data.DataAccess;
 using EvAutoreg.Data.Filters;
 using EvAutoreg.Data.Models;
@@ -9,25 +10,23 @@ namespace EvAutoreg.Data.Repository;
 public class RoleRepository : IRoleRepository
 {
     private readonly ISqlDataAccess _db;
+    private readonly IFilterQueryBuilder _filterQueryBuilder;
 
-    public RoleRepository(ISqlDataAccess db)
+    public RoleRepository(ISqlDataAccess db, IFilterQueryBuilder filterQueryBuilder)
     {
         _db = db;
+        _filterQueryBuilder = filterQueryBuilder;
     }
 
-    public async Task<IEnumerable<RoleModel>> GetAll(CancellationToken cts, PaginationFilter? filter = null)
+    public async Task<IEnumerable<RoleModel>> GetAll(
+        CancellationToken cts,
+        PaginationFilter? filter = null
+    )
     {
-        var sql = @$"SELECT * FROM role";
+        var sqlBuilder = new StringBuilder("SELECT * FROM role");
+        _filterQueryBuilder.ApplyPaginationFilter(sqlBuilder, filter, "id");
 
-        if (filter is not null)
-        {
-            var take = filter.PageSize;
-            var skip = (filter.PageNumber - 1) * filter.PageSize;
-            var paginator = $" ORDER BY id LIMIT {take} offset {skip}";
-            sql += paginator;
-        }
-
-        return await _db.LoadAllData<RoleModel>(sql, cts);
+        return await _db.LoadAllData<RoleModel>(sqlBuilder.ToString(), cts);
     }
 
     public async Task<RoleModel?> Get(int id, CancellationToken cts)
@@ -41,7 +40,8 @@ public class RoleRepository : IRoleRepository
 
     public async Task<RoleModel> Add(RoleModel role, CancellationToken cts)
     {
-        const string sql = @"INSERT INTO role (role_name, is_priveleged_role) VALUES (@RoleName, @IsPrivelegedRole) RETURNING *";
+        const string sql =
+            @"INSERT INTO role (role_name, is_priveleged_role) VALUES (@RoleName, @IsPrivelegedRole) RETURNING *";
 
         var parameters = new DynamicParameters(role);
 
@@ -64,7 +64,8 @@ public class RoleRepository : IRoleRepository
 
     public async Task<RoleModel> ChangePriveleges(RoleModel role, CancellationToken cts)
     {
-        const string sql = @"UPDATE role SET is_priveleged_role = @IsPrivelegedRole WHERE id = @id RETURNING *";
+        const string sql =
+            @"UPDATE role SET is_priveleged_role = @IsPrivelegedRole WHERE id = @id RETURNING *";
 
         var parameters = new DynamicParameters(role);
 

@@ -16,10 +16,9 @@ public class AutoregistrarSettingsRepository : IAutoregistrarSettingsRepository
 
     public async Task<AutoregstrarSettingsModel?> Get(CancellationToken cts)
     {
-        const string sql = @"SELECT * FROM autoregistrar_settings WHERE id = 1";
+        const string sql = @"SELECT * FROM autoregistrar_settings";
 
-        var result = (await _db.LoadAllData<AutoregstrarSettingsModel?>(sql, cts)).FirstOrDefault();
-
+        var result = await _db.LoadSingle<AutoregstrarSettingsModel?>(sql, cts);
         return result;
     }
 
@@ -28,19 +27,28 @@ public class AutoregistrarSettingsRepository : IAutoregistrarSettingsRepository
         CancellationToken cts
     )
     {
-        const string sql =
+        const string insert =
             @"INSERT INTO autoregistrar_settings 
-                             (id, exchange_server_uri, extra_view_uri,
+                             (exchange_server_uri, extra_view_uri,
                              new_issue_regex, issue_no_regex)
-                             VALUES(1, @ExchangeServerUri, @ExtraViewUri,
+                             VALUES(@ExchangeServerUri, @ExtraViewUri,
                              @NewIssueRegex, @IssueNoRegex)
-                             ON CONFLICT (id)
-                             DO UPDATE SET
-                             exchange_server_uri = excluded.exchange_server_uri,
-                             extra_view_uri = excluded.extra_view_uri,
-                             new_issue_regex = excluded.new_issue_regex, 
-                             issue_no_regex = excluded.issue_no_regex
                              RETURNING * ";
+
+        const string update =
+            @"UPDATE autoregistrar_settings SET
+                     exchange_server_uri = @ExchangeServerUri,
+                     extra_view_uri = @ExtraViewUri,
+                     new_issue_regex = @NewIssueRegex, 
+                     issue_no_regex = @IssueNoRegex
+                     RETURNING *";
+
+        var hasData = await DoExist(cts);
+        var sql = hasData switch
+        {
+            true => update,
+            false => insert
+        };
 
         var parameters = new DynamicParameters(settings);
 
@@ -56,7 +64,7 @@ public class AutoregistrarSettingsRepository : IAutoregistrarSettingsRepository
 
     public async Task<bool> DoExist(CancellationToken cts)
     {
-        const string sql = @"SELECT EXISTS (SELECT true FROM autoregistrar_settings WHERE id = 1)";
+        const string sql = @"SELECT EXISTS (SELECT true FROM autoregistrar_settings)";
 
         return await _db.LoadSingle<bool>(sql, cts);
     }

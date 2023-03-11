@@ -2,6 +2,7 @@
 using System.Data.Common;
 using Dapper;
 using EvAutoreg.Data.DataAccess;
+using EvAutoreg.Data.Filters;
 using EvAutoreg.Data.Migrations;
 using EvAutoreg.Data.Repository;
 using EvAutoreg.Data.Repository.Interfaces;
@@ -62,6 +63,7 @@ public static class WebApplicationBuilderDataExtensions
     public static WebApplicationBuilder AddRepositories(this WebApplicationBuilder builder)
     {
         builder.Services.AddScoped<ISqlDataAccess, SqlDataAccess>();
+        builder.Services.AddSingleton<IFilterQueryBuilder, FilterQueryBuilder>();
 
         builder.Services.AddScoped<IGeneralPurposeRepository, GeneralPurposeRepository>();
         builder.Services.AddScoped<IUserRepository, UserRepository>();

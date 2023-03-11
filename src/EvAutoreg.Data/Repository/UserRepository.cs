@@ -10,12 +10,14 @@ namespace EvAutoreg.Data.Repository;
 public class UserRepository : IUserRepository
 {
     private readonly ISqlDataAccess _db;
+    private readonly IFilterQueryBuilder _filterQueryBuilder;
 
     private const string IncludeDeletedSql = " is_deleted = false";
 
-    public UserRepository(ISqlDataAccess db)
+    public UserRepository(ISqlDataAccess db, IFilterQueryBuilder filterQueryBuilder)
     {
         _db = db;
+        _filterQueryBuilder = filterQueryBuilder;
     }
 
     public async Task<UserModel?> GetById(
@@ -30,15 +32,12 @@ public class UserRepository : IUserRepository
                     ON app_user.id = role.id
                     WHERE app_user.id = @UserId";
 
-        var resultingSql = includeDeleted switch
-        {
-            true => sql,
-            false => sql + " AND" + IncludeDeletedSql
-        };
+        var sqlBuilder = new StringBuilder(sql);
+        _filterQueryBuilder.ApplyIncludeDeletedFilter(sqlBuilder, includeDeleted, ChainOptions.And);
 
         var parameters = new DynamicParameters(new { UserId = userId });
 
-        return await _db.LoadSingle<UserModel>(resultingSql, parameters, cts);
+        return await _db.LoadSingle<UserModel>(sqlBuilder.ToString(), parameters, cts);
     }
 
     public async Task<UserModel?> GetByEmail(
@@ -53,15 +52,12 @@ public class UserRepository : IUserRepository
                     ON app_user.id = role.id
                     WHERE email = @Email";
 
-        var resultingSql = includeDeleted switch
-        {
-            true => sql,
-            false => sql + " AND" + IncludeDeletedSql
-        };
+        var sqlBuilder = new StringBuilder(sql);
+        _filterQueryBuilder.ApplyIncludeDeletedFilter(sqlBuilder, includeDeleted, ChainOptions.And);
 
         var parameters = new DynamicParameters(new { Email = email });
 
-        return await _db.LoadSingle<UserModel, RoleModel>(resultingSql, parameters, cts);
+        return await _db.LoadSingle<UserModel, RoleModel>(sqlBuilder.ToString(), parameters, cts);
     }
 
     public async Task<IEnumerable<UserModel>> GetAll(
@@ -70,33 +66,20 @@ public class UserRepository : IUserRepository
         PaginationFilter? filter = null
     )
     {
-        string resultingSql;
-
-        var sqlTemplateBuilder = new StringBuilder(
+        var sqlBuilder = new StringBuilder(
             @"SELECT * FROM app_user
               LEFT JOIN role ON app_user.role_id = role.id"
         );
 
-        sqlTemplateBuilder = includeDeleted switch
-        {
-            true => sqlTemplateBuilder.Append(" WHERE").Append(IncludeDeletedSql).Append(' '),
-            false => sqlTemplateBuilder.Append(' ')
-        };
+        _filterQueryBuilder.ApplyIncludeDeletedFilter(
+            sqlBuilder,
+            includeDeleted,
+            ChainOptions.Where
+        );
 
-        if (filter is not null)
-        {
-            var skip = (filter.PageNumber - 1) * filter.PageSize;
-            var take = filter.PageSize;
+        _filterQueryBuilder.ApplyPaginationFilter(sqlBuilder, filter, "app_user.id");
 
-            var paginator = $@"ORDER BY app_user.id LIMIT {take} OFFSET {skip}";
-            resultingSql = sqlTemplateBuilder.Append(paginator).ToString();
-        }
-        else
-        {
-            resultingSql = sqlTemplateBuilder.ToString();
-        }
-
-        return await _db.LoadAllData<UserModel, RoleModel>(resultingSql, cts);
+        return await _db.LoadAllData<UserModel, RoleModel>(sqlBuilder.ToString(), cts);
     }
 
     public async Task<UserModel> Create(UserModel user, CancellationToken cts)
