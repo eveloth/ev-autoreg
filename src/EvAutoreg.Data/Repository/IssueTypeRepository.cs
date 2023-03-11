@@ -1,4 +1,5 @@
-﻿using Dapper;
+﻿using System.Text;
+using Dapper;
 using EvAutoreg.Data.DataAccess;
 using EvAutoreg.Data.Filters;
 using EvAutoreg.Data.Models;
@@ -9,10 +10,12 @@ namespace EvAutoreg.Data.Repository;
 public class IssueTypeRepository : IIssueTypeRepository
 {
     private readonly ISqlDataAccess _db;
+    private readonly IFilterQueryBuilder _filterQueryBuilder;
 
-    public IssueTypeRepository(ISqlDataAccess db)
+    public IssueTypeRepository(ISqlDataAccess db, IFilterQueryBuilder filterQueryBuilder)
     {
         _db = db;
+        _filterQueryBuilder = filterQueryBuilder;
     }
 
     public async Task<IssueTypeModel?> Get(int issueTypeId, CancellationToken cts)
@@ -28,17 +31,10 @@ public class IssueTypeRepository : IIssueTypeRepository
         PaginationFilter? filter = null
     )
     {
-        var sql = @"SELECT * FROM issue_type";
+        var sqlBuilder = new StringBuilder("SELECT * FROM issue_type");
+        _filterQueryBuilder.ApplyPaginationFilter(sqlBuilder, filter, "id");
 
-        if (filter is not null)
-        {
-            var take = filter.PageSize;
-            var skip = (filter.PageNumber - 1) * filter.PageSize;
-            var paginator = $" ORDER BY id LIMIT {take} offset {skip}";
-            sql += paginator;
-        }
-
-        return await _db.LoadAllData<IssueTypeModel>(sql, cts);
+        return await _db.LoadAllData<IssueTypeModel>(sqlBuilder.ToString(), cts);
     }
 
     public async Task<IssueTypeModel> Add(IssueTypeModel issueType, CancellationToken cts)

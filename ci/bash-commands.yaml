@@ -26,7 +26,7 @@ variables:
     sed -i "/SERILOGOPTIONS__ENABLESEQ/s/'.*'/'$SERILOGOPTIONS_ENABLESEQ'/" .env &&
 
   INITIALIZE_ENV_SEQ: >-
-    sed -i "/SEQOPTIONS__URL/s/'.*'/'$SEQ_URL'/" .env &&
+    sed -i "/SEQOPTIONS__SERVERURL/s/'.*'/'$SEQ_URL'/" .env &&
     sed -i "/SEQOPTIONS__APIKEY/s/'.*'/'$SEQ_APIKEY'/" .env &&
 
   INITIALIZE_ENV_NETWORKING: >-

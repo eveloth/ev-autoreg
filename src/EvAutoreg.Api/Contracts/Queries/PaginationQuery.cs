@@ -2,13 +2,34 @@ namespace EvAutoreg.Api.Contracts.Queries;
 
 public record PaginationQuery
 {
-    private int _pageSize;
-    public int PageNumber { get; init; }
+    private readonly int _pageSize;
+    private readonly int _pageNumber;
+
+    public int PageNumber
+    {
+        get => _pageNumber;
+        init
+        {
+            _pageNumber = value switch
+            {
+                < 1 => 1,
+                _ => value
+            };
+        }
+    }
 
     public int PageSize
     {
         get => _pageSize;
-        init => _pageSize = value > 100 ? 100 : value;
+        init
+        {
+            _pageSize = value switch
+            {
+                > 100 => 100,
+                < 1 => 1,
+                _ => value
+            };
+        }
     }
 
     public PaginationQuery(int pageNumber, int pageSize)

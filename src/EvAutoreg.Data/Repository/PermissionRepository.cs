@@ -1,4 +1,5 @@
-﻿using Dapper;
+﻿using System.Text;
+using Dapper;
 using EvAutoreg.Data.DataAccess;
 using EvAutoreg.Data.Filters;
 using EvAutoreg.Data.Models;
@@ -9,10 +10,12 @@ namespace EvAutoreg.Data.Repository;
 public class PermissionRepository : IPermissionRepository
 {
     private readonly ISqlDataAccess _db;
+    private readonly IFilterQueryBuilder _filterQueryBuilder;
 
-    public PermissionRepository(ISqlDataAccess db)
+    public PermissionRepository(ISqlDataAccess db, IFilterQueryBuilder filterQueryBuilder)
     {
         _db = db;
+        _filterQueryBuilder = filterQueryBuilder;
     }
 
     public async Task<IEnumerable<PermissionModel>> GetAll(
@@ -20,17 +23,10 @@ public class PermissionRepository : IPermissionRepository
         PaginationFilter? filter = null
     )
     {
-        var sql = @"SELECT * FROM permission";
+        var sqlBuilder = new StringBuilder("SELECT * FROM permission");
+        _filterQueryBuilder.ApplyPaginationFilter(sqlBuilder, filter, "id");
 
-        if (filter is not null)
-        {
-            var take = filter.PageSize;
-            var skip = (filter.PageNumber - 1) * filter.PageSize;
-            var paginator = $" ORDER BY id LIMIT {take} offset {skip}";
-            sql += paginator;
-        }
-
-        return await _db.LoadAllData<PermissionModel>(sql, cts);
+        return await _db.LoadAllData<PermissionModel>(sqlBuilder.ToString(), cts);
     }
 
     public async Task<PermissionModel?> Get(int permissionId, CancellationToken cts)

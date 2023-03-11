@@ -1,4 +1,5 @@
-﻿using Dapper;
+﻿using System.Text;
+using Dapper;
 using EvAutoreg.Data.DataAccess;
 using EvAutoreg.Data.Filters;
 using EvAutoreg.Data.Models;
@@ -9,10 +10,12 @@ namespace EvAutoreg.Data.Repository;
 public class IssueRepository : IIssueRepository
 {
     private readonly ISqlDataAccess _db;
+    private readonly IFilterQueryBuilder _filterQueryBuilder;
 
-    public IssueRepository(ISqlDataAccess db)
+    public IssueRepository(ISqlDataAccess db, IFilterQueryBuilder filterQueryBuilder)
     {
         _db = db;
+        _filterQueryBuilder = filterQueryBuilder;
     }
 
     public async Task<IssueModel?> Get(int issueId, CancellationToken cts)
@@ -29,16 +32,10 @@ public class IssueRepository : IIssueRepository
         PaginationFilter? filter = null
     )
     {
-        var sql = @"SELECT * FROM issue";
+        var sqlBuilder = new StringBuilder("SELECT * FROM issue");
+        _filterQueryBuilder.ApplyPaginationFilter(sqlBuilder, filter, "id");
 
-        if (filter is not null)
-        {
-            var take = filter.PageSize;
-            var skip = (filter.PageNumber - 1) * filter.PageSize;
-            var paginator = $" ORDER BY id LIMIT {take} offset {skip}";
-            sql += paginator;
-        }
-        return await _db.LoadAllData<IssueModel>(sql, cts);
+        return await _db.LoadAllData<IssueModel>(sqlBuilder.ToString(), cts);
     }
 
     public async Task<IssueModel> Upsert(IssueModel issue, CancellationToken cts)
@@ -78,6 +75,5 @@ public class IssueRepository : IIssueRepository
     {
         const string sql = "SELECT COUNT(*) from issue";
         return await _db.LoadScalar<int>(sql, cts);
-
     }
 }
